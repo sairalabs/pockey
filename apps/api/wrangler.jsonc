@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pocketkey-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": {
+    "ENVIRONMENT": "development",
+    // `mock` is refused outside development. Production sets `turnkey` (T0.5).
+    "KEY_PROVIDER": "mock",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pocketkey",
+      // Replace with the real id after `wrangler d1 create pocketkey`.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/db/migrations",
+    },
+  ],
+}

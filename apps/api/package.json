@@ -1,0 +1,37 @@
+{
+  "name": "@pocketkey/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply pocketkey --local",
+    "db:migrate:remote": "wrangler d1 migrations apply pocketkey --remote",
+    "db:seed": "wrangler d1 execute pocketkey --local --file ../../packages/db/seed/local.sql",
+    "smoke": "bash scripts/smoke.sh",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
+    "@pocketkey/db": "workspace:*",
+    "@pocketkey/key-provider": "workspace:*",
+    "@pocketkey/types": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.8",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5.20260915.1",
+    "@pocketkey/config": "workspace:*",
+    "@types/node": "^22.18.0",
+    "eslint": "^9.39.0",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.132.0"
+  }
+}

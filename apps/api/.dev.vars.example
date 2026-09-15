@@ -1,0 +1,10 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Production values live in Wrangler secrets (`wrangler secret put NAME`).
+BETTER_AUTH_SECRET=change-me-32-chars-minimum-please
+# TURNKEY_API_PUBLIC_KEY=
+# TURNKEY_API_PRIVATE_KEY=
+# TURNKEY_ORG_ID=
+# RESEND_API_KEY=
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# PIMLICO_API_KEY=
