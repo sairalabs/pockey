@@ -1,7 +1,9 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
+import { hmac } from '@noble/hashes/hmac.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { keccak_256 } from '@noble/hashes/sha3.js';
-import { bytesToHex, randomBytes } from '@noble/hashes/utils.js';
+import { bytesToHex, randomBytes, utf8ToBytes } from '@noble/hashes/utils.js';
 import { base58, base64 } from '@scure/base';
 import type { Curve, SigningPolicy } from '@pocketkey/types';
 import {
@@ -17,12 +19,16 @@ import {
 } from '../index.js';
 
 /**
- * In-memory key provider for tests and local development.
+ * Stand-in for Turnkey in tests and local development.
  *
- * It produces real signatures so chain adapters can be exercised end to end,
- * which means it holds private keys in process memory. That is acceptable only
- * because it never runs in a deployed environment: `apps/api` refuses to
- * instantiate it unless `KEY_PROVIDER=mock`.
+ * It produces real signatures so chain adapters are exercised end to end, which
+ * means private keys exist in process memory. That is acceptable only because it
+ * never runs in production: `apps/api` refuses `KEY_PROVIDER=mock` there.
+ *
+ * Two modes:
+ * - Unseeded (tests): keys are random and live in memory. Unknown ids are `not_found`.
+ * - Seeded (`MOCK_KEY_SEED` in local dev): a key is derived from the seed and the
+ *   wallet id, so wallets stored in D1 keep working after a `wrangler dev` restart.
  */
 
 interface MockWallet {
@@ -35,13 +41,14 @@ interface MockWallet {
 
 interface MockSubOrg {
   subOrgId: string;
-  endUserId: string;
   wallets: Map<string, MockWallet>;
   policies: Map<string, SigningPolicy>;
 }
 
-let counter = 0;
-const nextId = (prefix: string) => `${prefix}_${(++counter).toString(36).padStart(6, '0')}`;
+const SUB_ORG_ID = /^mockorg_[0-9a-f]{16}$/;
+const WALLET_ID = /^mockwlt_(secp256k1|ed25519)_[0-9a-f]{16}$/;
+
+const randomHex = (bytes: number) => bytesToHex(randomBytes(bytes));
 
 function evmAddressFromPublicKey(uncompressed: Uint8Array): string {
   // Drop the 0x04 prefix, keccak the 64 remaining bytes, keep the last 20.
@@ -62,10 +69,29 @@ export function toChecksumAddress(hexNoPrefix: string): string {
   return out;
 }
 
+function buildWallet(walletId: string, curve: Curve, privateKey: Uint8Array): MockWallet {
+  if (curve === 'secp256k1') {
+    const publicKey = secp256k1.getPublicKey(privateKey, false);
+    return { walletId, curve, privateKey, publicKey, address: evmAddressFromPublicKey(publicKey) };
+  }
+  const publicKey = ed25519.getPublicKey(privateKey);
+  return { walletId, curve, privateKey, publicKey, address: base58.encode(publicKey) };
+}
+
+export interface MockKeyProviderOptions {
+  /** Enables deterministic keys that survive restarts. Local development only. */
+  seed?: string;
+}
+
 export class MockKeyProvider implements KeyProvider {
   private readonly subOrgs = new Map<string, MockSubOrg>();
+  private readonly seed: Uint8Array | undefined;
 
-  /** Test helper: number of sub-orgs created so far. */
+  constructor(options: MockKeyProviderOptions = {}) {
+    this.seed = options.seed ? utf8ToBytes(options.seed) : undefined;
+  }
+
+  /** Test helper: number of sub-orgs known in memory. */
   get size(): number {
     return this.subOrgs.size;
   }
@@ -74,49 +100,24 @@ export class MockKeyProvider implements KeyProvider {
     this.subOrgs.clear();
   }
 
-  async createSubOrganization(input: CreateSubOrganizationInput): Promise<{ subOrgId: string }> {
-    const subOrgId = nextId('suborg');
-    this.subOrgs.set(subOrgId, {
-      subOrgId,
-      endUserId: input.endUserId,
-      wallets: new Map(),
-      policies: new Map(),
-    });
+  async createSubOrganization(_input: CreateSubOrganizationInput): Promise<{ subOrgId: string }> {
+    const subOrgId = `mockorg_${randomHex(8)}`;
+    this.subOrgs.set(subOrgId, { subOrgId, wallets: new Map(), policies: new Map() });
     return { subOrgId };
   }
 
   async createWallet(input: CreateWalletInput): Promise<CreateWalletOutput> {
     const subOrg = this.getSubOrg(input.subOrgId);
-    const walletId = nextId('wallet');
-    const privateKey = randomBytes(32);
+    const walletId = `mockwlt_${input.curve}_${randomHex(8)}`;
+    const privateKey = this.seed
+      ? this.derivePrivateKey(walletId, input.curve)
+      : input.curve === 'secp256k1'
+        ? secp256k1.utils.randomSecretKey()
+        : randomBytes(32);
 
-    let wallet: MockWallet;
-    if (input.curve === 'secp256k1') {
-      const publicKey = secp256k1.getPublicKey(privateKey, false);
-      wallet = {
-        walletId,
-        curve: input.curve,
-        privateKey,
-        publicKey,
-        address: evmAddressFromPublicKey(publicKey),
-      };
-    } else {
-      const publicKey = ed25519.getPublicKey(privateKey);
-      wallet = {
-        walletId,
-        curve: input.curve,
-        privateKey,
-        publicKey,
-        address: base58.encode(publicKey),
-      };
-    }
-
+    const wallet = buildWallet(walletId, input.curve, privateKey);
     subOrg.wallets.set(walletId, wallet);
-    return {
-      walletId,
-      address: wallet.address,
-      publicKey: bytesToHex(wallet.publicKey),
-    };
+    return { walletId, address: wallet.address, publicKey: bytesToHex(wallet.publicKey) };
   }
 
   async signRaw(input: SignRawInput): Promise<SignRawOutput> {
@@ -146,7 +147,7 @@ export class MockKeyProvider implements KeyProvider {
 
   async createPolicy(input: CreatePolicyInput): Promise<{ policyId: string }> {
     const subOrg = this.getSubOrg(input.subOrgId);
-    const policyId = nextId('policy');
+    const policyId = `mockpol_${randomHex(8)}`;
     subOrg.policies.set(policyId, input.policy);
     return { policyId };
   }
@@ -160,9 +161,9 @@ export class MockKeyProvider implements KeyProvider {
 
   async exportWallet(input: ExportWalletInput): Promise<{ encryptedBundle: string }> {
     this.getWallet(input.subOrgId, input.walletId);
-    // The real provider encrypts the key material to `targetPublicKey`.
-    // The mock returns an opaque bundle so the export flow can be exercised
-    // without ever exposing bytes that look like a key.
+    // The real provider encrypts key material to `targetPublicKey`. The mock
+    // returns an opaque marker so the export flow can be exercised without ever
+    // emitting bytes that look like a key.
     const bundle = base64.encode(
       new TextEncoder().encode(
         JSON.stringify({ mock: true, walletId: input.walletId, to: input.targetPublicKey }),
@@ -181,19 +182,43 @@ export class MockKeyProvider implements KeyProvider {
     return this.getWallet(subOrgId, walletId).publicKey;
   }
 
+  private derivePrivateKey(walletId: string, curve: Curve): Uint8Array {
+    if (!this.seed) throw new KeyProviderError('Seed required', 'invalid_input');
+    // HMAC-SHA256(seed, walletId || counter). Retry in the negligible case the
+    // digest is not a valid secp256k1 scalar.
+    for (let counter = 0; counter < 16; counter++) {
+      const candidate = hmac(sha256, this.seed, utf8ToBytes(`${walletId}:${counter}`));
+      if (curve === 'ed25519' || secp256k1.utils.isValidSecretKey(candidate)) return candidate;
+    }
+    throw new KeyProviderError('Could not derive a valid key', 'unknown');
+  }
+
   private getSubOrg(subOrgId: string): MockSubOrg {
-    const subOrg = this.subOrgs.get(subOrgId);
-    if (!subOrg) throw new KeyProviderError(`Sub-organization ${subOrgId} not found`, 'not_found');
-    return subOrg;
+    const known = this.subOrgs.get(subOrgId);
+    if (known) return known;
+    if (this.seed && SUB_ORG_ID.test(subOrgId)) {
+      const rehydrated: MockSubOrg = { subOrgId, wallets: new Map(), policies: new Map() };
+      this.subOrgs.set(subOrgId, rehydrated);
+      return rehydrated;
+    }
+    throw new KeyProviderError(`Sub-organization ${subOrgId} not found`, 'not_found');
   }
 
   private getWallet(subOrgId: string, walletId: string): MockWallet {
-    const wallet = this.getSubOrg(subOrgId).wallets.get(walletId);
-    if (!wallet) throw new KeyProviderError(`Wallet ${walletId} not found`, 'not_found');
-    return wallet;
+    const subOrg = this.getSubOrg(subOrgId);
+    const known = subOrg.wallets.get(walletId);
+    if (known) return known;
+    const match = this.seed ? WALLET_ID.exec(walletId) : null;
+    const curve = match?.[1];
+    if (curve === 'secp256k1' || curve === 'ed25519') {
+      const wallet = buildWallet(walletId, curve, this.derivePrivateKey(walletId, curve));
+      subOrg.wallets.set(walletId, wallet);
+      return wallet;
+    }
+    throw new KeyProviderError(`Wallet ${walletId} not found`, 'not_found');
   }
 }
 
-export function createMockKeyProvider(): MockKeyProvider {
-  return new MockKeyProvider();
+export function createMockKeyProvider(options: MockKeyProviderOptions = {}): MockKeyProvider {
+  return new MockKeyProvider(options);
 }

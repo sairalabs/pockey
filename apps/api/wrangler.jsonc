@@ -5,6 +5,8 @@
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // T2.5: usage aggregation. Stripe metering (T5.4) will add a nightly entry.
+  "triggers": { "crons": ["0 * * * *"] },
   "vars": {
     "ENVIRONMENT": "development",
     // `mock` is refused outside development. Production sets `turnkey` (T0.5).

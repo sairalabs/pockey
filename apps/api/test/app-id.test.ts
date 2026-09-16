@@ -47,7 +47,8 @@ describe('requireApp middleware', () => {
     expect(body.appId).toBe(SEED.app.publicId);
     expect(body.name).toBe('Playground');
     expect(body.loginMethods).toContain('email');
-    expect(body.chains.evm).toEqual([8453]);
+    expect(body.chains.evm).toEqual([8453, 84532]);
+    expect(body.chains.solana).toEqual(['devnet']);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
   });
 

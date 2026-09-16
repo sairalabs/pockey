@@ -2,14 +2,17 @@ import { AppConfig, PublicAppConfig, PublicAppId } from '@pocketkey/types';
 import { Hono } from 'hono';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
+import { APP_CACHE_TTL_SECONDS } from '../lib/apps.js';
 import { requireApp } from '../middleware/app.js';
 
 /**
- * `GET /v1/apps/:appId/config` (section 7.2). Public, no user session needed.
- * Edge caching (T1.5) is added later; the shape is final now so the SDK can
- * build against it.
+ * `GET /v1/apps/:appId/config` (section 7.2, T1.5). Public, no user session.
+ * The app row comes from the edge cache in `requireApp`; browsers may keep the
+ * response for 60 seconds. `Vary` keeps the per-origin CORS answer correct.
  */
 export const appRoutes = new Hono<AppEnv>().get('/:appId/config', requireApp, (c) => {
+  c.header('Cache-Control', `public, max-age=${APP_CACHE_TTL_SECONDS}`);
+  c.header('Vary', 'Origin, X-Pocketkey-App-Id');
   const app = c.var.app;
   const requested = c.req.param('appId');
   if (requested !== app.publicId) {

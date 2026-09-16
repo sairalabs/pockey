@@ -1,5 +1,6 @@
 import type { AppRow, Db } from '@pocketkey/db';
 import type { KeyProvider } from '@pocketkey/key-provider';
+import type { Mailer } from '@pocketkey/mailer';
 import type { Env, ParsedEnv } from './env.js';
 
 /** Variables set by middleware and available as `c.get(...)` / `c.var`. */
@@ -8,8 +9,12 @@ export interface Variables {
   db: Db;
   config: ParsedEnv;
   keyProvider: KeyProvider;
+  mailer: Mailer;
   /** Set by `requireApp` on every `/v1/*` route. */
   app: AppRow;
+  /** Set by `requireUser`. */
+  endUserId: string;
+  sessionFamilyId: string;
 }
 
 export interface AppEnv {

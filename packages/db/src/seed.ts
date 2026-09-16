@@ -26,6 +26,12 @@ export const SEED = {
   },
 } as const;
 
+/** The playground exercises the whole SDK, so every login method and a testnet per chain family are on. */
+export const SEED_APP_CONFIG = AppConfig.parse({
+  loginMethods: ['email', 'google', 'apple', 'passkey', 'wallet'],
+  chains: { evm: [8453, 84532], solana: ['devnet'] },
+});
+
 export async function seed(db: Db): Promise<void> {
   await db
     .insert(developers)
@@ -45,7 +51,7 @@ export async function seed(db: Db): Promise<void> {
       name: SEED.app.name,
       slug: SEED.app.slug,
       allowedOrigins: [...SEED.app.allowedOrigins],
-      config: AppConfig.parse({}),
+      config: SEED_APP_CONFIG,
     })
     .onConflictDoNothing();
 

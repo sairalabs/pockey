@@ -6,3 +6,5 @@ dist
 pnpm-lock.yaml
 packages/db/migrations/meta
 .agents
+apps/dashboard/next-env.d.ts
+apps/api/worker-configuration.d.ts

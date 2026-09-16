@@ -1,15 +1,15 @@
-import { apps } from '@pocketkey/db';
 import { PublicAppId } from '@pocketkey/types';
-import { eq } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
+import { loadAppByPublicId } from '../lib/apps.js';
 
 export const APP_ID_HEADER = 'X-Pocketkey-App-Id';
 
 /**
  * Every `/v1/*` route (section 7.2). Resolves the public app id to its row and
- * checks the browser `Origin` against `allowedOrigins` when one is present.
+ * checks the browser `Origin` against the app allowlist plus the embed origin
+ * (the iframe of section 4.1 calls the API from its own origin).
  * Server-to-server calls carry no Origin and are gated by the API key instead.
  */
 export const requireApp = createMiddleware<AppEnv>(async (c, next) => {
@@ -19,15 +19,16 @@ export const requireApp = createMiddleware<AppEnv>(async (c, next) => {
   const parsed = PublicAppId.safeParse(raw);
   if (!parsed.success) throw new ApiError('app_id_invalid', 'Malformed app id');
 
-  const app = await c.var.db.query.apps.findFirst({ where: eq(apps.publicId, parsed.data) });
+  const { app, cache } = await loadAppByPublicId(c.var.db, parsed.data);
   if (!app) throw new ApiError('app_id_invalid', 'Unknown app id');
 
   const origin = c.req.header('Origin');
-  if (origin && !isOriginAllowed(origin, app.allowedOrigins)) {
+  if (origin && !isOriginAllowed(origin, [...app.allowedOrigins, c.var.config.EMBED_ORIGIN])) {
     throw new ApiError('origin_not_allowed', `Origin ${origin} is not allowed for this app`);
   }
 
   c.set('app', app);
+  c.header('X-Pocketkey-App-Cache', cache);
   await next();
 });
 
@@ -39,5 +40,11 @@ export function isOriginAllowed(origin: string, allowed: readonly string[]): boo
   } catch {
     return false;
   }
-  return allowed.includes(normalized);
+  return allowed.some((entry) => {
+    try {
+      return new URL(entry).origin === normalized;
+    } catch {
+      return false;
+    }
+  });
 }

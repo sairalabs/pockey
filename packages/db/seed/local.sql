@@ -3,7 +3,7 @@
 INSERT OR IGNORE INTO developers (id, email, name)
 VALUES ('dev_seed00000000000000000001', 'dev@pocketkey.local', 'Local Developer');
 
-INSERT OR IGNORE INTO apps (id, public_id, developer_id, name, slug, allowed_origins, config)
+INSERT INTO apps (id, public_id, developer_id, name, slug, allowed_origins, config)
 VALUES (
   'app_seed00000000000000000001',
   'pk_app_seed00000000000000000001',
@@ -11,8 +11,9 @@ VALUES (
   'Playground',
   'playground',
   '["http://localhost:3000","http://localhost:3800"]',
-  '{"loginMethods":["email","google","passkey"],"chains":{"evm":[8453],"solana":[]},"appearance":{"theme":"system","accent":"#7c3aed"},"embeddedWallets":{"createOnLogin":"all"},"gasSponsoring":{"evm":false,"solana":false,"solanaDailyCapLamports":"0"}}'
-);
+  '{"loginMethods":["email","google","apple","passkey","wallet"],"chains":{"evm":[8453,84532],"solana":["devnet"]},"appearance":{"theme":"system","accent":"#7c3aed"},"embeddedWallets":{"createOnLogin":"all"},"gasSponsoring":{"evm":false,"solana":false,"solanaDailyCapLamports":"0"}}'
+)
+ON CONFLICT(id) DO UPDATE SET allowed_origins = excluded.allowed_origins, config = excluded.config;
 
 -- sha256('pk_sk_seed00000000000000000001')
 INSERT OR IGNORE INTO api_keys (id, app_id, hash, prefix, name, scopes)

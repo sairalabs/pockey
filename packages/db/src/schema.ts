@@ -84,10 +84,73 @@ export const endUsers = sqliteTable(
       .references(() => apps.id, { onDelete: 'cascade' }),
     /** Sub-organization at the key provider. Null until the first wallet is created. */
     keyProviderSubOrgId: text('key_provider_sub_org_id'),
+    /**
+     * Better Auth user behind email, OAuth and passkey logins. Null for users
+     * who only ever signed in with an external wallet (SIWE / SIWS).
+     */
+    authUserId: text('auth_user_id'),
     createdAt: timestamp('created_at'),
     lastActiveAt: nullableTimestamp('last_active_at'),
   },
-  (t) => [index('end_users_app_idx').on(t.appId)],
+  (t) => [
+    index('end_users_app_idx').on(t.appId),
+    uniqueIndex('end_users_auth_user_idx').on(t.authUserId),
+  ],
+);
+
+/**
+ * Refresh tokens (T1.4). Opaque, stored as SHA-256. Each use rotates the token
+ * inside the same family; presenting an already rotated token revokes the
+ * whole family (reuse detection).
+ */
+export const refreshTokens = sqliteTable(
+  'refresh_tokens',
+  {
+    id: text('id').primaryKey(),
+    endUserId: text('end_user_id')
+      .notNull()
+      .references(() => endUsers.id, { onDelete: 'cascade' }),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    familyId: text('family_id').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    rotatedAt: nullableTimestamp('rotated_at'),
+    revokedAt: nullableTimestamp('revoked_at'),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at'),
+  },
+  (t) => [
+    uniqueIndex('refresh_tokens_hash_idx').on(t.tokenHash),
+    index('refresh_tokens_family_idx').on(t.familyId),
+    index('refresh_tokens_user_idx').on(t.endUserId),
+  ],
+);
+
+/**
+ * Single-use, short-lived values (section 8.1 replay protection).
+ * - `siwe` / `siws`: login nonces, id = the nonce itself (public by design).
+ * - `oauth_state`: maps a provider state to the app that started the flow,
+ *   id = SHA-256 of the state, so the callback can find its tenant.
+ * - `exchange_code`: handed from the OAuth popup to the iframe, id = SHA-256 of
+ *   the code, `subject` = Better Auth user id.
+ * Consumption is a conditional UPDATE on `consumed_at IS NULL`, so it is atomic.
+ */
+export const authChallenges = sqliteTable(
+  'auth_challenges',
+  {
+    id: text('id').primaryKey(),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    purpose: text('purpose', { enum: ['siwe', 'siws', 'oauth_state', 'exchange_code'] }).notNull(),
+    subject: text('subject'),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: nullableTimestamp('consumed_at'),
+    createdAt: timestamp('created_at'),
+  },
+  (t) => [index('auth_challenges_app_idx').on(t.appId)],
 );
 
 export const endUserIdentities = sqliteTable(
@@ -323,6 +386,8 @@ export type AppRow = typeof apps.$inferSelect;
 export type NewAppRow = typeof apps.$inferInsert;
 export type ApiKeyRow = typeof apiKeys.$inferSelect;
 export type EndUserRow = typeof endUsers.$inferSelect;
+export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
+export type AuthChallengeRow = typeof authChallenges.$inferSelect;
 export type IdentityRow = typeof endUserIdentities.$inferSelect;
 export type WalletRow = typeof wallets.$inferSelect;
 export type SessionSignerRow = typeof sessionSigners.$inferSelect;

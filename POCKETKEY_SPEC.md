@@ -372,19 +372,19 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 ### Phase 1 : auth (semaine 2)
 
-- [ ] **T1.1** Better Auth dans `apps/api` : email OTP (Resend), Google, Apple. Multi-tenant par appId.
-- [ ] **T1.2** Passkeys via plugin Better Auth. Test WebAuthn en Miniflare avec mocks.
-- [ ] **T1.3** Login wallet externe : SIWE (EVM) + SIWS (Solana). Routes nonce/verify.
-- [ ] **T1.4** JWT EndUser (access 15 min, refresh 30 j), rotation, révocation.
-- [ ] **T1.5** Route `/v1/apps/:appId/config` publique + cache edge.
+- [x] **T1.1** Better Auth dans `apps/api` : email OTP (Resend), Google, Apple. Multi-tenant par appId.
+- [x] **T1.2** Passkeys via plugin Better Auth. Test WebAuthn en Miniflare avec mocks.
+- [x] **T1.3** Login wallet externe : SIWE (EVM) + SIWS (Solana). Routes nonce/verify.
+- [x] **T1.4** JWT EndUser (access 15 min, refresh 30 j), rotation, révocation.
+- [x] **T1.5** Route `/v1/apps/:appId/config` publique + cache edge.
 
 ### Phase 2 : wallets (semaine 3)
 
-- [ ] **T2.1** `packages/chains-evm` : adapter viem. sign message, typed data, tx. Chains : Base, Arbitrum, Ethereum, Polygon.
-- [ ] **T2.2** `packages/chains-solana` : adapter. sign message, tx, versioned tx.
-- [ ] **T2.3** Service wallets `apps/api` : création à la login (config `createOnLogin`), routes sign-*, send-transaction avec broadcast RPC (Alchemy/Helius, clés par app ou fallback Pocketkey).
-- [ ] **T2.4** Export wallet (section 8.4).
-- [ ] **T2.5** Usage events : émission sur chaque action, table + cron d'agrégation.
+- [x] **T2.1** `packages/chains-evm` : adapter viem. sign message, typed data, tx. Chains : Base, Arbitrum, Ethereum, Polygon.
+- [x] **T2.2** `packages/chains-solana` : adapter. sign message, tx, versioned tx.
+- [x] **T2.3** Service wallets `apps/api` : création à la login (config `createOnLogin`), routes sign-*, send-transaction avec broadcast RPC (Alchemy/Helius, clés par app ou fallback Pocketkey).
+- [x] **T2.4** Export wallet (section 8.4).
+- [x] **T2.5** Usage events : émission sur chaque action, table + cron d'agrégation.
 
 ### Phase 3 : SDK web (semaine 4)
 

@@ -1,10 +1,24 @@
 # Copy to .dev.vars for local development. Never commit .dev.vars.
 # Production values live in Wrangler secrets (`wrangler secret put NAME`).
-BETTER_AUTH_SECRET=change-me-32-chars-minimum-please
+
+# Required. Signs Better Auth cookies and derives the access token key (HKDF).
+BETTER_AUTH_SECRET=replace-with-openssl-rand-hex-32
+# Local only: mock wallets keep their keys across `wrangler dev` restarts.
+MOCK_KEY_SEED=replace-with-openssl-rand-hex-16
+# console prints OTP codes in the wrangler log. Use resend in production.
+MAILER=console
+
+# RESEND_API_KEY=
+# MAIL_FROM=Pocketkey <auth@pocketkey.dev>
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# APPLE_CLIENT_ID=
+# APPLE_CLIENT_SECRET=
+# APPLE_APP_BUNDLE_IDENTIFIER=
+# RPC_URLS={"8453":"https://base-mainnet.g.alchemy.com/v2/KEY","solana:devnet":"https://devnet.helius-rpc.com/?api-key=KEY"}
 # TURNKEY_API_PUBLIC_KEY=
 # TURNKEY_API_PRIVATE_KEY=
 # TURNKEY_ORG_ID=
-# RESEND_API_KEY=
 # STRIPE_SECRET_KEY=
 # STRIPE_WEBHOOK_SECRET=
 # PIMLICO_API_KEY=

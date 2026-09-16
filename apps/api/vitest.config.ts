@@ -12,7 +12,17 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: './wrangler.jsonc' },
         miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            ENVIRONMENT: 'test',
+            MAILER: 'memory',
+            API_BASE_URL: 'http://localhost:8787',
+            EMBED_ORIGIN: 'http://localhost:5174',
+            // Test-only values. Real secrets live in Wrangler secrets.
+            BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-0123',
+            GOOGLE_CLIENT_ID: 'test-google-client-id.apps.googleusercontent.com',
+            GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+          },
         },
       }),
     ],

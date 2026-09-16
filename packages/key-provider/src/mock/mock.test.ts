@@ -124,3 +124,51 @@ describe('MockKeyProvider', () => {
     });
   });
 });
+
+describe('MockKeyProvider seeded mode', () => {
+  it('re-derives the same wallet after a restart', async () => {
+    const before = createMockKeyProvider({ seed: 'local-dev-seed' });
+    const { subOrgId } = await before.createSubOrganization({
+      endUserId: 'usr_test',
+      auth: { type: 'email', email: 'a@b.co' },
+    });
+    const evm = await before.createWallet({ subOrgId, curve: 'secp256k1' });
+    const sol = await before.createWallet({ subOrgId, curve: 'ed25519' });
+    const digest = keccak_256(new TextEncoder().encode('persist'));
+    const sigBefore = await before.signRaw({
+      subOrgId,
+      walletId: evm.walletId,
+      payload: digest,
+      encoding: 'hash',
+    });
+
+    // Simulates `wrangler dev` restarting: new instance, empty memory, same seed.
+    const after = createMockKeyProvider({ seed: 'local-dev-seed' });
+    const sigAfter = await after.signRaw({
+      subOrgId,
+      walletId: evm.walletId,
+      payload: digest,
+      encoding: 'hash',
+    });
+    expect(sigAfter).toEqual(sigBefore);
+    expect(after.publicKeyOf(subOrgId, sol.walletId)).toEqual(
+      before.publicKeyOf(subOrgId, sol.walletId),
+    );
+  });
+
+  it('derives different keys for different seeds and still refuses malformed ids', async () => {
+    const a = createMockKeyProvider({ seed: 'seed-a' });
+    const { subOrgId } = await a.createSubOrganization({
+      endUserId: 'usr_test',
+      auth: { type: 'email', email: 'a@b.co' },
+    });
+    const wallet = await a.createWallet({ subOrgId, curve: 'secp256k1' });
+    const b = createMockKeyProvider({ seed: 'seed-b' });
+    expect(b.publicKeyOf(subOrgId, wallet.walletId)).not.toEqual(
+      a.publicKeyOf(subOrgId, wallet.walletId),
+    );
+    await expect(b.createWallet({ subOrgId: 'nope', curve: 'secp256k1' })).rejects.toMatchObject({
+      code: 'not_found',
+    });
+  });
+});

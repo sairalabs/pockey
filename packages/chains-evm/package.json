@@ -1,0 +1,38 @@
+{
+  "name": "@pocketkey/chains-evm",
+  "version": "0.0.0",
+  "description": "EVM chain adapter for Pocketkey (viem). Signing is delegated, no private key ever lives here.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@pocketkey/types": "workspace:*",
+    "viem": "^2.56.5"
+  },
+  "devDependencies": {
+    "@noble/curves": "^2.4.0",
+    "@pocketkey/config": "workspace:*",
+    "eslint": "^9.39.0",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

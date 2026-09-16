@@ -14,6 +14,7 @@ export const ID_PREFIXES = {
   sessionSigner: 'ses',
   usageEvent: 'evt',
   webhook: 'whk',
+  refreshToken: 'rtk',
 } as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES];

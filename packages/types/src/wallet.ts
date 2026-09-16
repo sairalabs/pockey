@@ -141,3 +141,6 @@ export type ExportWalletOutput = z.infer<typeof ExportWalletOutput>;
 
 /* Solana address helper types re-exported for convenience */
 export { EvmAddress, SolanaAddress };
+
+export const WalletList = z.object({ wallets: z.array(Wallet) });
+export type WalletList = z.infer<typeof WalletList>;

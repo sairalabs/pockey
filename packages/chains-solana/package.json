@@ -1,0 +1,39 @@
+{
+  "name": "@pocketkey/chains-solana",
+  "version": "0.0.0",
+  "description": "Solana chain adapter for Pocketkey (dependency-free wire codec). Signing is delegated, no private key ever lives here.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@pocketkey/types": "workspace:*",
+    "@scure/base": "^2.0.0"
+  },
+  "devDependencies": {
+    "@pocketkey/config": "workspace:*",
+    "@solana/web3.js": "^1.99.0",
+    "eslint": "^9.39.0",
+    "tsup": "^8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

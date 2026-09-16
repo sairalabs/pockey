@@ -7,3 +7,4 @@ export * from './session.js';
 export * from './usage.js';
 export * from './errors.js';
 export * from './embed.js';
+export * from './auth.js';
