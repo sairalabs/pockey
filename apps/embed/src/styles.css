@@ -1,0 +1,228 @@
+@import 'tailwindcss';
+
+/* Tokens live on .pk-theme (not :root) so the preview can render both themes side by side. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-ring: var(--ring);
+  --color-danger: var(--danger);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-hover: var(--accent-hover);
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Component classes sit in a layer so Tailwind utilities can still override them. */
+@layer components {
+  .pk-theme {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-swap: cubic-bezier(0.2, 0, 0, 1);
+
+    --surface: #ffffff;
+    --surface-2: #f5f5f5;
+    --surface-3: #ebebeb;
+    --text: #0a0a0a;
+    --text-2: #525252;
+    --text-3: #a3a3a3;
+    --ring: oklch(0 0 0 / 0.08);
+    --danger: #dc2626;
+    --backdrop: oklch(0 0 0 / 0.4);
+    --image-outline: oklch(0 0 0 / 0.1);
+    --shadow-panel:
+      0px 0px 0px 1px oklch(0 0 0 / 0.06), 0px 1px 2px -1px oklch(0 0 0 / 0.06),
+      0px 2px 4px 0px oklch(0 0 0 / 0.04);
+
+    --accent: #7c3aed;
+    --accent-fg: #ffffff;
+    --accent-hover: color-mix(in oklch, var(--accent) 88%, var(--text));
+
+    --pk-pad: 24px;
+    --pk-max-h: min(640px, calc(100dvh - 32px));
+
+    color-scheme: light;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  .pk-theme[data-theme='dark'] {
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --surface-3: #242424;
+    --text: #fafafa;
+    --text-2: #a3a3a3;
+    --text-3: #525252;
+    --ring: oklch(1 0 0 / 0.08);
+    --danger: #f87171;
+    --backdrop: oklch(0 0 0 / 0.6);
+    --image-outline: oklch(1 0 0 / 0.1);
+    --shadow-panel: 0 0 0 1px oklch(1 0 0 / 0.08);
+    color-scheme: dark;
+  }
+
+  .pk-theme [data-variant='sheet'] {
+    --pk-pad: 20px;
+    --pk-max-h: min(640px, calc(100dvh - 24px));
+  }
+
+  .pk-theme :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .pk-theme [role='dialog']:focus-visible {
+    outline: none;
+  }
+
+  .pk-theme :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Screen layout: header and footer stay, the body scrolls. */
+  .pk-screen {
+    display: flex;
+    flex-direction: column;
+    max-height: var(--pk-max-h);
+    padding: var(--pk-pad);
+  }
+
+  [data-variant='sheet'] .pk-screen {
+    padding-bottom: calc(var(--pk-pad) + env(safe-area-inset-bottom));
+  }
+
+  .pk-screen-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* 20px + 4px padding = 24px under the header; the 4px keeps focus rings unclipped. */
+    margin: 20px calc(-1 * var(--pk-pad)) -4px;
+    padding: 4px var(--pk-pad);
+  }
+
+  /* Press feedback: scale(0.96), 150ms ease-out, transform only. */
+  .pk-press {
+    transition-property: transform;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .pk-press:active:not(:disabled):not([aria-disabled='true']) {
+    transform: scale(0.96);
+  }
+
+  /* Contextual swaps (copy to check, label to spinner): both layers stay in the DOM. */
+  .pk-swap {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .pk-swap > * {
+    grid-area: 1 / 1;
+  }
+
+  .pk-swap-layer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition-property: opacity, transform, filter;
+    transition-duration: 300ms;
+    transition-timing-function: var(--ease-swap);
+  }
+
+  .pk-swap-layer[data-shown='false'] {
+    opacity: 0;
+    transform: scale(0.25);
+    filter: blur(4px);
+    pointer-events: none;
+  }
+
+  /* Inline reveal for the Continue button inside the email field. */
+  .pk-reveal {
+    transition-property: opacity, transform, filter;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .pk-reveal[data-shown='false'] {
+    opacity: 0;
+    transform: scale(0.96);
+    filter: blur(2px);
+    pointer-events: none;
+  }
+
+  /* Hold to reveal: 1.5s linear fill on press, 200ms ease-out snap back on release. */
+  .pk-hold-fill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--danger);
+    color: #ffffff;
+    clip-path: inset(0 100% 0 0);
+    transition-property: clip-path;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .pk-hold[data-holding='true'] .pk-hold-fill {
+    clip-path: inset(0 0 0 0);
+    transition-duration: 1500ms;
+    transition-timing-function: linear;
+  }
+
+  .pk-theme[data-theme='dark'] .pk-hold-fill {
+    color: #0a0a0a;
+  }
+
+  .pk-img-outline {
+    outline: 1px solid var(--image-outline);
+    outline-offset: -1px;
+  }
+
+  .pk-spinner {
+    animation: pk-spin 700ms linear infinite;
+  }
+
+  @keyframes pk-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pk-press:active:not(:disabled):not([aria-disabled='true']) {
+      transform: none;
+    }
+
+    .pk-swap-layer[data-shown='false'],
+    .pk-reveal[data-shown='false'] {
+      transform: none;
+      filter: none;
+    }
+
+    .pk-spinner {
+      animation-duration: 1400ms;
+    }
+  }
+
+  /* Preview gallery stages are fixed size, not the viewport. */
+  .pk-preview-stage [data-variant] {
+    --pk-max-h: 640px;
+  }
+}

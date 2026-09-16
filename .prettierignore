@@ -10,3 +10,5 @@ apps/dashboard/next-env.d.ts
 apps/api/worker-configuration.d.ts
 apps/playground/next-env.d.ts
 apps/playground/.e2e
+apps/playground/test-results
+apps/playground/playwright-report

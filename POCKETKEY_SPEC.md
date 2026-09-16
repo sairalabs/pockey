@@ -388,10 +388,10 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 ### Phase 3 : SDK web (semaine 4)
 
-- [ ] **T3.1** `packages/core` : client HTTP typé, gestion session, auth, wallets. Tests unitaires.
-- [ ] **T3.2** `apps/embed` : iframe UI. Écrans : choix méthode, email OTP, OAuth redirect, passkey, wallet externe, confirmation signature, export. Thémable via config. `postMessage` protocol typé dans `types`.
-- [ ] **T3.3** `packages/react` : Provider, `usePocketkey`, `useWallet`, `useSign`, modal wrapper iframe. EIP-1193 provider. Wallet Standard Solana.
-- [ ] **T3.4** `apps/playground` : app Next.js qui exerce tout le SDK. Sert de test E2E (Playwright).
+- [x] **T3.1** `packages/core` : client HTTP typé, gestion session, auth, wallets. Tests unitaires.
+- [x] **T3.2** `apps/embed` : iframe UI. Écrans : choix méthode, email OTP, OAuth redirect, passkey, wallet externe, confirmation signature, export. Thémable via config. `postMessage` protocol typé dans `types`.
+- [x] **T3.3** `packages/react` : Provider, `usePocketkey`, `useWallet`, `useSign`, modal wrapper iframe. EIP-1193 provider. Wallet Standard Solana.
+- [x] **T3.4** `apps/playground` : app Next.js qui exerce tout le SDK. Sert de test E2E (Playwright).
 
 ### Phase 4 : session signers + gas (semaine 5)
 

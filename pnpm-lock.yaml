@@ -166,12 +166,21 @@ importers:
 
   apps/embed:
     dependencies:
+      '@pocketkey/chains-evm':
+        specifier: workspace:*
+        version: link:../../packages/chains-evm
+      '@pocketkey/chains-solana':
+        specifier: workspace:*
+        version: link:../../packages/chains-solana
       '@pocketkey/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@pocketkey/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@scure/base':
+        specifier: ^2.0.0
+        version: 2.4.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -477,9 +486,6 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       '@wallet-standard/features':
-        specifier: ^1.1.1
-        version: 1.1.1
-      '@wallet-standard/wallet':
         specifier: ^1.1.1
         version: 1.1.1
       zod:
@@ -2965,10 +2971,6 @@ packages:
 
   '@wallet-standard/features@1.1.1':
     resolution: {integrity: sha512-aCWYmVeSCGViyEU5k7GMoW8zxE4Gs+C1s1Pp2XLesvSNlnZ4PMES9HUnTB3hl0b3RVj7C61yze3IWyrncqg4MA==}
-    engines: {node: '>=22'}
-
-  '@wallet-standard/wallet@1.1.1':
-    resolution: {integrity: sha512-8WiRPaKk/wNNRZhB2eVhpR/JW7/aqTCMoZhgVUCujuzDmxxmGvsosMxdCG4NAdYkoyozAHCX8/xLtlWUn5mNdQ==}
     engines: {node: '>=22'}
 
   abitype@1.2.3:
@@ -7041,10 +7043,6 @@ snapshots:
   '@wallet-standard/base@1.1.1': {}
 
   '@wallet-standard/features@1.1.1':
-    dependencies:
-      '@wallet-standard/base': 1.1.1
-
-  '@wallet-standard/wallet@1.1.1':
     dependencies:
       '@wallet-standard/base': 1.1.1
 

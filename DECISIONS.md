@@ -58,3 +58,10 @@ Journal des décisions non couvertes par `POCKETKEY_SPEC.md`. Une entrée = date
   - `useWallet().getEvmProvider()` ajouté : sans lui, impossible d'appeler `eth_requestAccounts` (qui ouvre le login) quand l'utilisateur est déconnecté.
   - Ordre de résolution des chaînes : config hôte, puis config serveur renvoyée par `init`, puis Base 8453 et `mainnet-beta`.
   - Méthodes EIP-1193 non supportées (`eth_sign`, `eth_signTypedData` v1/v3, `wallet_*`) : 4200, jamais relayées au RPC public.
+- **Embed (`apps/embed`)** :
+  - Vite + React 19 + Tailwind 4, `motion` limité aux changements d'écran et à la sortie du dialog, chargé en lazy. JS principal 139 Ko gzip (react-dom, zod via `@pocketkey/types`, motion dominent).
+  - Les surcharges d'apparence de l'hôte ne s'appliquent que pour les clés réellement présentes dans le message (Zod remplit sinon `theme` et `accent` par défaut et écraserait la config serveur).
+  - Les méthodes de login de l'hôte ne peuvent que restreindre celles du serveur ; si l'intersection est vide, la liste serveur est gardée avec un avertissement console.
+  - Mode `?preview=1` : tous les écrans en statique, clair et sombre, variantes d'accent et bottom sheet mobile, pour itérer sur le design sans passer par le SDK.
+  - L'export affiche un avis « simulé » avec le fournisseur de clés mock ; le déchiffrement du bundle Turnkey réel reste à faire avec T0.5.
+- **E2E (T3.4)** : Playwright 1.63 (Chromium déjà en cache) démarre l'API sur wrangler dev (mailer console, code lu dans `.e2e/api.log`), l'embed sur Vite et la playground sur Next. Pas encore dans la CI GitHub : à ajouter avec `playwright install --with-deps` une fois validé sur un runner.
