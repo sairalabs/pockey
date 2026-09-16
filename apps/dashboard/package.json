@@ -1,0 +1,37 @@
+{
+  "name": "@pocketkey/dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3800",
+    "build": "next build",
+    "start": "next start --port 3800",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@base-ui-components/react": "1.0.0-rc.0",
+    "@pocketkey/types": "workspace:*",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.46.0",
+    "motion": "^13.3.0",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@pocketkey/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.18.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.3.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "5.9.3"
+  }
+}

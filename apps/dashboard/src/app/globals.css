@@ -1,0 +1,232 @@
+@import 'tailwindcss';
+
+/*
+  Raw tokens live on :root so a light theme can later be added with a
+  `[data-theme='light']` block that overrides the same variables.
+  Dark is the only theme shipped at MVP (DESIGN.md).
+*/
+:root {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --surface: #0f0f0f;
+  --surface-2: #171717;
+  --surface-3: #212121;
+  --border: oklch(1 0 0 / 0.08);
+  --border-strong: oklch(1 0 0 / 0.13);
+  --text: #ffffff;
+  --text-2: #a1a1a1;
+  --text-3: #6b6b6b;
+  --accent: #0052ff;
+  --danger: #ff4d4f;
+
+  --radius-card: 16px;
+  --radius-dialog: 24px;
+  --radius-pill: 9999px;
+
+  /* better-ui: one white ring in dark mode, layered shadows are invisible on black. */
+  --shadow-border: 0 0 0 1px oklch(1 0 0 / 0.08);
+  --shadow-border-hover: 0 0 0 1px oklch(1 0 0 / 0.13);
+  --image-outline: oklch(1 0 0 / 0.1);
+
+  /* emil-design-eng: custom curves, built-in easings are too weak. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+
+  --radius-card: var(--radius-card);
+  --radius-dialog: var(--radius-dialog);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-border: var(--shadow-border);
+  --shadow-border-hover: var(--shadow-border-hover);
+
+  --ease-out-strong: var(--ease-out-strong);
+  --ease-in-out-strong: var(--ease-in-out-strong);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus ring on the accent for every focusable element. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  img,
+  video {
+    outline: 1px solid var(--image-outline);
+    outline-offset: -1px;
+  }
+
+  ::selection {
+    background: oklch(1 0 0 / 0.2);
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- One-shot page enter stagger (keyframes, runs once per mount) ---------- */
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.stagger > * {
+  animation: enter-up 400ms ease-out both;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 100ms;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 200ms;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 300ms;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 400ms;
+}
+.stagger > :nth-child(6) {
+  animation-delay: 500ms;
+}
+.stagger > :nth-child(7) {
+  animation-delay: 600ms;
+}
+.stagger > :nth-child(n + 8) {
+  animation-delay: 700ms;
+}
+
+/* ---------- Popups (Base UI Popover, Menu, Select) ---------- */
+
+.popup {
+  transform-origin: var(--transform-origin);
+  transition-property: opacity, scale;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-out-strong);
+}
+.popup[data-starting-style],
+.popup[data-ending-style] {
+  opacity: 0;
+  scale: 0.97;
+}
+/* Exits are faster than enters. */
+.popup[data-ending-style] {
+  transition-duration: 120ms;
+}
+/* Keyboard-initiated opens (data-no-motion, ours) and Base UI instant states do not animate. */
+.popup[data-instant],
+.popup[data-no-motion] {
+  transition-duration: 0ms;
+}
+
+/* ---------- Dialog (modal, stays centered: no --transform-origin) ---------- */
+
+.dialog-backdrop {
+  background: oklch(0 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  transition-property: opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+.dialog-backdrop[data-starting-style],
+.dialog-backdrop[data-ending-style] {
+  opacity: 0;
+}
+.dialog-backdrop[data-ending-style] {
+  transition-duration: 150ms;
+}
+
+.dialog-popup {
+  transform-origin: center;
+  transition-property: opacity, scale;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out-strong);
+}
+.dialog-popup[data-starting-style],
+.dialog-popup[data-ending-style] {
+  opacity: 0;
+  scale: 0.97;
+}
+.dialog-popup[data-ending-style] {
+  transition-duration: 150ms;
+}
+.dialog-popup[data-instant],
+.dialog-popup[data-no-motion],
+.dialog-backdrop[data-instant],
+.dialog-backdrop[data-no-motion] {
+  transition-duration: 0ms;
+}
+
+/* ---------- Reduced motion: keep opacity, drop movement ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * {
+    animation: enter-fade 200ms ease-out both;
+    animation-delay: 0ms !important;
+  }
+  .popup,
+  .dialog-popup {
+    transition-property: opacity;
+  }
+  .popup[data-starting-style],
+  .popup[data-ending-style],
+  .dialog-popup[data-starting-style],
+  .dialog-popup[data-ending-style] {
+    scale: 1;
+  }
+}
