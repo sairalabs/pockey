@@ -10,14 +10,18 @@
       "cache": false,
       "persistent": true
     },
+    "cf-typegen": {
+      "inputs": ["wrangler.jsonc"],
+      "outputs": ["worker-configuration.d.ts"]
+    },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "cf-typegen"]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "cf-typegen"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "cf-typegen"]
     }
   }
 }

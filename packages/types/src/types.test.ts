@@ -100,7 +100,12 @@ describe('embed protocol', () => {
       input: { chain: 'evm', message: 'gm' },
     });
     expect(ok.success).toBe(true);
-    expect(HostRequest.safeParse({ source: 'pocketkey', pk: 2, requestId: 'r1', type: 'logout' }).success).toBe(false);
-    expect(HostRequest.safeParse({ source: 'other', pk: 1, requestId: 'r1', type: 'logout' }).success).toBe(false);
+    expect(
+      HostRequest.safeParse({ source: 'pocketkey', pk: 2, requestId: 'r1', type: 'logout' })
+        .success,
+    ).toBe(false);
+    expect(
+      HostRequest.safeParse({ source: 'other', pk: 1, requestId: 'r1', type: 'logout' }).success,
+    ).toBe(false);
   });
 });
