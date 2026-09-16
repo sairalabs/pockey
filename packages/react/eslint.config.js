@@ -1,3 +1,8 @@
 import { base } from '@pocketkey/config/eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
 
-export default [...base, { ignores: ['tsup.config.ts', 'vitest.config.ts', 'eslint.config.js'] }];
+export default [
+  ...base,
+  reactHooks.configs.flat.recommended,
+  { ignores: ['tsup.config.ts', 'vitest.config.ts', 'eslint.config.js', 'test/**'] },
+];

@@ -40,3 +40,21 @@ Journal des décisions non couvertes par `POCKETKEY_SPEC.md`. Une entrée = date
 - **Agrégation d'usage** : cron horaire qui recalcule le mois courant et le précédent (idempotent), sommes de gas en BigInt pour éviter le dépassement 64 bits de SQLite.
 - **Seed Playground** : toutes les méthodes de login, Base + Base Sepolia et Solana devnet.
 - **Bundle Worker** : 4,5 Mio brut, 821 Kio gzip (limite gratuite 3 Mio).
+
+## 2026-09-17
+
+- **Phase 3 découpée en 4 livrables** sur un contrat unique, le protocole `postMessage` v1 de `packages/types/src/embed.ts` : messages tagués `source: 'pocketkey'`, une réponse par `requestId`, payloads de réponse validés par type côté hôte. Les jetons ne traversent jamais la frontière iframe.
+- **`allowedOrigins` exposé dans la config publique** : l'iframe doit vérifier l'origine de sa page parente. Les origines d'une app sont publiques par nature (ce sont ses sites). `frame-ancestors *` côté hébergement, contrôle en JavaScript sur chaque message et côté API sur chaque requête.
+- **`@pocketkey/core`** :
+  - Un refresh refusé (401) vide la session, notifie `null` et remonte `not_authenticated` (code d'origine dans `details.code`). Un second 401 après le retry remonte l'erreur API sans vider la session, pas de boucle.
+  - Avant de rafraîchir, le client relit le stockage : si un autre onglet a déjà fait la rotation, il reprend ces jetons au lieu de rejouer l'ancien refresh (que l'API traiterait comme un vol et révoquerait).
+  - Popup OAuth fermée : rejet `user_rejected` après deux sondages (500 à 1000 ms) pour laisser passer le message envoyé juste avant la fermeture. `access_denied` devient `user_rejected`.
+  - `@simplewebauthn/browser` chargé en import dynamique uniquement : le core reste importable dans Workers et Node, et léger.
+- **Origine de seed** : la playground tourne sur 3810, l'origine `localhost:3000` (port d'une autre app locale) est retirée du seed.
+- **Wallet externe dans l'iframe** : découverte EIP-6963 et Phantom dans le contexte de l'iframe. Les extensions injectent généralement aussi dans les iframes ; si ce n'est pas le cas pour un wallet, la connexion devra passer par la page hôte (post-MVP, avec WalletConnect).
+- **`@pocketkey/react`** :
+  - `treeshake` tsup désactivé : Rollup supprimait la directive `'use client'` nécessaire au App Router. Le code mort reste éliminé par esbuild.
+  - Enregistrement Wallet Standard fait à la main (même handshake d'événements que `registerWallet`) pour pouvoir se désenregistrer au démontage.
+  - `useWallet().getEvmProvider()` ajouté : sans lui, impossible d'appeler `eth_requestAccounts` (qui ouvre le login) quand l'utilisateur est déconnecté.
+  - Ordre de résolution des chaînes : config hôte, puis config serveur renvoyée par `init`, puis Base 8453 et `mainnet-beta`.
+  - Méthodes EIP-1193 non supportées (`eth_sign`, `eth_signTypedData` v1/v3, `wallet_*`) : 4200, jamais relayées au RPC public.
