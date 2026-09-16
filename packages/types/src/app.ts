@@ -93,6 +93,8 @@ export const PublicAppConfig = z.object({
   chains: ChainsConfig,
   appearance: Appearance,
   embeddedWallets: z.object({ createOnLogin: CreateOnLogin }),
+  /** Origins allowed to embed the iframe. Public by nature, the embed checks its parent against it. */
+  allowedOrigins: z.array(z.string()),
 });
 export type PublicAppConfig = z.infer<typeof PublicAppConfig>;
 

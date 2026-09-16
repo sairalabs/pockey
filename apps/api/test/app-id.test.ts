@@ -40,7 +40,7 @@ describe('requireApp middleware', () => {
 
   it('serves the public config to an allowed origin', async () => {
     const res = await request(`/v1/apps/${SEED.app.publicId}/config`, {
-      headers: withApp({ Origin: 'http://localhost:3000' }),
+      headers: withApp({ Origin: 'http://localhost:3810' }),
     });
     expect(res.status).toBe(200);
     const body = PublicAppConfig.parse(await res.json());
@@ -49,7 +49,7 @@ describe('requireApp middleware', () => {
     expect(body.loginMethods).toContain('email');
     expect(body.chains.evm).toEqual([8453, 84532]);
     expect(body.chains.solana).toEqual(['devnet']);
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3810');
   });
 
   it('serves the public config to a server call without Origin', async () => {
@@ -68,7 +68,7 @@ describe('requireApp middleware', () => {
     const res = await request(`/v1/apps/${SEED.app.publicId}/config`, {
       method: 'OPTIONS',
       headers: {
-        Origin: 'http://localhost:3000',
+        Origin: 'http://localhost:3810',
         'Access-Control-Request-Method': 'GET',
         'Access-Control-Request-Headers': 'x-pocketkey-app-id',
       },

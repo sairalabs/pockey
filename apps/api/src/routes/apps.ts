@@ -27,6 +27,7 @@ export const appRoutes = new Hono<AppEnv>().get('/:appId/config', requireApp, (c
     chains: config.chains,
     appearance: config.appearance,
     embeddedWallets: { createOnLogin: config.embeddedWallets.createOnLogin },
+    allowedOrigins: app.allowedOrigins,
   };
   return c.json(PublicAppConfig.parse(body));
 });

@@ -5,7 +5,7 @@ import {
   AppId,
   Duration,
   durationToSeconds,
-  HostToEmbed,
+  HostRequest,
   PublicAppId,
   SecretApiKey,
   SendTransactionInput,
@@ -90,16 +90,17 @@ describe('SendTransactionInput', () => {
 });
 
 describe('embed protocol', () => {
-  it('parses an init message and rejects the wrong version', () => {
-    const ok = HostToEmbed.safeParse({
+  it('parses a tagged request and rejects the wrong version or tag', () => {
+    const ok = HostRequest.safeParse({
+      source: 'pocketkey',
       pk: 1,
       requestId: 'r1',
-      type: 'init',
-      appId: `pk_app_${cuid}`,
-      hostOrigin: 'https://game.example.com',
+      type: 'signMessage',
+      walletId: 'wlt_x',
+      input: { chain: 'evm', message: 'gm' },
     });
     expect(ok.success).toBe(true);
-    const bad = HostToEmbed.safeParse({ pk: 2, requestId: 'r1', type: 'init' });
-    expect(bad.success).toBe(false);
+    expect(HostRequest.safeParse({ source: 'pocketkey', pk: 2, requestId: 'r1', type: 'logout' }).success).toBe(false);
+    expect(HostRequest.safeParse({ source: 'other', pk: 1, requestId: 'r1', type: 'logout' }).success).toBe(false);
   });
 });

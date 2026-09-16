@@ -18,7 +18,7 @@ export const SEED = {
     publicId: 'pk_app_seed00000000000000000001',
     name: 'Playground',
     slug: 'playground',
-    allowedOrigins: ['http://localhost:3000', 'http://localhost:3800'],
+    allowedOrigins: ['http://localhost:3810', 'http://localhost:3800'],
   },
   apiKey: {
     id: 'key_seed00000000000000000001',
