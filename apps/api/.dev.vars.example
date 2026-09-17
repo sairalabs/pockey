@@ -8,6 +8,12 @@ MOCK_KEY_SEED=replace-with-openssl-rand-hex-16
 # console prints OTP codes in the wrangler log. Use resend in production.
 MAILER=console
 
+# Origin of the dashboard (T5.1). Only origin allowed with credentials on /admin/*.
+# DASHBOARD_ORIGIN=http://localhost:3800
+# Dashboard sign-in with GitHub. Callback: <API_BASE_URL>/admin/auth/callback/github.
+# GITHUB_CLIENT_ID=
+# GITHUB_CLIENT_SECRET=
+
 # RESEND_API_KEY=
 # MAIL_FROM=Pocketkey <auth@pocketkey.dev>
 # GOOGLE_CLIENT_ID=
@@ -25,5 +31,14 @@ MAILER=console
 # PRICE_FEED=static
 # STRIPE_SECRET_KEY=
 # STRIPE_WEBHOOK_SECRET=
+# Usage based billing (section 11, T5.4): the metered price and the event_name of
+# the billing meter behind it. Required in production. Without them the billing
+# portal answers 400 and the nightly meter cron reports nothing.
+# STRIPE_ACTIVE_WALLET_PRICE_ID=
+# STRIPE_ACTIVE_WALLET_METER_NAME=active_wallets
 # Without it, EVM sponsored sends answer 400 (Solana sponsoring still works).
 # PIMLICO_API_KEY=
+# Rate limit overrides (T5.5), requests per minute per scope. Defaults live in
+# src/rate-limit/limits.ts: app 600, user 120, authApp 30, authIdentity 5,
+# serverKey 300, sponsoredSend 10. A value of 0 disables that scope.
+# RATE_LIMITS={"authIdentity":10}

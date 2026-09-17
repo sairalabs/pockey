@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { SponsoringView } from '@/components/apps/sponsoring-view';
-import { findApp } from '@/lib/mock-data';
+import { LoginScreen } from '@/components/auth/login-screen';
+import { fetchSponsorBalance, loadApp, tryFetch } from '@/lib/api.server';
 
 export const metadata: Metadata = { title: 'Sponsoring' };
 
 export default async function SponsoringPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const entry = findApp(id);
-  if (!entry) notFound();
-  return <SponsoringView app={entry} />;
+  const app = await loadApp(id);
+  if (!app.ok) return <LoginScreen />;
+
+  const balance = await tryFetch(() => fetchSponsorBalance(id));
+  if (!balance.ok) return <LoginScreen />;
+
+  return <SponsoringView app={app.data} balance={balance.data} />;
 }

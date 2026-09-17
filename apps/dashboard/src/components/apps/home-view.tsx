@@ -1,53 +1,41 @@
 'use client';
 
+import type { AdminApp, AdminUsage, SponsorBalance } from '@pocketkey/types';
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CardRow } from '@/components/ui/card';
+import { rangeOptions, useUsage } from '@/components/apps/use-usage';
+import { countSeries, gasSeries, numbers, sumCounts, sumWei } from '@/components/apps/usage-series';
+import { ButtonLink } from '@/components/ui/button';
+import { Card, CardRow } from '@/components/ui/card';
 import { Kpi } from '@/components/ui/kpi';
 import { PillSelect } from '@/components/ui/pill-select';
-import { Segmented } from '@/components/ui/segmented';
 import { StatCard } from '@/components/ui/stat-card';
-import { formatEth, formatInt, formatUsd } from '@/lib/format';
-import {
-  actions,
-  entryPoints,
-  seriesOf,
-  sponsoring,
-  sumMetrics,
-  usage,
-  type AppSummary,
-  type Platform,
-  type Range,
-} from '@/lib/mock-data';
+import { cn } from '@/lib/cn';
+import { formatCents, formatEth, formatInt } from '@/lib/format';
 
-const rangeOptions = [
-  { value: '7d', label: 'Last week' },
-  { value: '30d', label: 'Last month' },
-] as const;
+const methodLabels: Record<string, string> = {
+  email: 'Email',
+  google: 'Google',
+  apple: 'Apple',
+  passkey: 'Passkey',
+  wallet: 'Wallet',
+};
 
-const platformOptions = [
-  { value: 'web', label: 'Web' },
-  { value: 'reactNative', label: 'React Native' },
-] as const;
+export interface HomeViewProps {
+  app: AdminApp;
+  usage: AdminUsage;
+  sponsor: SponsorBalance;
+}
 
-export function HomeView({ app }: { app: AppSummary }) {
-  const [range, setRange] = useState<Range>('7d');
-  const [platform, setPlatform] = useState<Platform>('web');
+export function HomeView({ app, usage: initial, sponsor }: HomeViewProps) {
+  const { range, setRange, usage, loading, error } = useUsage(app.app.id, initial);
+  const points = usage.points;
 
-  const points = usage[range];
-  const totals = sumMetrics(points, platform);
-  // Balance series: today's balance minus what each day sponsored, walking back.
-  const gasSeries = seriesOf(points, platform, 'gasSponsoredWei');
-  const balanceSeries = gasSeries
-    .slice()
-    .reverse()
-    .reduce<number[]>((acc, gas) => {
-      const previous = acc[acc.length - 1] ?? sponsoring.balanceUsd;
-      acc.push(previous + gas / 1e6 / 1000);
-      return acc;
-    }, [])
-    .reverse();
+  const activeWallets = countSeries(points, 'activeUsers');
+  const txSigned = countSeries(points, 'txSigned');
+  const walletsCreated = countSeries(points, 'walletsCreated');
+  const sessionsSigned = countSeries(points, 'sessionSigned');
+  const gas = gasSeries(points);
+  const loginTotal = usage.loginMethods.reduce((total, entry) => total + entry.users, 0);
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -62,79 +50,91 @@ export function HomeView({ app }: { app: AppSummary }) {
           options={rangeOptions}
           onValueChange={setRange}
         />
-        <Button size="sm" iconEnd={<ChevronRight strokeWidth={2} />}>
-          App rankings
-        </Button>
+        <ButtonLink
+          size="sm"
+          href={`/apps/${app.app.id}/usage`}
+          iconEnd={<ChevronRight strokeWidth={2} />}
+        >
+          Usage details
+        </ButtonLink>
       </div>
+
+      {app.endUserCount === 0 ? (
+        <Card className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Nobody has signed in yet</p>
+            <p className="mt-0.5 text-[13px] text-fg-2">
+              Pass the public app id to the SDK provider, and these numbers start filling in.
+            </p>
+          </div>
+          <ButtonLink size="sm" href={`/apps/${app.app.id}/keys`}>
+            Get the app id
+          </ButtonLink>
+        </Card>
+      ) : null}
 
       <Kpi
         label="Monthly active wallets"
-        value={formatInt(app.mawThisMonth)}
+        value={formatInt(usage.month.activeUsers)}
         info="Distinct wallets that signed at least once this calendar month."
       />
 
-      <Segmented
-        aria-label="Platform"
-        value={platform}
-        options={platformOptions}
-        onValueChange={setPlatform}
-      />
+      {error !== null ? (
+        <p role="alert" className="text-[13px] text-danger">
+          {error}
+        </p>
+      ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div
+        className={cn(
+          'grid gap-4 transition-[opacity] duration-150 ease-out sm:grid-cols-2',
+          loading && 'opacity-60',
+        )}
+      >
         <StatCard
           label="Active wallets"
-          value={formatInt(totals.activeWallets)}
-          series={seriesOf(points, platform, 'activeWallets')}
+          value={formatInt(sumCounts(points, 'activeUsers'))}
+          series={numbers(activeWallets)}
         />
         <StatCard
           label="Transactions signed"
-          value={formatInt(totals.txSigned)}
-          series={seriesOf(points, platform, 'txSigned')}
-        />
-        <StatCard
-          label="Gas sponsored"
-          value={formatEth(totals.gasSponsoredWei)}
-          unit="ETH"
-          series={gasSeries}
-        />
-        <StatCard
-          label="Sponsor balance"
-          value={formatUsd(sponsoring.balanceUsd)}
-          unit="USD"
-          series={balanceSeries}
-        />
-        <StatCard
-          label="Sessions signed"
-          value={formatInt(totals.sessionsSigned)}
-          series={seriesOf(points, platform, 'sessionsSigned')}
+          value={formatInt(sumCounts(points, 'txSigned'))}
+          series={numbers(txSigned)}
         />
         <StatCard
           label="Wallets created"
-          value={formatInt(totals.walletsCreated)}
-          series={seriesOf(points, platform, 'walletsCreated')}
+          value={formatInt(sumCounts(points, 'walletsCreated'))}
+          series={numbers(walletsCreated)}
         />
         <StatCard
-          label="Entry points"
-          value={formatInt(entryPoints[platform].reduce((sum, e) => sum + e.count, 0))}
-        >
+          label="Gas sponsored"
+          value={formatEth(sumWei(points))}
+          unit="ETH"
+          series={numbers(gas)}
+        />
+        <StatCard
+          label="Sessions signed"
+          value={formatInt(sumCounts(points, 'sessionSigned'))}
+          series={numbers(sessionsSigned)}
+        />
+        <StatCard label="Sponsor balance" value={formatCents(sponsor.balanceCents)} unit="USD">
           <div className="flex flex-col gap-1.5">
-            {entryPoints[platform].map((entry) => (
-              <CardRow key={entry.method}>
-                <span className="text-fg-2">{entry.label}</span>
-                <span className="font-medium num">{formatInt(entry.count)}</span>
-              </CardRow>
-            ))}
+            <CardRow>
+              <span className="text-fg-2">End users</span>
+              <span className="font-medium num">{formatInt(app.endUserCount)}</span>
+            </CardRow>
+            <CardRow>
+              <span className="text-fg-2">Active API keys</span>
+              <span className="font-medium num">{formatInt(app.apiKeyCount)}</span>
+            </CardRow>
           </div>
         </StatCard>
-        <StatCard
-          label="Actions"
-          value={formatInt(actions[platform].reduce((sum, a) => sum + a.count, 0))}
-        >
+        <StatCard label="Login methods" value={formatInt(loginTotal)} className="sm:col-span-2">
           <div className="flex flex-col gap-1.5">
-            {actions[platform].map((action) => (
-              <CardRow key={action.label}>
-                <span className="text-fg-2">{action.label}</span>
-                <span className="font-medium num">{formatInt(action.count)}</span>
+            {usage.loginMethods.map((entry) => (
+              <CardRow key={entry.method}>
+                <span className="text-fg-2">{methodLabels[entry.method] ?? entry.method}</span>
+                <span className="font-medium num">{formatInt(entry.users)}</span>
               </CardRow>
             ))}
           </div>

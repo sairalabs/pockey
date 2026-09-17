@@ -37,6 +37,14 @@ export function getPayments(config: ParsedEnv): Payments {
       payments = createStripePayments({
         secretKey: config.STRIPE_SECRET_KEY,
         webhookSecret: config.STRIPE_WEBHOOK_SECRET,
+        // T5.4. Absent outside production: the subscription and meter methods
+        // then refuse, which `services/billing.ts` degrades into a 400.
+        ...(config.STRIPE_ACTIVE_WALLET_PRICE_ID === undefined
+          ? {}
+          : { activeWalletPriceId: config.STRIPE_ACTIVE_WALLET_PRICE_ID }),
+        ...(config.STRIPE_ACTIVE_WALLET_METER_NAME === undefined
+          ? {}
+          : { activeWalletMeterName: config.STRIPE_ACTIVE_WALLET_METER_NAME }),
       });
       break;
   }

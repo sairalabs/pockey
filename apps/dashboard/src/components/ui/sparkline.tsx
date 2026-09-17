@@ -13,7 +13,9 @@ export function Sparkline({ series, className }: SparklineProps) {
   const width = 100;
   const height = 32;
   const pad = 2;
-  const max = Math.max(...series, 1);
+  // Clamping the top to 1 flattens any fractional series (gas in ETH sits well
+  // under 1), so only the baseline is pinned to zero.
+  const max = Math.max(...series, 0);
   const min = Math.min(...series, 0);
   const span = max - min || 1;
   const step = series.length > 1 ? (width - pad * 2) / (series.length - 1) : 0;

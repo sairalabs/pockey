@@ -27,6 +27,29 @@ function defaultMessage(code: ApiErrorCode): string {
   return code.replace(/_/g, ' ');
 }
 
+/** What a 429 says about itself (T5.5). */
+export interface RateLimitDetails {
+  /** Scope of `RATE_LIMIT_DEFAULTS` that refused the request. */
+  scope: string;
+  limit: number;
+  /** End of the current window, ISO 8601. */
+  resetAt: string;
+}
+
+/**
+ * 429 with a `Retry-After` header. A plain `ApiError` carries no header, and a
+ * client needs one to back off instead of hammering the same second.
+ */
+export class RateLimitError extends ApiError {
+  constructor(
+    readonly retryAfterSeconds: number,
+    details: RateLimitDetails,
+  ) {
+    super('rate_limited', `Too many requests, retry in ${retryAfterSeconds} seconds`, details);
+    this.name = 'RateLimitError';
+  }
+}
+
 export function errorBody(
   code: ApiErrorCode,
   message: string,
@@ -43,6 +66,12 @@ export function errorBody(
 export function handleError(err: unknown, c: Context): Response {
   const requestId = c.get('requestId') as string | undefined;
   const rid = requestId ?? crypto.randomUUID();
+
+  if (err instanceof RateLimitError) {
+    return c.json(errorBody(err.code, err.message, rid, err.details), err.status, {
+      'Retry-After': String(err.retryAfterSeconds),
+    });
+  }
 
   if (err instanceof ApiError) {
     return c.json(errorBody(err.code, err.message, rid, err.details), err.status);

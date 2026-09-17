@@ -11,18 +11,17 @@ import {
   WalletId,
 } from '@pocketkey/types';
 import { PaymentsError } from '@pocketkey/payments';
-import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../context.js';
 import { ApiError, errorBody } from '../errors.js';
-import { toBase64Url } from '../lib/crypto.js';
 import { getRpcFactory } from '../lib/rpc.js';
 import { getPayments, sponsorRuntime } from '../lib/sponsor.js';
 import { validate } from '../lib/validate.js';
 import { requireApiKey } from '../middleware/api-key.js';
 import { requireApp } from '../middleware/app.js';
-import { loadEndUser } from '../services/end-users.js';
+import { EndUserListQuery, listEndUsers } from '../services/end-users.js';
 import { signWithSession, type SessionDeps } from '../services/sessions.js';
 import { getBalance } from '../services/sponsoring.js';
 
@@ -34,81 +33,15 @@ const deps = (c: Context<AppEnv>): SessionDeps => ({
   sponsor: sponsorRuntime(c),
 });
 
-/* Opaque cursor: base64url JSON of the last (createdAt ms, id) returned. */
-
-const CursorPayload = z.object({ t: z.number().int().nonnegative(), i: EndUserId });
-type CursorPayload = z.infer<typeof CursorPayload>;
-
-export function encodeCursor(payload: CursorPayload): string {
-  return toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
-}
-
-function decodeCursor(cursor: string): CursorPayload | null {
-  try {
-    const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
-    const binary = atob(base64 + '='.repeat((4 - (base64.length % 4)) % 4));
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    const parsed = CursorPayload.safeParse(JSON.parse(new TextDecoder().decode(bytes)));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-}
-
-export const ServerUsersQuery = z.object({
-  cursor: z
-    .string()
-    .max(200)
-    .optional()
-    .transform((value, ctx) => {
-      if (value === undefined || value === '') return undefined;
-      const decoded = decodeCursor(value);
-      if (!decoded) {
-        ctx.addIssue({ code: 'custom', message: 'Invalid cursor' });
-        return z.NEVER;
-      }
-      return decoded;
-    }),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-});
-
 const SignParams = z.object({ id: EndUserId, wid: WalletId });
-
-// `created_at` comes from `unixepoch('subsec') * 1000`, a REAL: round it so the
-// cursor compares whole milliseconds exactly.
-const createdAtMs = sql<number>`cast(round(${endUsers.createdAt}) as integer)`;
 
 /** Section 7.2 server routes (secret API key). */
 export const serverRoutes = new Hono<AppEnv>()
   .use(requireApp, requireApiKey)
 
-  .get('/users', validate('query', ServerUsersQuery), async (c) => {
-    const { cursor, limit } = c.req.valid('query');
-    const scope = eq(endUsers.appId, c.var.app.id);
-    const where = cursor
-      ? and(
-          scope,
-          or(lt(createdAtMs, cursor.t), and(eq(createdAtMs, cursor.t), lt(endUsers.id, cursor.i))),
-        )
-      : scope;
-
-    const rows = await c.var.db
-      .select({ id: endUsers.id, createdAt: createdAtMs })
-      .from(endUsers)
-      .where(where)
-      .orderBy(desc(createdAtMs), desc(endUsers.id))
-      .limit(limit + 1);
-
-    const page = rows.slice(0, limit);
-    const last = page.at(-1);
-    const nextCursor =
-      rows.length > limit && last
-        ? encodeCursor({ t: last.createdAt, i: last.id as EndUserId })
-        : null;
-
-    const users = [];
-    for (const row of page) users.push(await loadEndUser(c.var.db, c.var.app, row.id));
-    return c.json(ServerUserList.parse({ users, nextCursor }));
+  .get('/users', validate('query', EndUserListQuery), async (c) => {
+    const page = await listEndUsers(c.var.db, c.var.app, c.req.valid('query'));
+    return c.json(ServerUserList.parse(page));
   })
 
   .post('/users/:id/wallets/:wid/sign', validate('json', ServerSignInput), async (c) => {

@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { LoginScreen } from '@/components/auth/login-screen';
 import { AppNav } from '@/components/shell/app-nav';
-import { findApp } from '@/lib/mock-data';
+import { loadApp } from '@/lib/api.server';
 
 export default async function AppDetailLayout({
   children,
@@ -11,12 +11,12 @@ export default async function AppDetailLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const entry = findApp(id);
-  if (!entry) notFound();
+  const loaded = await loadApp(id);
+  if (!loaded.ok) return <LoginScreen />;
 
   return (
     <>
-      <AppNav appId={entry.app.id} />
+      <AppNav appId={loaded.data.app.id} />
       {children}
     </>
   );

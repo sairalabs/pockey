@@ -56,12 +56,106 @@ const COMPLETED_TYPES = new Set([
   'checkout.session.async_payment_succeeded',
 ]);
 
+/** Usage based plan lifecycle (section 11), mapped to `billing.updated`. */
+const SUBSCRIPTION_TYPES = new Set([
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+]);
+
+const INVOICE_TYPES = new Set(['invoice.paid', 'invoice.payment_failed']);
+
+/** A Stripe reference is either an id or, when expanded, the object itself. */
+function referenceId(value: unknown): string | null {
+  if (typeof value === 'string' && value.length > 0) return value;
+  if (isRecord(value) && typeof value.id === 'string' && value.id.length > 0) return value.id;
+  return null;
+}
+
+/**
+ * `invoice.subscription` up to API version 2025-03-31.basil, then
+ * `invoice.parent.subscription_details.subscription`. Both are read.
+ */
+function invoiceSubscriptionId(invoice: Record<string, unknown>): string | null {
+  const direct = referenceId(invoice.subscription);
+  if (direct !== null) return direct;
+  const parent = invoice.parent;
+  if (!isRecord(parent)) return null;
+  const details = parent.subscription_details;
+  if (!isRecord(details)) return null;
+  return referenceId(details.subscription);
+}
+
+function billingUpdated(input: {
+  eventId: string;
+  providerType: string;
+  customerId: string;
+  subscriptionId: string | null;
+  status: string;
+}): PaymentEvent {
+  return {
+    type: 'billing.updated',
+    eventId: input.eventId,
+    customerId: input.customerId,
+    status: input.status,
+    providerType: input.providerType,
+    ...(input.subscriptionId === null ? {} : { subscriptionId: input.subscriptionId }),
+  };
+}
+
+/**
+ * Subscription and invoice events of the usage based plan. Anything without a
+ * customer is ignored rather than rejected: other products can live on the same
+ * Stripe account, and Stripe replays trimmed payloads.
+ */
+function toBillingEvent(
+  event: Record<string, unknown>,
+  eventId: string,
+  providerType: string,
+): PaymentEvent {
+  const ignored: PaymentEvent = { type: 'ignored', eventId, providerType };
+  const object = isRecord(event.data) ? event.data.object : undefined;
+  if (!isRecord(object)) return ignored;
+  const customerId = referenceId(object.customer);
+  if (customerId === null) return ignored;
+  const status = typeof object.status === 'string' && object.status.length > 0 ? object.status : '';
+
+  if (SUBSCRIPTION_TYPES.has(providerType)) {
+    const resolved =
+      status.length > 0
+        ? status
+        : providerType === 'customer.subscription.deleted'
+          ? 'canceled'
+          : '';
+    if (resolved.length === 0) return ignored;
+    return billingUpdated({
+      eventId,
+      providerType,
+      customerId,
+      subscriptionId: referenceId(object.id),
+      status: resolved,
+    });
+  }
+
+  return billingUpdated({
+    eventId,
+    providerType,
+    customerId,
+    subscriptionId: invoiceSubscriptionId(object),
+    status:
+      status.length > 0 ? status : providerType === 'invoice.paid' ? 'paid' : 'payment_failed',
+  });
+}
+
 function toPaymentEvent(event: unknown): PaymentEvent {
   if (!isRecord(event) || typeof event.id !== 'string' || typeof event.type !== 'string') {
     throw invalid('Webhook body is not a Stripe event');
   }
   const eventId = event.id;
   const providerType = event.type;
+  if (SUBSCRIPTION_TYPES.has(providerType) || INVOICE_TYPES.has(providerType)) {
+    return toBillingEvent(event, eventId, providerType);
+  }
   if (!COMPLETED_TYPES.has(providerType)) return { type: 'ignored', eventId, providerType };
 
   const session = isRecord(event.data) ? event.data.object : undefined;

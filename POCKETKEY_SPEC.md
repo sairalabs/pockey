@@ -404,11 +404,11 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 ### Phase 5 : dashboard + billing (semaine 6)
 
-- [ ] **T5.1** `apps/dashboard` : auth dev, CRUD apps, clés API.
-- [ ] **T5.2** Config app avec preview live du modal.
-- [ ] **T5.3** Pages users, usage (graphes), sponsoring.
-- [ ] **T5.4** Stripe : customer, meters, subscription usage-based, portal, webhooks.
-- [ ] **T5.5** Rate limiting par app et par EndUser (Workers KV ou Durable Objects).
+- [x] **T5.1** `apps/dashboard` : auth dev, CRUD apps, clés API.
+- [x] **T5.2** Config app avec preview live du modal.
+- [x] **T5.3** Pages users, usage (graphes), sponsoring.
+- [x] **T5.4** Stripe : customer, meters, subscription usage-based, portal, webhooks.
+- [x] **T5.5** Rate limiting par app et par EndUser (Workers KV ou Durable Objects).
 
 ### Phase 6 : React Native (semaines 7 et 8)
 

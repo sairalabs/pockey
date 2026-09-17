@@ -22,6 +22,13 @@
       "when": 1789611810479,
       "tag": "0002_sponsoring",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789670538160,
+      "tag": "0003_developer_auth",
+      "breakpoints": true
     }
   ]
 }

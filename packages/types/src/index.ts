@@ -10,3 +10,4 @@ export * from './embed.js';
 export * from './auth.js';
 export * from './color.js';
 export * from './sponsoring.js';
+export * from './admin.js';

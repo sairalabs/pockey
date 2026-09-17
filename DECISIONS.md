@@ -113,3 +113,51 @@ Journal des décisions non couvertes par `POCKETKEY_SPEC.md`. Une entrée = date
   - Production exige `PAYMENTS=stripe` et `PRICE_FEED=coingecko` (des prix statiques factureraient faux).
   - Les overrides de gas et de nonce sont ignorés pour les envois EVM sponsorisés ; un envoi sponsorisé sous session avec `broadcast: false` est refusé.
   - Le rate limit par utilisateur final de la section 8.1 reste à faire avec T5.5.
+
+## 2026-09-17 (phase 5)
+
+- **Contrats dashboard** dans `packages/types/src/admin.ts` : session développeur, apps avec usage du mois et solde, clés API (secret montré une seule fois), séries d'usage avec remplissage des jours vides, liste d'utilisateurs paginée, résumé de facturation (500 wallets actifs inclus, 0,06 $ au-delà, section 11).
+- **Facturation Stripe dans `@pocketkey/payments` (T5.4)** :
+  - Clés d'idempotence hachées (`pocketkey-<scope>-<sha256>`) pour qu'aucun identifiant de développeur ou de client ne circule en clair dans un en-tête. Checkout et portail gardent une clé aléatoire (une clé stable rejouerait une URL expirée).
+  - Compatibilité entre versions d'API Stripe : `current_period_end` est lu au niveau de l'abonnement puis de ses items (déplacé dans Basil), et l'abonnement d'une facture est lu aux deux emplacements connus.
+  - Les événements de facturation sans client identifiable sont ignorés plutôt que rejetés : d'autres produits peuvent vivre sur le même compte Stripe.
+  - Les clés de payload des compteurs (`stripe_customer_id`, `value`) sont celles par défaut : un compteur configuré autrement demanderait d'autres noms de champs. À vérifier à la création du compteur.
+  - `estimateMonthlyCents` est la seule source du calcul de prix, partagée par l'API et le dashboard.
+
+## 2026-09-17 (phase 5, API dashboard)
+
+- **Deuxième instance Better Auth pour les developers** (`apps/api/src/auth/developer-auth.ts`, `basePath: /admin/auth`) plutôt qu'un plugin ou une table séparée : les tables `ba_*` sont partagées, les end users portent un `app_id`, les developers `NULL`. Un `developerScopeAdapter` dédié ajoute `appId IS NULL` sur chaque lecture et écrit `null` à la création (l'adapter Drizzle traduit une valeur `null` en `IS NULL`), et préfixe les identifiants de vérification par `developer|`. Symétrique du `scopeAdapter` multi-tenant, mais volontairement séparé : l'un scope à une app, l'autre à « aucune app ».
+- **Cookies réels côté dashboard, pas de pont d'en-tête** : le dashboard proxifie `/admin/*` sous sa propre origine, donc pas de contexte tiers. Préfixe de cookie `pocketkey_dev` (distinct de `pocketkey`) pour qu'un cookie de popup OAuth end user ne masque jamais une session developer sur l'origine de l'API. `SameSite=Lax`, `Secure` seulement si `API_BASE_URL` est en https (sinon le navigateur jette le cookie en développement local).
+- **Session developer de 7 jours** (contre 1 h pour l'instance end user, qui ne sert qu'à faire un pont vers les jetons Pocketkey).
+- **Migration 0003** : `developers.auth_user_id` (unique, nullable). La ligne developer est créée à la première connexion ; si une ligne existe déjà avec le même email et sans `auth_user_id` (seed local, support), elle est rattachée au lieu d'en créer une seconde (l'email est unique). `seed.ts` reste inchangé.
+- **Mois courant recalculé à la volée** pour `/admin/apps`, `/admin/apps/:id/usage` et `/admin/billing` : `usage_monthly` est écrit par le cron horaire et retarde toujours d'une heure. Les mois passés viennent de `usage_monthly`, le mois courant de `usage_events`. Le dashboard et l'estimation de facturation reflètent donc ce qui vient de se passer, et une app sans événement renvoie des zéros.
+- **Conséquence connue** : `user.active` n'est émis qu'une fois par mois et par utilisateur (section 7.6), donc la courbe journalière des utilisateurs actifs ne montre que la première connexion du mois. Changer cela demanderait un événement quotidien, donc plus de lignes : non fait au MVP.
+- **Slugs** : dérivés du nom (minuscules, tirets) avec suffixe numérique `-2`, `-3` si nécessaire ; un slug demandé explicitement et déjà pris renvoie 409 plutôt que d'être renommé en silence.
+- **CORS `/admin/*`** : une seule origine exacte (`DASHBOARD_ORIGIN`, défaut `http://localhost:3800`) avec `credentials: true`. Les routes `/v1/*` gardent le reflet d'origine existant.
+- **`GET /admin/billing/portal`** : le client Stripe et l'abonnement sont T5.4. La route détecte la capacité `createBillingPortalSession` sur le port `Payments` et répond 400 `bad_request` tant qu'il n'y a pas de client Stripe ou que le port ne l'offre pas, au lieu de planter.
+- **Pagination des end users mutualisée** : le curseur opaque et la requête de `/v1/server/users` sont remontés dans `services/end-users.ts` et réutilisés par `/admin/apps/:id/users`, qui ajoute `total`.
+- **Durée des sessions qui autorisent les messages plafonnée à 24 heures** (contre 30 jours pour les sessions transactions seules), vérifiée dans le schéma `SigningPolicy` lui-même, donc appliquée partout : API, SDK et iframe.
+- **Workflow E2E manuel** (`.github/workflows/e2e.yml`, `workflow_dispatch`) : il installe Chromium et lance l'API, l'iframe et la playground. Volontairement hors du CI de push tant qu'il n'a pas tourné plusieurs fois sur un runner.
+- **Dashboard branché sur l'API (T5.1 à T5.3)** :
+  - Le navigateur ne parle qu'à l'origine du dashboard : un route handler Next (`/api/admin/[...path]`) relaie vers l'API et transmet les cookies dans les deux sens. Pas de CORS, pas de cookie tiers, session `pocketkey_dev` de première partie.
+  - Un 401 rend l'écran de connexion à la place de la page, sans redirection.
+  - Les panneaux sans route côté API ont été retirés plutôt que simulés : membres (pas de modèle d'équipe au MVP), suppression de compte, factures, transactions sponsorisées récentes, plafond journalier en dollars, découpage par plateforme.
+  - `appearance.name` et `appearance.logo` deviennent éditables (ce sont de vrais champs de config qui n'avaient pas d'écran) ; le tagline et la description du design d'origine n'existent pas dans le modèle et ont été retirés.
+  - Graphes en SVG inline, une seule couleur de données (l'accent de l'app), contraste validé sur le fond sombre.
+  - Le compteur de wallets actifs porte une note : un wallet est compté une fois par mois calendaire (section 7.6), sinon la courbe quotidienne se lit à tort comme des actifs du jour.
+- **Contrat `AuthProviders`** ajouté : le dashboard devait deviner la disponibilité de GitHub en provoquant un 400. Une route publique dédiée remplacera cette sonde.
+- **À corriger pour GitHub** : le callback OAuth doit pointer vers le proxy du dashboard (`<DASHBOARD_ORIGIN>/api/admin/auth/callback/github`), sinon le cookie d'état posé côté dashboard n'accompagne pas le retour de GitHub vers l'API.
+
+## 2026-09-17 (phase 5, facturation Stripe et rate limiting)
+
+- **`STRIPE_ACTIVE_WALLET_PRICE_ID` et `STRIPE_ACTIVE_WALLET_METER_NAME` optionnels** hors production : sans eux la facturation se dégrade (portail en 400, cron nocturne sans effet) au lieu d'empêcher le Worker de démarrer. La validation d'environnement les exige en production, où `PAYMENTS=stripe` est déjà obligatoire.
+- **Client Stripe créé à la demande, une fois par developer** : `ensureBilling` est appelé par `GET /admin/billing/portal`, pas à l'inscription. L'id client est persisté sur `developers.stripe_customer_id` ; l'id d'abonnement ne l'est pas, parce que `@pocketkey/payments` crée l'abonnement sous une clé d'idempotence dérivée de l'id client, donc redemander renvoie le même abonnement. Aucune migration.
+- **`ensureBilling` prend la configuration d'environnement** en quatrième argument : un seul endroit décide si la facturation est configurée (mock : toujours ; Stripe : seulement avec le price id).
+- **`portalAvailable` est vrai dès que la facturation est configurée**, même sans client Stripe, puisque le client est créé au moment où le developer ouvre le portail.
+- **Metering nocturne à 02h20 UTC** (`20 2 * * *`), sur la veille et l'avant-veille. Stripe déduplique sur l'identifiant `maw:<developerId>:<YYYY-MM-DD>`, donc rejouer une nuit manquée ne facture rien deux fois. Horodatage à midi UTC du jour rapporté, pour que l'événement tombe dans la bonne période de facturation. `scheduled` fait un `switch` sur `controller.cron` et les deux expressions vivent dans `src/cron.ts`.
+- **Rate limiting (T5.5) sur Durable Objects SQLite** plutôt que KV : KV est éventuellement cohérent, un compteur y perd des requêtes. `new_sqlite_classes` garde l'objet disponible sur le plan gratuit. Fenêtre fixe, un objet par clé, alarme de fin de fenêtre qui vide le stockage pour qu'une clé inactive ne coûte rien.
+- **Six portées, défauts dans `src/rate-limit/limits.ts`**, surchargeables par la var `RATE_LIMITS` (JSON, `0` désactive) : app 600/min sur tout `/v1/*`, end user 120/min, app 30/min et identité 5/min sur les routes d'auth coûteuses, clé secrète 300/min sur `/v1/server/*`, envois sponsorisés 10/min par end user (menace « abus gas sponsoring » de la section 8.1).
+- **Jamais de limite sur `/health`, `/webhooks/*` et `/admin/*`** : les deux premiers sont de l'infrastructure, le dashboard est un humain derrière un cookie de session.
+- **Identité hachée** (SHA-256 de `appId|email:...` ou `appId|device:...`) avant de servir de nom d'objet : aucune adresse e-mail ne circule en clair dans une clé.
+- **Compteur injoignable : on laisse passer.** Perdre une limite quelques secondes vaut mieux que perdre l'API.
+- **Aucune limite quand `ENVIRONMENT=test`**, sauf si un test injecte un limiteur (`setRateLimiterForTests`) : sinon le volume de la suite déclencherait des 429.

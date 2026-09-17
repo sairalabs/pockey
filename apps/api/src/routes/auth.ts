@@ -14,7 +14,6 @@ import {
   WalletNonceInput,
   WalletNonceOutput,
   WalletVerifyInput,
-  type ApiErrorCode,
 } from '@pocketkey/types';
 import { eq } from 'drizzle-orm';
 import { Hono, type Context } from 'hono';
@@ -30,8 +29,9 @@ import {
 } from '../auth/cookie-bridge.js';
 import { issueTokens, revokeFamily, rotateRefreshToken } from '../auth/tokens.js';
 import type { AppEnv } from '../context.js';
-import { ApiError, errorBody } from '../errors.js';
+import { ApiError } from '../errors.js';
 import { loadAppByPublicId } from '../lib/apps.js';
+import { normalizeAuthError } from '../lib/auth-error.js';
 import { getRpcFactory } from '../lib/rpc.js';
 import { randomAlphanumeric, randomBytes, sha256Hex, toBase64Url } from '../lib/crypto.js';
 import { validate } from '../lib/validate.js';
@@ -107,41 +107,6 @@ async function completeLogin(
   });
   const user = await loadEndUser(c.var.db, app, resolved.endUserId);
   return AuthResponse.parse({ ...tokens, user, isNewUser: resolved.isNewUser });
-}
-
-/** Better Auth answers `{ code, message }`; the SDK expects our documented shape. */
-async function normalizeAuthError(c: Ctx, response: Response): Promise<Response> {
-  if (response.ok || response.status < 400) return response;
-  let message = response.statusText || 'Authentication failed';
-  let details: unknown;
-  try {
-    const body = await response.clone().json<{ code?: string; message?: string }>();
-    if (body.message) message = body.message;
-    if (body.code) details = { betterAuthCode: body.code };
-  } catch {
-    // Non JSON error body, keep the status text.
-  }
-  const code: ApiErrorCode =
-    response.status === 401
-      ? 'unauthorized'
-      : response.status === 403
-        ? 'forbidden'
-        : response.status === 404
-          ? 'not_found'
-          : response.status === 429
-            ? 'rate_limited'
-            : response.status >= 500
-              ? 'internal'
-              : 'bad_request';
-  const normalized = new Response(
-    JSON.stringify(errorBody(code, message, c.var.requestId, details)),
-    {
-      status: response.status,
-      headers: response.headers,
-    },
-  );
-  normalized.headers.set('Content-Type', 'application/json');
-  return normalized;
 }
 
 function oauthResultPage(embedOrigin: string, payload: { code?: string; error?: string }): string {
@@ -312,7 +277,7 @@ export const authRoutes = new Hono<AppEnv>()
         }),
       }),
     );
-    if (!response.ok) return normalizeAuthError(c, response);
+    if (!response.ok) return normalizeAuthError(c.var.requestId, response);
 
     const { url } = await response.clone().json<{ url: string }>();
     const state = new URL(url).searchParams.get('state');
@@ -354,7 +319,7 @@ export const authRoutes = new Hono<AppEnv>()
     const app = await c.var.db.query.apps.findFirst({ where: eq(apps.id, challenge.appId) });
     if (!app) throw new ApiError('bad_request', 'Unknown or expired OAuth state');
 
-    return normalizeAuthError(c, await authFor(c, app).handler(c.req.raw));
+    return normalizeAuthError(c.var.requestId, await authFor(c, app).handler(c.req.raw));
   })
 
   .get('/oauth/:publicAppId/complete', async (c) => {
@@ -426,7 +391,10 @@ export const authRoutes = new Hono<AppEnv>()
     const response = await auth.handler(forwarded);
 
     if (!response.ok)
-      return normalizeAuthError(c, bridgeResponseCookies(c.req.raw.headers, response));
+      return normalizeAuthError(
+        c.var.requestId,
+        bridgeResponseCookies(c.req.raw.headers, response),
+      );
 
     if (route.signsIn) {
       const session = await auth.api.getSession({

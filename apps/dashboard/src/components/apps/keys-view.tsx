@@ -1,15 +1,25 @@
 'use client';
 
+import type { AdminApp, ApiKeySummary } from '@pocketkey/types';
 import { Plus } from 'lucide-react';
-import { ApiKeysList, useApiKeys } from '@/components/apps/api-keys-manager';
+import { useState } from 'react';
+import { ApiKeysList, NewApiKeyDialog, useApiKeys } from '@/components/apps/api-keys-manager';
 import { PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CopyButton } from '@/components/ui/copy-button';
-import type { AppSummary } from '@/lib/mock-data';
 
-export function KeysView({ app }: { app: AppSummary }) {
-  const { keys, revealed, dismissRevealed, create, revoke } = useApiKeys();
+export interface KeysViewProps {
+  app: AdminApp;
+  initialKeys: readonly ApiKeySummary[];
+}
+
+export function KeysView({ app, initialKeys }: KeysViewProps) {
+  const { keys, revealed, pending, error, create, revoke, dismissRevealed } = useApiKeys(
+    app.app.id,
+    initialKeys,
+  );
+  const [creating, setCreating] = useState(false);
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -17,7 +27,13 @@ export function KeysView({ app }: { app: AppSummary }) {
         title="API keys"
         description="The public id ships in your client bundle. Secret keys stay on your server."
         actions={
-          <Button variant="primary" iconStart={<Plus strokeWidth={2} />} onClick={create}>
+          <Button
+            variant="primary"
+            iconStart={<Plus strokeWidth={2} />}
+            onClick={() => {
+              setCreating(true);
+            }}
+          >
             Create key
           </Button>
         }
@@ -36,16 +52,23 @@ export function KeysView({ app }: { app: AppSummary }) {
           </span>
           <CopyButton value={app.app.publicId} label="Copy public app id" />
         </div>
-        <ul className="flex flex-wrap gap-1.5">
-          {app.app.allowedOrigins.map((origin) => (
-            <li
-              key={origin}
-              className="rounded-pill bg-surface-2 px-2.5 py-1 tabular-nums text-[12px] text-fg-2 shadow-border"
-            >
-              {origin}
-            </li>
-          ))}
-        </ul>
+        {app.app.allowedOrigins.length === 0 ? (
+          <p className="text-[13px] text-fg-3">
+            No allowed origin yet. Add one in Settings, App information, or the SDK is refused on
+            every site.
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-1.5">
+            {app.app.allowedOrigins.map((origin) => (
+              <li
+                key={origin}
+                className="rounded-pill bg-surface-2 px-2.5 py-1 tabular-nums text-[12px] text-fg-2 shadow-border"
+              >
+                {origin}
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       <Card>
@@ -57,10 +80,19 @@ export function KeysView({ app }: { app: AppSummary }) {
         <ApiKeysList
           keys={keys}
           revealed={revealed}
+          pending={pending}
+          error={error}
           onDismissRevealed={dismissRevealed}
           onRevoke={revoke}
         />
       </Card>
+
+      <NewApiKeyDialog
+        open={creating}
+        onOpenChange={setCreating}
+        pending={pending}
+        onCreate={create}
+      />
     </div>
   );
 }

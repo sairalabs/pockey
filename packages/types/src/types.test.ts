@@ -109,3 +109,17 @@ describe('embed protocol', () => {
     ).toBe(false);
   });
 });
+
+describe('SigningPolicy message sessions', () => {
+  it('caps sessions that allow messages at 24 hours', () => {
+    const base = { chain: 'evm', expiresIn: '7d' } as const;
+    expect(SigningPolicy.safeParse(base).success).toBe(true);
+    expect(SigningPolicy.safeParse({ ...base, allowMessages: true }).success).toBe(false);
+    expect(
+      SigningPolicy.safeParse({ chain: 'evm', expiresIn: '24h', allowMessages: true }).success,
+    ).toBe(true);
+    expect(
+      SigningPolicy.safeParse({ chain: 'evm', expiresIn: '25h', allowMessages: true }).success,
+    ).toBe(false);
+  });
+});

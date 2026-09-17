@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { KeysView } from '@/components/apps/keys-view';
-import { findApp } from '@/lib/mock-data';
+import { LoginScreen } from '@/components/auth/login-screen';
+import { fetchApiKeys, loadApp, tryFetch } from '@/lib/api.server';
 
 export const metadata: Metadata = { title: 'API keys' };
 
 export default async function KeysPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const entry = findApp(id);
-  if (!entry) notFound();
-  return <KeysView app={entry} />;
+  const app = await loadApp(id);
+  if (!app.ok) return <LoginScreen />;
+
+  const keys = await tryFetch(() => fetchApiKeys(id));
+  if (!keys.ok) return <LoginScreen />;
+
+  return <KeysView app={app.data} initialKeys={keys.data.keys} />;
 }

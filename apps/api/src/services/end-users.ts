@@ -10,9 +10,11 @@ import {
   type AppRow,
   type Db,
 } from '@pocketkey/db';
-import { EndUser, type ChainFamily, type IdentityType } from '@pocketkey/types';
-import { and, eq } from 'drizzle-orm';
+import { EndUser, EndUserId, type ChainFamily, type IdentityType } from '@pocketkey/types';
+import { and, count, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { ApiError } from '../errors.js';
+import { toBase64Url } from '../lib/crypto.js';
 
 /**
  * Maps authentication results to Pocketkey end users (section 4.2).
@@ -213,4 +215,89 @@ export async function loadEndUser(db: Db, app: AppRow, endUserId: string): Promi
     createdAt: user.createdAt.toISOString(),
     lastActiveAt: user.lastActiveAt?.toISOString() ?? null,
   });
+}
+
+/* Cursor pagination, shared by `/v1/server/users` and `/admin/apps/:id/users`. */
+
+/** Opaque cursor: base64url JSON of the last (createdAt ms, id) returned. */
+const CursorPayload = z.object({ t: z.number().int().nonnegative(), i: EndUserId });
+type CursorPayload = z.infer<typeof CursorPayload>;
+
+export function encodeCursor(payload: CursorPayload): string {
+  return toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+}
+
+function decodeCursor(cursor: string): CursorPayload | null {
+  try {
+    const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64 + '='.repeat((4 - (base64.length % 4)) % 4));
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    const parsed = CursorPayload.safeParse(JSON.parse(new TextDecoder().decode(bytes)));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Query of both listing routes. An unreadable cursor is a validation error. */
+export const EndUserListQuery = z.object({
+  cursor: z
+    .string()
+    .max(200)
+    .optional()
+    .transform((value, ctx) => {
+      if (value === undefined || value === '') return undefined;
+      const decoded = decodeCursor(value);
+      if (!decoded) {
+        ctx.addIssue({ code: 'custom', message: 'Invalid cursor' });
+        return z.NEVER;
+      }
+      return decoded;
+    }),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+export type EndUserListQuery = z.infer<typeof EndUserListQuery>;
+
+// `created_at` comes from `unixepoch('subsec') * 1000`, a REAL: round it so the
+// cursor compares whole milliseconds exactly.
+const createdAtMs = sql<number>`cast(round(${endUsers.createdAt}) as integer)`;
+
+/** One page of end users, newest first. */
+export async function listEndUsers(
+  db: Db,
+  app: AppRow,
+  query: EndUserListQuery,
+): Promise<{ users: EndUser[]; nextCursor: string | null }> {
+  const { cursor, limit } = query;
+  const scope = eq(endUsers.appId, app.id);
+  const where = cursor
+    ? and(
+        scope,
+        or(lt(createdAtMs, cursor.t), and(eq(createdAtMs, cursor.t), lt(endUsers.id, cursor.i))),
+      )
+    : scope;
+
+  const rows = await db
+    .select({ id: endUsers.id, createdAt: createdAtMs })
+    .from(endUsers)
+    .where(where)
+    .orderBy(desc(createdAtMs), desc(endUsers.id))
+    .limit(limit + 1);
+
+  const page = rows.slice(0, limit);
+  const last = page.at(-1);
+  const nextCursor =
+    rows.length > limit && last
+      ? encodeCursor({ t: last.createdAt, i: last.id as EndUserId })
+      : null;
+
+  const users: EndUser[] = [];
+  for (const row of page) users.push(await loadEndUser(db, app, row.id));
+  return { users, nextCursor };
+}
+
+/** Total end users of an app, for the dashboard list header. */
+export async function countEndUsers(db: Db, appId: string): Promise<number> {
+  const [row] = await db.select({ total: count() }).from(endUsers).where(eq(endUsers.appId, appId));
+  return row?.total ?? 0;
 }

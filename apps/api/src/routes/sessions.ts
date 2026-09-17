@@ -14,6 +14,7 @@ import { getRpcFactory } from '../lib/rpc.js';
 import { sponsorRuntime } from '../lib/sponsor.js';
 import { validate } from '../lib/validate.js';
 import { requireApp } from '../middleware/app.js';
+import { enforceRateLimit } from '../middleware/rate-limit.js';
 import { requireUser } from '../middleware/user.js';
 import {
   createSession,
@@ -61,8 +62,14 @@ export const sessionRoutes = new Hono<AppEnv>()
   })
 
   .post('/:id/sign', validate('json', SessionSignRequest), async (c) => {
+    const request = c.req.valid('json');
+    // Same cap as an interactive send (section 8.1): a session signer must not
+    // be a way around the sponsored send limit.
+    if (request.kind === 'transaction' && request.sponsored) {
+      await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
+    }
     const d = deps(c);
     const session = await loadUserSession(d, c.var.endUserId, sessionIdParam(c));
-    const out = await signWithSession(d, session, c.req.valid('json'), { via: 'user' });
+    const out = await signWithSession(d, session, request, { via: 'user' });
     return c.json(SessionSignOutput.parse(out));
   });

@@ -28,10 +28,18 @@ export const developers = sqliteTable(
     id: text('id').primaryKey(),
     email: text('email').notNull(),
     name: text('name'),
+    /**
+     * Better Auth user behind the dashboard login (T5.1). Null until the first
+     * sign-in, so rows created by the seed or by support stay valid.
+     */
+    authUserId: text('auth_user_id'),
     stripeCustomerId: text('stripe_customer_id'),
     createdAt: timestamp('created_at'),
   },
-  (t) => [uniqueIndex('developers_email_idx').on(t.email)],
+  (t) => [
+    uniqueIndex('developers_email_idx').on(t.email),
+    uniqueIndex('developers_auth_user_idx').on(t.authUserId),
+  ],
 );
 
 export const apps = sqliteTable(
@@ -432,7 +440,8 @@ export const authSchema = {
   passkey: baPasskey,
 };
 
-export type Developer = typeof developers.$inferSelect;
+export type DeveloperRow = typeof developers.$inferSelect;
+export type Developer = DeveloperRow;
 export type AppRow = typeof apps.$inferSelect;
 export type NewAppRow = typeof apps.$inferInsert;
 export type ApiKeyRow = typeof apiKeys.$inferSelect;

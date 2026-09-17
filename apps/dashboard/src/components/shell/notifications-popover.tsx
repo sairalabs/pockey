@@ -6,7 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Popover } from '@/components/ui/popover';
 import { Tab, TabPanel, Tabs, TabsList } from '@/components/ui/tabs';
-import { notifications } from '@/lib/mock-data';
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  completed: boolean;
+}
+
+/**
+ * The admin API exposes no notification feed, so the list stays empty and the
+ * popover shows the "all caught up" state it was designed around.
+ */
+const notifications: readonly Notification[] = [];
 
 export function NotificationsPopover({
   trigger,

@@ -1,19 +1,21 @@
 'use client';
 
+import type { AdminApp } from '@pocketkey/types';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/avatar';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@/components/ui/menu';
-import { apps, type AppSummary } from '@/lib/mock-data';
 
 export interface AppSwitcherProps {
-  current: AppSummary;
+  apps: readonly AdminApp[];
+  current: AdminApp | null;
   onCreateApp: () => void;
 }
 
 /** 20px square app icon + name + up/down chevrons, opens the app list. */
-export function AppSwitcher({ current, onCreateApp }: AppSwitcherProps) {
+export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
   const router = useRouter();
+  const label = current?.app.name ?? 'No app yet';
 
   return (
     <Menu
@@ -21,23 +23,23 @@ export function AppSwitcher({ current, onCreateApp }: AppSwitcherProps) {
       trigger={
         <button
           type="button"
-          aria-label={`Switch app, current: ${current.app.name}`}
+          aria-label={`Switch app, current: ${label}`}
           className="flex h-9 items-center gap-2 rounded-[10px] ps-1.5 pe-2 text-sm font-medium text-fg transition-[background-color,transform] duration-150 ease-out hover:bg-surface-2 active:scale-[0.96] data-popup-open:bg-surface-2"
         >
           <Avatar
-            seed={current.app.id}
+            seed={current?.app.id ?? 'pocketkey'}
             size={20}
             shape="square"
-            initial={current.app.name.charAt(0)}
+            initial={label.charAt(0)}
           />
-          <span className="max-w-40 truncate">{current.app.name}</span>
+          <span className="max-w-40 truncate">{label}</span>
           <ChevronsUpDown className="size-4 text-fg-2" strokeWidth={2} />
         </button>
       }
     >
-      <MenuLabel>Apps</MenuLabel>
+      {apps.length > 0 ? <MenuLabel>Apps</MenuLabel> : null}
       {apps.map((entry) => {
-        const selected = entry.app.id === current.app.id;
+        const selected = entry.app.id === current?.app.id;
         return (
           <MenuItem
             key={entry.app.id}
@@ -61,7 +63,7 @@ export function AppSwitcher({ current, onCreateApp }: AppSwitcherProps) {
           </MenuItem>
         );
       })}
-      <MenuSeparator />
+      {apps.length > 0 ? <MenuSeparator /> : null}
       <MenuItem icon={<Plus strokeWidth={1.5} />} onClick={onCreateApp}>
         Create app
       </MenuItem>

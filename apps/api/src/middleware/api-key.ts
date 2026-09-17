@@ -4,6 +4,7 @@ import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
+import { enforceRateLimit } from './rate-limit.js';
 
 /** `last_used_at` is written at most once per this interval per key. */
 const LAST_USED_RESOLUTION_MS = 60_000;
@@ -50,5 +51,8 @@ export const requireApiKey = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   c.set('apiKeyId', key.id);
+  // T5.5, section 8.1: a stolen secret key is capped per key, not per app, so
+  // revoking it is enough and the other keys of the app keep their budget.
+  await enforceRateLimit(c, 'serverKey', key.id);
   await next();
 });

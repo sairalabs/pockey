@@ -21,6 +21,7 @@ import { getRpcFactory } from '../lib/rpc.js';
 import { sponsorRuntime } from '../lib/sponsor.js';
 import { validate } from '../lib/validate.js';
 import { requireApp } from '../middleware/app.js';
+import { enforceRateLimit } from '../middleware/rate-limit.js';
 import { requireUser } from '../middleware/user.js';
 import {
   createWallet,
@@ -85,12 +86,11 @@ export const walletRoutes = new Hono<AppEnv>()
   })
 
   .post('/:id/send-transaction', validate('json', SendTransactionInput), async (c) => {
-    const out = await sendTransaction(
-      deps(c),
-      c.var.endUserId,
-      c.req.param('id'),
-      c.req.valid('json'),
-    );
+    const input = c.req.valid('json');
+    // Section 8.1: gas sponsoring abuse is capped per end user, before anything
+    // reads a balance or talks to a bundler.
+    if (input.sponsored) await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
+    const out = await sendTransaction(deps(c), c.var.endUserId, c.req.param('id'), input);
     return c.json(SendTransactionOutput.parse(out));
   })
 

@@ -1,45 +1,76 @@
 'use client';
 
-import { CreateAppInput } from '@pocketkey/types';
+import { CreateAppInput, type AdminApp } from '@pocketkey/types';
+import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Field, Input, Textarea } from '@/components/ui/input';
+import { ApiError, createApp, errorMessage } from '@/lib/api';
 
 export interface NewAppDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called with the validated input. Client state only for now. */
-  onCreate?: (input: CreateAppInput) => void;
+  /** Called with the created app, before the dashboard navigates to it. */
+  onCreated?: (app: AdminApp) => void;
 }
 
-export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps) {
+export function NewAppDialog({ open, onOpenChange, onCreated }: NewAppDialogProps) {
   const id = useId();
+  const router = useRouter();
   const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
   const [origins, setOrigins] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   const reset = () => {
     setName('');
+    setSlug('');
     setOrigins('');
     setError(null);
+    setSlugError(null);
   };
 
-  const submit = () => {
+  const submit = async () => {
     const allowedOrigins = origins
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
-    const parsed = CreateAppInput.safeParse({ name: name.trim(), allowedOrigins });
+    const trimmedSlug = slug.trim();
+    const parsed = CreateAppInput.safeParse({
+      name: name.trim(),
+      allowedOrigins,
+      ...(trimmedSlug.length > 0 ? { slug: trimmedSlug } : {}),
+    });
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
-      setError(issue ? `${issue.path.join('.') || 'input'}: ${issue.message}` : 'Invalid input');
+      const path = issue ? issue.path.join('.') : '';
+      if (path === 'slug') setSlugError(issue?.message ?? 'Invalid slug');
+      else if (issue) setError(`${path === '' ? 'input' : path}: ${issue.message}`);
+      else setError('Invalid input');
       return;
     }
-    // TODO(T5.1): POST /admin/apps and navigate to the created app.
-    onCreate?.(parsed.data);
-    reset();
-    onOpenChange(false);
+
+    setPending(true);
+    setError(null);
+    setSlugError(null);
+    try {
+      const created = await createApp(parsed.data);
+      reset();
+      onOpenChange(false);
+      onCreated?.(created);
+      router.push(`/apps/${created.app.id}`);
+      router.refresh();
+    } catch (cause) {
+      // A slug already used by another app of this developer is a 409, and it
+      // is the one error that belongs next to the field.
+      if (cause instanceof ApiError && cause.code === 'conflict') setSlugError(cause.message);
+      else setError(errorMessage(cause, 'Could not create the app'));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -56,7 +87,7 @@ export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps
         className="flex flex-col gap-5"
         onSubmit={(event) => {
           event.preventDefault();
-          submit();
+          void submit();
         }}
       >
         <Field label="Name" htmlFor={`${id}-name`} counter={{ value: name.length, max: 60 }}>
@@ -72,6 +103,30 @@ export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps
           />
         </Field>
         <Field
+          label="Slug"
+          htmlFor={`${id}-slug`}
+          hint="Optional. Lowercase letters, digits and hyphens. Derived from the name when empty."
+        >
+          <Input
+            id={`${id}-slug`}
+            value={slug}
+            spellCheck={false}
+            aria-invalid={slugError !== null || undefined}
+            className={slugError === null ? 'num' : 'num border-danger'}
+            onChange={(event) => {
+              setSlug(event.target.value);
+              setSlugError(null);
+            }}
+            placeholder="my-app"
+            maxLength={40}
+          />
+        </Field>
+        {slugError !== null ? (
+          <p role="alert" className="-mt-3 text-[13px] text-danger">
+            {slugError}
+          </p>
+        ) : null}
+        <Field
           label="Allowed origins"
           htmlFor={`${id}-origins`}
           hint="One origin per line, scheme and host only. Wildcards are refused."
@@ -86,7 +141,7 @@ export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps
             className="tabular-nums text-[13px]"
           />
         </Field>
-        {error ? (
+        {error !== null ? (
           <p role="alert" className="text-[13px] text-danger">
             {error}
           </p>
@@ -94,14 +149,15 @@ export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps
         <div className="flex justify-end gap-2">
           <Button
             variant="ghost"
+            disabled={pending}
             onClick={() => {
               onOpenChange(false);
             }}
           >
             Cancel
           </Button>
-          <Button variant="primary" type="submit" disabled={name.trim().length === 0}>
-            Create app
+          <Button variant="primary" type="submit" disabled={pending || name.trim().length === 0}>
+            {pending ? 'Creating' : 'Create app'}
           </Button>
         </div>
       </form>

@@ -1,5 +1,6 @@
 'use client';
 
+import type { AdminApp, Developer } from '@pocketkey/types';
 import { Inbox, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -10,19 +11,22 @@ import { NotificationsPopover } from '@/components/shell/notifications-popover';
 import { SettingsDialog } from '@/components/shell/settings/settings-dialog';
 import type { SettingsSectionId } from '@/components/shell/settings/sections';
 import { IconButton } from '@/components/ui/icon-button';
-import { apps, findApp, type AppSummary } from '@/lib/mock-data';
 
-function useCurrentApp(): AppSummary {
-  const pathname = usePathname();
-  const match = /^\/apps\/([^/]+)/.exec(pathname);
-  const fromPath = match?.[1] ? findApp(match[1]) : undefined;
-  const fallback = apps[0];
-  if (!fallback) throw new Error('Mock data needs at least one app');
-  return fromPath ?? fallback;
+export interface TopBarProps {
+  developer: Developer;
+  apps: readonly AdminApp[];
 }
 
-export function TopBar() {
-  const current = useCurrentApp();
+/** The app in the URL, or the first one. Null while the developer has none. */
+function useCurrentApp(apps: readonly AdminApp[]): AdminApp | null {
+  const pathname = usePathname();
+  const match = /^\/apps\/([^/]+)/.exec(pathname);
+  const id = match?.[1];
+  return apps.find((entry) => entry.app.id === id) ?? apps[0] ?? null;
+}
+
+export function TopBar({ developer, apps }: TopBarProps) {
+  const current = useCurrentApp(apps);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [section, setSection] = useState<SettingsSectionId>('app-information');
   const [newAppOpen, setNewAppOpen] = useState(false);
@@ -35,6 +39,7 @@ export function TopBar() {
   return (
     <header className="flex h-14 items-center justify-between px-6">
       <AppSwitcher
+        apps={apps}
         current={current}
         onCreateApp={() => {
           setNewAppOpen(true);
@@ -52,12 +57,13 @@ export function TopBar() {
         <IconButton
           aria-label="Settings"
           onClick={() => {
-            openSettings('app-information');
+            openSettings(current ? 'app-information' : 'account-information');
           }}
         >
           <Settings strokeWidth={1.5} />
         </IconButton>
         <AccountMenu
+          developer={developer}
           onManageAccount={() => {
             openSettings('account-information');
           }}
@@ -69,6 +75,7 @@ export function TopBar() {
         onOpenChange={setSettingsOpen}
         section={section}
         onSectionChange={setSection}
+        developer={developer}
         app={current}
       />
       <NewAppDialog open={newAppOpen} onOpenChange={setNewAppOpen} />

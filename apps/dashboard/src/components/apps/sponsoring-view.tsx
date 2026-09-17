@@ -1,25 +1,60 @@
 'use client';
 
-import { Fuel } from 'lucide-react';
+import type { AdminApp, SponsorBalance } from '@pocketkey/types';
+import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { TopUpDialog } from '@/components/apps/top-up-dialog';
 import { PageHeader } from '@/components/shell/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input } from '@/components/ui/input';
 import { SwitchRow } from '@/components/ui/switch';
-import { Table, Td, Th } from '@/components/ui/table';
-import { formatDate, formatEth, formatRelative, formatUsd, truncateMiddle } from '@/lib/format';
-import { sponsoredTxs, sponsoring, type AppSummary } from '@/lib/mock-data';
+import { errorMessage, updateApp } from '@/lib/api';
+import { formatCents, formatEth, formatInt, formatSol } from '@/lib/format';
 
-export function SponsoringView({ app }: { app: AppSummary }) {
+export interface SponsoringViewProps {
+  app: AdminApp;
+  balance: SponsorBalance;
+}
+
+export function SponsoringView({ app, balance }: SponsoringViewProps) {
   const id = useId();
-  const [balance, setBalance] = useState(sponsoring.balanceUsd);
-  const [dailyCap, setDailyCap] = useState(String(sponsoring.dailyCapUsd));
-  const [perUserCap, setPerUserCap] = useState(String(sponsoring.perUserDailyCapUsd));
-  const [evm, setEvm] = useState(app.app.config.gasSponsoring.evm);
-  const [solana, setSolana] = useState(app.app.config.gasSponsoring.solana);
-  const enabled = evm || solana;
+  const router = useRouter();
+  const sponsoring = app.app.config.gasSponsoring;
+  const [evm, setEvm] = useState(sponsoring.evm);
+  const [solana, setSolana] = useState(sponsoring.solana);
+  const [cap, setCap] = useState(sponsoring.solanaDailyCapLamports);
+  const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toppingUp, setToppingUp] = useState(false);
+
+  const capValid = /^\d+$/.test(cap.trim());
+  const spentToday = Number(balance.solanaSpentTodayLamports);
+  const capToday = Number(balance.solanaDailyCapLamports);
+
+  const save = async () => {
+    if (!capValid) {
+      setError('The Solana daily cap is a whole number of lamports.');
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      await updateApp(app.app.id, {
+        config: { gasSponsoring: { evm, solana, solanaDailyCapLamports: cap.trim() } },
+      });
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+      }, 1500);
+      router.refresh();
+    } catch (cause) {
+      setError(errorMessage(cause, 'Could not save the sponsoring settings'));
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="stagger flex flex-col gap-6">
@@ -30,8 +65,7 @@ export function SponsoringView({ app }: { app: AppSummary }) {
           <Button
             variant="primary"
             onClick={() => {
-              // TODO(T5.4): Stripe checkout for a top up.
-              setBalance((value) => value + 100);
+              setToppingUp(true);
             }}
           >
             Top up
@@ -42,21 +76,21 @@ export function SponsoringView({ app }: { app: AppSummary }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Card accent>
           <p className="text-[13px] text-fg-2">Balance</p>
-          <p className="mt-1.5 text-2xl font-medium leading-none num">{formatUsd(balance)}</p>
+          <p className="mt-1.5 text-2xl font-medium leading-none">
+            {formatCents(balance.balanceCents)}
+          </p>
           <p className="mt-3 text-[13px] text-fg-3">
-            Last top up {formatDate(sponsoring.lastTopUpAt)}
+            Real cost plus 15 percent. Sponsoring stops at zero, users keep signing.
           </p>
         </Card>
         <Card accent>
           <p className="text-[13px] text-fg-2">Sponsored this month</p>
           <p className="mt-1.5 flex items-baseline gap-1.5 leading-none">
-            <span className="text-2xl font-medium num">
-              {formatEth(sponsoring.sponsoredThisMonthWei)}
-            </span>
+            <span className="text-2xl font-medium num">{formatEth(app.usage.gasSponsoredWei)}</span>
             <span className="text-[13px] text-fg-3">ETH</span>
           </p>
           <p className="mt-3 text-[13px] text-fg-3 num">
-            {sponsoredTxs.length} transactions in the last 48h
+            {formatSol(app.usage.gasSponsoredLamports)} SOL on Solana
           </p>
         </Card>
       </div>
@@ -72,7 +106,7 @@ export function SponsoringView({ app }: { app: AppSummary }) {
           />
           <SwitchRow
             title="Solana"
-            description="Fee payer on mainnet-beta, capped in lamports."
+            description="Fee payer on the enabled clusters, capped in lamports."
             checked={solana}
             onCheckedChange={setSolana}
           />
@@ -80,83 +114,65 @@ export function SponsoringView({ app }: { app: AppSummary }) {
       </Card>
 
       <Card>
-        <p className="text-sm font-medium">Daily caps</p>
+        <p className="text-sm font-medium">Solana daily cap</p>
         <p className="mt-0.5 text-[13px] text-fg-2">
-          Sponsoring stops for the day once a cap is reached. Users keep signing, they pay gas.
+          Lamports the fee payer may spend per UTC day. Zero means no daily cap, the prepaid balance
+          stays the limit.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="App cap (USD per day)" htmlFor={`${id}-cap`}>
+          <Field label="Cap (lamports per day)" htmlFor={`${id}-cap`}>
             <Input
               id={`${id}-cap`}
-              inputMode="decimal"
-              value={dailyCap}
+              inputMode="numeric"
+              value={cap}
               className="num"
+              aria-invalid={!capValid || undefined}
               onChange={(event) => {
-                setDailyCap(event.target.value);
+                setCap(event.target.value);
+                setError(null);
               }}
             />
           </Field>
-          <Field label="Per user cap (USD per day)" htmlFor={`${id}-user-cap`}>
-            <Input
-              id={`${id}-user-cap`}
-              inputMode="decimal"
-              value={perUserCap}
-              className="num"
-              onChange={(event) => {
-                setPerUserCap(event.target.value);
-              }}
-            />
-          </Field>
+          <div className="flex flex-col justify-end">
+            <p className="text-[13px] text-fg-2 num">
+              Spent today {formatInt(spentToday)} lamports
+              {capToday > 0 ? ` of ${formatInt(capToday)}` : ', no cap set'}
+            </p>
+            <span className="mt-2 h-2 overflow-hidden rounded-pill bg-surface-2">
+              <span
+                className="block h-full rounded-pill bg-accent"
+                style={{
+                  width:
+                    capToday > 0
+                      ? `${Math.min(100, Math.round((spentToday / capToday) * 100))}%`
+                      : '0%',
+                }}
+              />
+            </span>
+          </div>
         </div>
-        <div className="mt-4 flex justify-end">
+        {error !== null ? (
+          <p role="alert" className="mt-4 text-[13px] text-danger">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex items-center justify-end gap-3">
+          <span aria-live="polite" className="text-[13px] text-fg-2">
+            {saved ? 'Saved' : ''}
+          </span>
           <Button
             size="sm"
+            disabled={pending}
             onClick={() => {
-              // TODO(T5.3): PATCH caps on the admin API.
+              void save();
             }}
           >
-            Save caps
+            {pending ? 'Saving' : 'Save sponsoring'}
           </Button>
         </div>
       </Card>
 
-      <Card flush>
-        <p className="px-5 pt-5 text-sm font-medium">Recent sponsored transactions</p>
-        {!enabled || sponsoredTxs.length === 0 ? (
-          <EmptyState
-            icon={<Fuel strokeWidth={1.5} />}
-            title={enabled ? 'No sponsored transactions yet' : 'Sponsoring is off'}
-            description={
-              enabled
-                ? 'They show up here as soon as a user sends one.'
-                : 'Enable a chain above to start paying gas for your users.'
-            }
-          />
-        ) : (
-          <Table className="mt-2">
-            <thead>
-              <tr>
-                <Th>Transaction</Th>
-                <Th>User</Th>
-                <Th>Chain</Th>
-                <Th className="text-right">Gas (ETH)</Th>
-                <Th className="text-right">When</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {sponsoredTxs.map((tx) => (
-                <tr key={tx.hash}>
-                  <Td className="tabular-nums text-[13px]">{truncateMiddle(tx.hash, 8, 6)}</Td>
-                  <Td className="text-fg-2">{tx.userIdentifier}</Td>
-                  <Td className="text-fg-2">{tx.chain}</Td>
-                  <Td className="text-right num">{formatEth(tx.gasWei, 6)}</Td>
-                  <Td className="text-right text-fg-2 num">{formatRelative(tx.at)}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card>
+      <TopUpDialog appId={app.app.id} open={toppingUp} onOpenChange={setToppingUp} />
     </div>
   );
 }

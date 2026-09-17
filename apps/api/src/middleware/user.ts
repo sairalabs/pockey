@@ -2,10 +2,12 @@ import { createMiddleware } from 'hono/factory';
 import { verifyAccessToken } from '../auth/tokens.js';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
+import { enforceRateLimit } from './rate-limit.js';
 
 /**
  * End user routes (section 7.2). Requires `requireApp` first.
- * Sets `endUserId` and `sessionFamilyId`.
+ * Sets `endUserId` and `sessionFamilyId`, and applies the per end user rate
+ * limit of T5.5 once the token proves who is calling.
  */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   const header = c.req.header('Authorization');
@@ -22,5 +24,6 @@ export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
 
   c.set('endUserId', claims.sub);
   c.set('sessionFamilyId', claims.sid);
+  await enforceRateLimit(c, 'user', claims.sub);
   await next();
 });

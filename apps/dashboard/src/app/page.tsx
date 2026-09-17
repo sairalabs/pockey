@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation';
+import { fetchSession, tryFetch } from '@/lib/api.server';
 
-export default function IndexPage() {
-  // TODO(T5.1): redirect to /login when there is no developer session.
-  redirect('/apps');
+export const dynamic = 'force-dynamic';
+
+export default async function IndexPage() {
+  const session = await tryFetch(fetchSession);
+  redirect(session.ok ? '/apps' : '/login');
 }

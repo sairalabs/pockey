@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  type AdminApp,
   AppConfig,
   type CreateOnLogin,
   type EvmChainId,
@@ -10,14 +11,15 @@ import {
   textOnColor,
 } from '@pocketkey/types';
 import { Check, Pipette } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Field, Input } from '@/components/ui/input';
 import { PillSelect } from '@/components/ui/pill-select';
 import { Segmented } from '@/components/ui/segmented';
 import { SwitchRow } from '@/components/ui/switch';
+import { errorMessage, saveAppConfig } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import type { AppSummary } from '@/lib/mock-data';
 import { LoginModalPreview } from './login-modal-preview';
 import { Pane, PaneSection, SavedHint } from './pane';
 
@@ -72,11 +74,13 @@ function toggleIn<T>(list: readonly T[], value: T, enabled: boolean): T[] {
   return list.filter((item) => item !== value);
 }
 
-export function ConfigurationPane({ app }: { app: AppSummary }) {
+export function ConfigurationPane({ app }: { app: AdminApp }) {
   const id = useId();
+  const router = useRouter();
   const [draft, setDraft] = useState<AppConfig>(() => structuredClone(app.app.config));
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pending, setPending] = useState(false);
   const isCustomAccent = !(accentSwatches as readonly string[]).includes(
     draft.appearance.accent.toLowerCase(),
   );
@@ -86,19 +90,31 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
     setError(null);
   };
 
-  const save = () => {
+  const save = async () => {
     const parsed = AppConfig.safeParse(draft);
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
       setError(issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid configuration');
       return;
     }
-    // TODO(T5.2): PUT /admin/apps/:id/config with parsed.data.
-    setDraft(parsed.data);
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-    }, 1500);
+
+    setPending(true);
+    setError(null);
+    try {
+      // PUT replaces the whole config, so the draft is sent as one document.
+      const updated = await saveAppConfig(app.app.id, parsed.data);
+      setDraft(structuredClone(updated.app.config));
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+      }, 1500);
+      // The SDK reads the same config through the public endpoint.
+      router.refresh();
+    } catch (cause) {
+      setError(errorMessage(cause, 'Could not save the configuration'));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -107,8 +123,15 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
       actions={
         <>
           <SavedHint visible={saved} />
-          <Button variant="primary" size="sm" onClick={save}>
-            Save
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={pending}
+            onClick={() => {
+              void save();
+            }}
+          >
+            {pending ? 'Saving' : 'Save'}
           </Button>
         </>
       }
@@ -291,6 +314,52 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
                   />
                 </div>
               </div>
+              <Field
+                label="Display name"
+                htmlFor={`${id}-modal-name`}
+                hint="Shown in the login modal. Defaults to the app name."
+              >
+                <Input
+                  id={`${id}-modal-name`}
+                  value={draft.appearance.name ?? ''}
+                  maxLength={40}
+                  placeholder={app.app.name}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    update((c) => {
+                      const { name: _dropped, ...rest } = c.appearance;
+                      return {
+                        ...c,
+                        appearance: value.length > 0 ? { ...rest, name: value } : rest,
+                      };
+                    });
+                  }}
+                />
+              </Field>
+              <Field
+                label="Logo URL"
+                htmlFor={`${id}-logo`}
+                hint="Absolute URL or a path served by your own origin."
+              >
+                <Input
+                  id={`${id}-logo`}
+                  value={draft.appearance.logo ?? ''}
+                  maxLength={2048}
+                  spellCheck={false}
+                  className="text-[13px] tabular-nums"
+                  placeholder="https://example.com/logo.svg"
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    update((c) => {
+                      const { logo: _dropped, ...rest } = c.appearance;
+                      return {
+                        ...c,
+                        appearance: value.length > 0 ? { ...rest, logo: value } : rest,
+                      };
+                    });
+                  }}
+                />
+              </Field>
             </div>
             <LoginModalPreview
               name={draft.appearance.name ?? app.app.name}

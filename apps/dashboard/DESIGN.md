@@ -80,3 +80,59 @@ Written 2026-09-15 with the first mocked version of the dashboard (no auth, no n
 - Footer social buttons use `Globe`, `MessageCircle` and `AtSign`: the installed lucide version has no brand icons, and only lucide is allowed.
 - `Fingerprint` and `Trash2` do not exist in the installed lucide version either; `ScanFace` stands in for passkeys.
 - ESLint: `eslint-config-next/core-web-vitals` is spread before the shared `base` so the type-aware typescript-eslint setup keeps the parser for `.ts/.tsx`. `import/no-default-export` is switched off for `src/**` because the App Router requires default exports.
+
+## Wired to the admin API (T5.1, T5.2, T5.3, T5.4 UI), 2026-09-17
+
+The mock is gone: `src/lib/mock-data.ts` is deleted and every page reads the
+real `/admin/*` API. The design above is unchanged, only its data source is.
+
+### Data layer
+
+- `src/app/api/admin/[...path]/route.ts` is a same origin proxy. It forwards
+  method, query, body and cookies to `${POCKETKEY_API_URL}/admin/...` (default
+  `http://localhost:8787`) and hands back `Set-Cookie`, `Location` and the
+  status. The browser therefore only ever talks to the dashboard origin: no CORS
+  preflight, no third party cookie, and the `pocketkey_dev` session cookie is a
+  first party cookie of the dashboard.
+- `src/lib/api.ts` is the browser client: it calls the proxy, parses every
+  answer with the Zod schemas of `@pocketkey/types`, and throws a typed
+  `ApiError` carrying `code`, `message`, `details` and `requestId`.
+- `src/lib/api.server.ts` is the same thing for server components: it reads the
+  cookies of the incoming request with `cookies()` and calls the API directly.
+  `tryFetch` turns the single 401 into "render the login screen" and lets every
+  other error bubble to the error boundary.
+- Server components render the first paint; mutations and range switches run in
+  client components against the proxy, then `router.refresh()` so the server
+  data and the screen agree.
+
+### Where the design met the contract
+
+- `App information` shows name, slug and allowed origins. The mocked tagline and
+  description do not exist in `packages/types/src/app.ts`, and the public id and
+  creation date took their place.
+- `Configuration` gained a display name and a logo URL: both are real
+  `appearance` fields with nowhere else to live.
+- `Members` lists the session developer as the owner. There is no member table
+  and no invite route, so the invite form is gone rather than fake.
+- `Account information` is read only with a sign out. `/admin` has no route to
+  update or delete a developer.
+- Home and Usage lost the `Web | React Native` segmented control: usage is not
+  broken down per platform anywhere in the contract. The range select now
+  carries the three ranges the API serves, `7d`, `30d` and `12m`.
+- Sponsoring caps are the Solana daily cap in lamports, the only cap the API
+  stores. The mocked USD app cap and per user cap do not exist. The recent
+  sponsored transactions table is gone: no endpoint lists them.
+- Billing renders `BillingSummary` only. Invoices and the card on file are not
+  exposed, the Stripe portal is.
+
+### Charts
+
+`src/components/charts/usage-chart.tsx`, inline SVG, no dependency, following
+the `dataviz` skill: one column chart per measure, one series each so no legend,
+marks capped at 20 viewbox units (about 24px) with a 4 unit rounded cap and a 2
+unit gap, one recessive hairline at a rounded maximum, `--accent` as the single
+data color (validated above 3:1 against `--surface`), and axis and value text in
+HTML so it keeps the site font and never wears the series color. Hover and the
+arrow keys move one readout, and the table under the charts holds every value,
+so the tooltip enhances and never gates. `Sparkline` no longer clamps its
+maximum to 1, which used to flatten the fractional gas series.

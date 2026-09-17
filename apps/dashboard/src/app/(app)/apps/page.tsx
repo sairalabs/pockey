@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { AppsList } from '@/components/apps/apps-list';
-import { apps } from '@/lib/mock-data';
+import { LoginScreen } from '@/components/auth/login-screen';
+import { fetchApps, tryFetch } from '@/lib/api.server';
 
 export const metadata: Metadata = { title: 'Apps' };
 
-export default function AppsPage() {
-  // TODO(T5.1): fetch the developer's apps from the admin API.
-  return <AppsList initial={apps} />;
+export default async function AppsPage() {
+  const loaded = await tryFetch(fetchApps);
+  if (!loaded.ok) return <LoginScreen />;
+  return <AppsList apps={loaded.data} />;
 }

@@ -5,12 +5,16 @@
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
-  // T2.5: usage aggregation. Stripe metering (T5.4) will add a nightly entry.
-  "triggers": { "crons": ["0 * * * *"] },
+  // Hourly: usage aggregation (T2.5) and session signer expiry (T4.3).
+  // Nightly: monthly active wallets sent to Stripe Meters (T5.4, section 7.6).
+  // Both expressions are mirrored in `src/cron.ts`, which `scheduled` switches on.
+  "triggers": { "crons": ["0 * * * *", "20 2 * * *"] },
   "vars": {
     "ENVIRONMENT": "development",
     // `mock` is refused outside development. Production sets `turnkey` (T0.5).
     "KEY_PROVIDER": "mock",
+    // T5.1: the dashboard origin allowed with credentials on /admin/*.
+    "DASHBOARD_ORIGIN": "http://localhost:3800",
   },
   "d1_databases": [
     {
@@ -21,4 +25,10 @@
       "migrations_dir": "../../packages/db/migrations",
     },
   ],
+  // T5.5: one fixed window counter per rate limit key.
+  "durable_objects": {
+    "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }],
+  },
+  // SQLite backed, the only kind of Durable Object available on the free plan.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
 }

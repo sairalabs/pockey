@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { UsageView } from '@/components/apps/usage-view';
-import { findApp } from '@/lib/mock-data';
+import { LoginScreen } from '@/components/auth/login-screen';
+import { fetchUsage, loadApp, tryFetch } from '@/lib/api.server';
 
 export const metadata: Metadata = { title: 'Usage' };
 
 export default async function UsagePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const entry = findApp(id);
-  if (!entry) notFound();
-  return <UsageView app={entry} />;
+  const app = await loadApp(id);
+  if (!app.ok) return <LoginScreen />;
+
+  const usage = await tryFetch(() => fetchUsage(id, '30d'));
+  if (!usage.ok) return <LoginScreen />;
+
+  return <UsageView app={app.data} usage={usage.data} />;
 }

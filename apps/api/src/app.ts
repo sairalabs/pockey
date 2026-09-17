@@ -5,12 +5,15 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { AUTH_COOKIES_HEADER } from './auth/cookie-bridge.js';
 import type { AppEnv } from './context.js';
-import { parseEnv } from './env.js';
+import { parseEnv, type Env } from './env.js';
 import { ApiError, handleError } from './errors.js';
 import { getKeyProvider } from './lib/key-provider.js';
 import { getMailer } from './lib/mailer.js';
 import { APP_ID_HEADER } from './middleware/app.js';
+import { appRateLimit, authRateLimit } from './middleware/rate-limit.js';
 import { requestId } from './middleware/request-id.js';
+import { adminRoutes } from './routes/admin.js';
+import { adminAuthRoutes } from './routes/admin-auth.js';
 import { appRoutes } from './routes/apps.js';
 import { authRoutes } from './routes/auth.js';
 import { health } from './routes/health.js';
@@ -61,6 +64,25 @@ export function createApp() {
     }),
   );
 
+  // T5.5, after CORS so a preflight is never counted and never rate limited.
+  // `/health`, `/webhooks/*` and `/admin/*` are deliberately left out.
+  app.use('/v1/*', appRateLimit);
+  app.use('/v1/auth/*', authRateLimit);
+
+  // The dashboard is the only browser origin allowed on /admin/*, and it sends
+  // the developer session cookie, so the allowlist is a single exact origin.
+  app.use(
+    '/admin/*',
+    cors({
+      origin: (_origin, c) => parseEnv(c.env as Env).DASHBOARD_ORIGIN,
+      allowHeaders: ['Content-Type', 'X-Request-Id'],
+      exposeHeaders: ['X-Request-Id'],
+      allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+      maxAge: 600,
+      credentials: true,
+    }),
+  );
+
   app.route('/health', health);
   app.route('/v1/apps', appRoutes);
   app.route('/v1/auth', authRoutes);
@@ -69,6 +91,9 @@ export function createApp() {
   app.route('/v1/sessions', sessionRoutes);
   app.route('/v1/server', serverRoutes);
   app.route('/v1/sponsor', sponsorRoutes);
+  // Dashboard (T5.1). /admin/auth is public (sign-in), the rest needs a session.
+  app.route('/admin/auth', adminAuthRoutes);
+  app.route('/admin', adminRoutes);
   // Provider webhooks: outside /v1, so no app header and no CORS.
   app.route('/webhooks', webhookRoutes);
 

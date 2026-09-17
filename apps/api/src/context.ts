@@ -1,4 +1,4 @@
-import type { AppRow, Db } from '@pocketkey/db';
+import type { AppRow, Db, DeveloperRow } from '@pocketkey/db';
 import type { KeyProvider } from '@pocketkey/key-provider';
 import type { Mailer } from '@pocketkey/mailer';
 import type { Env, ParsedEnv } from './env.js';
@@ -17,6 +17,8 @@ export interface Variables {
   sessionFamilyId: string;
   /** Set by `requireApiKey` on `/v1/server/*`. */
   apiKeyId: string;
+  /** Set by `requireDeveloper` on every `/admin/*` route except `/admin/auth/*`. */
+  developer: DeveloperRow;
 }
 
 export interface AppEnv {

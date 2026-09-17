@@ -9,7 +9,7 @@ import {
   type AppRow,
 } from '@pocketkey/db';
 import { MemoryMailer } from '@pocketkey/mailer';
-import { AppConfig, AuthResponse, type AppConfigInput } from '@pocketkey/types';
+import { AdminApp, AppConfig, AuthResponse, type AppConfigInput } from '@pocketkey/types';
 import { env } from 'cloudflare:workers';
 import { eq } from 'drizzle-orm';
 import { expect } from 'vitest';
@@ -133,3 +133,73 @@ export function bearer(token: string, publicId?: string): Record<string, string>
 }
 
 export { env, SEED };
+
+/* Dashboard (T5.1). Developer sessions are real cookies, no bridge header. */
+
+export const DASHBOARD_ORIGIN = 'http://localhost:3800';
+
+/** Turns `Set-Cookie` headers into a `Cookie` header, dropping cleared ones. */
+export function cookiesOf(response: Response): string {
+  return response.headers
+    .getSetCookie()
+    .map((header) => header.split(';')[0] ?? '')
+    .filter((pair) => {
+      const index = pair.indexOf('=');
+      return index > 0 && pair.slice(index + 1) !== '';
+    })
+    .join('; ');
+}
+
+export interface AdminInit {
+  method?: string;
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+/** One `/admin/*` call with the developer session cookie and the dashboard origin. */
+export function adminRequest(
+  path: string,
+  cookie: string,
+  init: AdminInit = {},
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    Origin: DASHBOARD_ORIGIN,
+    ...init.headers,
+    ...(cookie ? { Cookie: cookie } : {}),
+  };
+  const options: RequestInit = { method: init.method ?? 'GET', headers };
+  if (init.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(init.body);
+  }
+  return request(path, options);
+}
+
+/** Full developer email OTP login. Returns the session cookie header. */
+export async function loginAsDeveloper(email: string): Promise<string> {
+  const send = await adminRequest('/admin/auth/email-otp/send-verification-otp', '', {
+    method: 'POST',
+    body: { email, type: 'sign-in' },
+  });
+  expect(send.status, await send.clone().text()).toBe(200);
+
+  const signIn = await adminRequest('/admin/auth/sign-in/email-otp', '', {
+    method: 'POST',
+    body: { email, otp: otpFrom(email) },
+  });
+  expect(signIn.status, await signIn.clone().text()).toBe(200);
+
+  const cookie = cookiesOf(signIn);
+  expect(cookie).toMatch(/session_token=/);
+  return cookie;
+}
+
+/** Creates an app through the dashboard API and returns its `AdminApp`. */
+export async function createAdminApp(
+  cookie: string,
+  body: Record<string, unknown>,
+): Promise<AdminApp> {
+  const res = await adminRequest('/admin/apps', cookie, { method: 'POST', body });
+  expect(res.status, await res.clone().text()).toBe(201);
+  return AdminApp.parse(await res.json());
+}

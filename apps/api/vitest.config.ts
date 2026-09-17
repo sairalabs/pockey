@@ -18,10 +18,13 @@ export default defineConfig(async () => {
             MAILER: 'memory',
             API_BASE_URL: 'http://localhost:8787',
             EMBED_ORIGIN: 'http://localhost:5174',
+            DASHBOARD_ORIGIN: 'http://localhost:3800',
             // Test-only values. Real secrets live in Wrangler secrets.
             BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-0123',
             GOOGLE_CLIENT_ID: 'test-google-client-id.apps.googleusercontent.com',
             GOOGLE_CLIENT_SECRET: 'test-google-client-secret',
+            GITHUB_CLIENT_ID: 'test-github-client-id',
+            GITHUB_CLIENT_SECRET: 'test-github-client-secret',
           },
         },
       }),

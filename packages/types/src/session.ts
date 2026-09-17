@@ -30,25 +30,43 @@ export function durationToSeconds(value: string): number {
 }
 
 /**
+ * A session that may sign messages is closer to a blank cheque (raw hashes escape
+ * the key provider conditions), so it lives for hours, not weeks.
+ */
+export const MAX_MESSAGE_SESSION_SECONDS = 24 * 3600;
+
+/**
  * Constraints enforced by the key provider policy (source of truth) and
  * pre-checked by our API (fail fast). Section 7.4.
  */
-export const SigningPolicy = z.object({
-  chain: ChainFamily,
-  expiresIn: Duration,
-  /** Smallest unit (wei or lamports). */
-  maxValuePerTx: AmountString.optional(),
-  maxValueTotal: AmountString.optional(),
-  allowedChains: z.array(EvmChainId).optional(),
-  allowedContracts: z.array(EvmAddress).max(50).optional(),
-  allowedPrograms: z.array(SolanaAddress).max(50).optional(),
-  /**
-   * Also allow message and typed data signatures. Off by default: the key provider
-   * cannot tell a message hash from a transaction hash, so enabling it lets a
-   * compromised backend get any hash signed while the session is active.
-   */
-  allowMessages: z.boolean().optional(),
-});
+export const SigningPolicy = z
+  .object({
+    chain: ChainFamily,
+    expiresIn: Duration,
+    /** Smallest unit (wei or lamports). */
+    maxValuePerTx: AmountString.optional(),
+    maxValueTotal: AmountString.optional(),
+    allowedChains: z.array(EvmChainId).optional(),
+    allowedContracts: z.array(EvmAddress).max(50).optional(),
+    allowedPrograms: z.array(SolanaAddress).max(50).optional(),
+    /**
+     * Also allow message and typed data signatures. Off by default: the key provider
+     * cannot tell a message hash from a transaction hash, so enabling it lets a
+     * compromised backend get any hash signed while the session is active.
+     */
+    allowMessages: z.boolean().optional(),
+  })
+  .superRefine((policy, ctx) => {
+    if (policy.allowMessages !== true) return;
+    const seconds = tryDurationToSeconds(policy.expiresIn);
+    if (seconds !== null && seconds > 24 * 3600) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['expiresIn'],
+        message: 'Sessions that allow message signatures cannot exceed 24 hours',
+      });
+    }
+  });
 export type SigningPolicy = z.infer<typeof SigningPolicy>;
 
 export const CreateSessionInput = z.object({
