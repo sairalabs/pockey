@@ -21,12 +21,14 @@ import {
   type Db,
   type WalletRow,
 } from '@pocketkey/db';
-import { KeyProviderError, type KeyProvider } from '@pocketkey/key-provider';
+import { GasSponsorError } from '@pocketkey/gas-sponsor';
+import type { KeyProvider } from '@pocketkey/key-provider';
 import {
   AppConfig,
   CURVE_BY_FAMILY,
   Wallet,
   type ChainFamily,
+  type EvmChainId,
   type ExportWalletOutput,
   type SendTransactionInput,
   type SendTransactionOutput,
@@ -41,6 +43,17 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { hexToBytes, type Address, type Hex } from 'viem';
 import { ApiError } from '../errors.js';
 import type { RpcFactory } from '../lib/rpc.js';
+import type { SponsorRuntime } from '../lib/sponsor.js';
+import { providerFailure } from './provider-failure.js';
+import {
+  assertChainEnabled,
+  assertSponsoringEnabled,
+  redactReason,
+  sendSponsored,
+  sponsorFailure,
+} from './sponsored-send.js';
+
+export { providerFailure };
 
 /**
  * Wallet service (T2.3). Keys never leave the key provider: this code builds
@@ -53,6 +66,8 @@ export interface WalletDeps {
   keyProvider: KeyProvider;
   rpc: RpcFactory;
   app: AppRow;
+  /** Required by sponsored sends and smart account lookups only. */
+  sponsor?: SponsorRuntime;
 }
 
 export function toWallet(row: WalletRow): Wallet {
@@ -64,17 +79,6 @@ export function toWallet(row: WalletRow): Wallet {
     smartAccountAddress: row.smartAccountAddress,
     createdAt: row.createdAt.toISOString(),
   });
-}
-
-function providerFailure(error: unknown): never {
-  if (error instanceof ApiError) throw error;
-  if (error instanceof KeyProviderError) {
-    // Provider messages can describe internals; keep the code, not the text.
-    throw new ApiError('key_provider_error', 'Key provider rejected the request', {
-      reason: error.code,
-    });
-  }
-  throw error;
 }
 
 async function ensureSubOrg(deps: WalletDeps, endUserId: string): Promise<string> {
@@ -168,7 +172,7 @@ export async function createWalletsOnLogin(deps: WalletDeps, endUserId: string):
   }
 }
 
-async function loadOwnedWallet(deps: WalletDeps, endUserId: string, walletId: string) {
+export async function loadOwnedWallet(deps: WalletDeps, endUserId: string, walletId: string) {
   const wallet = await deps.db.query.wallets.findFirst({
     where: and(eq(wallets.id, walletId), eq(wallets.endUserId, endUserId)),
   });
@@ -204,19 +208,6 @@ function assertFamily(wallet: WalletRow, chain: ChainFamily): void {
       'bad_request',
       `This is a ${wallet.chainFamily} wallet, the request targets ${chain}`,
     );
-  }
-}
-
-function assertChainEnabled(app: AppRow, request: TransactionRequest): void {
-  const chains = AppConfig.parse(app.config).chains;
-  const enabled =
-    request.chain === 'evm'
-      ? chains.evm.includes(request.chainId)
-      : chains.solana.includes(request.cluster);
-  if (!enabled) {
-    const label =
-      request.chain === 'evm' ? `chain ${request.chainId}` : `cluster ${request.cluster}`;
-    throw new ApiError('forbidden', `${label} is not enabled for this app`);
   }
 }
 
@@ -312,8 +303,25 @@ export async function sendTransaction(
   input: SendTransactionInput,
 ): Promise<SendTransactionOutput> {
   if (input.sponsored) {
-    // Phase 4 (T4.4 to T4.6): prepaid sponsoring with ERC-4337 and Solana fee payers.
-    throw new ApiError('bad_request', 'Gas sponsoring is not available yet');
+    // T4.4 to T4.6: prepaid sponsoring, Solana fee payer or ERC-4337 smart account.
+    assertSponsoringEnabled(deps.app, input.chain);
+    const sponsor = requireSponsor(deps);
+    const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
+    const key = wallet.keyProviderWalletId;
+    const { hash } = await sendSponsored(
+      { ...deps, sponsor },
+      {
+        endUserId,
+        wallet,
+        signers: {
+          signHash: evmSigner(deps, subOrgId, key),
+          signBytes: solanaSigner(deps, subOrgId, key),
+        },
+      },
+      input,
+    );
+    await recordTx(deps, endUserId, { chain: input.chain, broadcast: true, hash, sponsored: true });
+    return { hash, sponsored: true };
   }
   const { signed } = await signTx(deps, endUserId, walletId, input);
 
@@ -333,6 +341,44 @@ export async function sendTransaction(
 
   await recordTx(deps, endUserId, { chain: input.chain, broadcast: true, hash });
   return { hash, sponsored: false };
+}
+
+export function requireSponsor(deps: WalletDeps): SponsorRuntime {
+  if (!deps.sponsor) throw new ApiError('internal', 'Gas sponsoring is not wired on this route');
+  return deps.sponsor;
+}
+
+/**
+ * Kernel smart account owned by an EVM wallet (T4.5). Sponsored EVM sends come from
+ * this address, not from the wallet EOA. Computing it signs nothing.
+ */
+export async function smartAccountAddress(
+  deps: WalletDeps,
+  endUserId: string,
+  walletId: string,
+  chainId: EvmChainId,
+): Promise<string> {
+  const factory = requireSponsor(deps).evm;
+  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
+  assertFamily(wallet, 'evm');
+  assertChainEnabled(deps.app, { chain: 'evm', chainId });
+  if (!factory) {
+    throw new ApiError('bad_request', 'EVM gas sponsoring is not configured on this server');
+  }
+  try {
+    return await factory.getSmartAccountAddress({
+      chainId,
+      owner: {
+        address: wallet.address as Address,
+        signHash: evmSigner(deps, subOrgId, wallet.keyProviderWalletId),
+      },
+    });
+  } catch (error) {
+    if (error instanceof ApiError || error instanceof GasSponsorError) sponsorFailure(error);
+    throw new ApiError('bad_request', 'Could not compute the smart account address', {
+      reason: redactReason(error),
+    });
+  }
 }
 
 export async function exportWallet(

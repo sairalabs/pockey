@@ -5,6 +5,7 @@ import {
   isHex,
   keccak256,
   parseSignature,
+  parseTransaction,
   serializeTransaction,
   type Address,
   type Hex,
@@ -150,5 +151,33 @@ export async function prepareTransaction(
     gas,
     maxFeePerGas,
     maxPriorityFeePerGas,
+  };
+}
+
+/** Unsigned EIP-1559 serialization, the payload a key provider parses to apply policies. */
+export function serializeUnsignedTransaction(tx: PreparedEvmTransaction): Hex {
+  return serializeTransaction(toSerializable(tx));
+}
+
+/** What a policy needs to know about an unsigned or signed EIP-1559 serialization. */
+export interface ParsedEvmTransaction {
+  chainId: number;
+  to: Address | null;
+  value: bigint;
+  data: Hex;
+  signed: boolean;
+}
+
+export function parseEvmTransaction(serialized: Hex): ParsedEvmTransaction {
+  const parsed = parseTransaction(serialized);
+  if (parsed.type !== 'eip1559') {
+    throw new Error('Only EIP-1559 transactions with a chain id are supported');
+  }
+  return {
+    chainId: parsed.chainId,
+    to: parsed.to ? getAddress(parsed.to) : null,
+    value: parsed.value ?? 0n,
+    data: parsed.data ?? '0x',
+    signed: parsed.r !== undefined && parsed.s !== undefined,
   };
 }

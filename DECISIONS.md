@@ -75,3 +75,41 @@ Journal des décisions non couvertes par `POCKETKEY_SPEC.md`. Une entrée = date
   - Hover : mélange de 10 % vers la couleur du texte du bouton.
 - **Couleur personnalisée** : sélecteur natif et champ hex (accepte `d2042d`, `#D2042D`, `#abc`) dans la galerie de l'iframe et dans le panneau Configuration du dashboard.
 - **Plus aucune police monospace** (préférence de Medhy) : adresses, hash, clés et codes en police du site avec chiffres tabulaires, `code`/`pre` héritent de la police.
+
+## 2026-09-17 (phase 4)
+
+- **SIGNALEMENT EXPLICITE : l'interface `KeyProvider` change** (règle de `CLAUDE.md`). La spec (7.4) veut que Turnkey revérifie la policy d'un session signer, or une signature de hash brut ne porte aucune information de transaction : Turnkey n'évalue les conditions `eth.tx.*` / `solana.tx.*` que sur des activités de signature de transaction. Ajouts :
+  - `signTransaction({ subOrgId, walletId, chainFamily, unsignedTransaction, sessionPolicyId? })` : le fournisseur parse la transaction et applique la policy.
+  - `SignRawInput.sessionPolicyId?` : signature de message sous session.
+  - `CreatePolicyInput.walletId` et `CreatePolicyInput.expiresAt` : une policy est toujours liée à un wallet et bornée dans le temps.
+  - Les signatures interactives de l'utilisateur gardent le chemin existant (`signRaw` + assemblage local).
+- **`maxValueTotal` n'est appliqué que par Pocketkey** : les policies Turnkey sont sans état, elles ne peuvent pas cumuler. Réservation atomique (compare-and-set sur `spent_total`) avant signature, compensation si la signature ou la diffusion échoue.
+- **Expiration des sessions** : les policies Turnkey ne savent pas exprimer une date ; le cron horaire supprime les policies des sessions expirées. Le mock refuse aussi toute signature après `expiresAt`.
+- **Données typées sous session** : autorisées seulement si la policy a une allowlist de contrats contenant `domain.verifyingContract`, sinon refus (`typed_data_not_allowed`). Un Permit ou un ordre signé peut vider un wallet sans transaction.
+- **Valeur Solana** : seuls les `Transfer` du System Program depuis le wallet sont comptés. Une session plafonnée en valeur devrait aussi restreindre `allowedPrograms`.
+- **Nouveaux ports** : `@pocketkey/gas-sponsor` (sponsor Solana fee payer, sponsor EVM ERC-4337 Kernel via Pimlico, `PriceFeed`) et `@pocketkey/payments` (Stripe Checkout et webhooks via fetch, sans SDK).
+- **Migration 0002** : `sponsor_ledger` (registre signé, référence unique pour l'idempotence), `app_system_wallets` (fee payer Solana par app dans une sub-org système), `payment_events`.
+- **`@pocketkey/chains-solana`** expose `inspectTransaction` (instructions, programmes, transferts System, compute budget, estimation de frais) et **`@pocketkey/chains-evm`** `serializeUnsignedTransaction` / `parseEvmTransaction`, pour les policies et le sponsoring.
+- **Session signers livrés (T4.1, T4.2)** :
+  - Les règles sont appliquées deux fois (API puis mock fournisseur), sauf `maxValueTotal` et la règle des données typées, propres à l'API.
+  - Le contrôle local tourne sur les valeurs de la requête avant la préparation de la transaction : une requête refusée ne coûte aucun appel RPC.
+  - `spentTotal` compte toute transaction qui déplace de la valeur, même sans plafond total, et une transaction signée mais non diffusée compte comme dépensée. Trois échecs de compare-and-set renvoient 409 `conflict`.
+  - Révocation : le flag en base d'abord (la session est refusée immédiatement), puis suppression de la policy fournisseur ; si elle échoue, 502 et un nouveau DELETE réessaie.
+  - Clés secrètes : toute requête avec un en-tête `Origin` est refusée avant lecture de la clé. Clé inconnue, révoquée ou d'une autre app : même 401 `api_key_invalid`.
+  - `GET /v1/server/users` charge chaque utilisateur complet (environ 300 requêtes pour 100 utilisateurs) : acceptable au MVP, à optimiser avec le dashboard.
+- **Point de sécurité ouvert (à trancher)** : signer des messages sous session impose d'autoriser la signature de payload brut dans la policy Turnkey, qui ne distingue pas un hash de message d'un hash de transaction. Un backend compromis pourrait alors faire signer n'importe quel hash sous une session active, ce qui affaiblit la garantie « backend compromis » de la section 8.1. Le mapping expose `allowRawPayloads: false` pour des sessions limitées aux transactions.
+- **`@pocketkey/gas-sponsor` et `@pocketkey/payments` livrés (T4.4, T4.5, partie Stripe de T4.6)** :
+  - EVM : l'opération est préparée puis signée, et envoyée via le client Pimlico sans compte attaché. Passer par le smart account client ferait re-préparer l'opération par viem (nouvelles données paymaster) et invaliderait la signature.
+  - Kernel v3 (0.3.1), EntryPoint 0.7. Les messages d'erreur du bundler masquent `apikey=`.
+  - Fee payer Solana, règles de sûreté : compte 0, jamais référencé par une instruction (même comme destination), jamais programme, jamais en lecture seule ni dupliqué, signataires requis exactement fee payer et utilisateur, pas de lookup tables, frais plafonnés (50 000 lamports par défaut).
+  - Prix : CoinGecko mis en cache 60 s, un échec n'est jamais servi depuis le cache ; calcul des centimes en BigInt, arrondi au supérieur, marge 15 %.
+  - Webhooks Stripe : tolérance de 300 s dans les deux sens, `async_payment_succeeded` payé compte aussi, une session payée sans `metadata.appId` est ignorée (autres produits sur le même compte Stripe) plutôt que rejetée, devise autre que USD rejetée.
+  - Le mock de paiements signe avec un secret public (`MOCK_WEBHOOK_SECRET`) : jamais en production, la validation d'environnement l'impose.
+- **Décision de sécurité tranchée : `SigningPolicy.allowMessages`, désactivé par défaut.** Une session ne signe que des transactions, que le fournisseur de clés peut contraindre. Messages, données typées et envois EVM sponsorisés (les opérations ERC-4337 sont signées comme des hash bruts) exigent `allowMessages: true`, affiché à l'utilisateur sur l'écran de consentement (« Transactions and messages »). Appliqué à trois niveaux : contrôle API (`messages_not_allowed`), mock fournisseur (refus des payloads bruts), mapping Turnkey (`ACTIVITY_TYPE_SIGN_RAW_PAYLOAD*` seulement si autorisé). Ainsi la garantie « backend compromis » de la section 8.1 tient par défaut.
+- **Sponsoring branché dans l'API (T4.4 à T4.6)** :
+  - Solana : validation du fee payer avant tout débit, plafond journalier (`'0'` = pas de plafond, le solde prépayé reste la limite ; dépassement : 429 `rate_limited`, léger dépassement possible en concurrence), débit, co-signature, diffusion, remboursement intégral en cas d'échec.
+  - EVM : préparation de l'opération, débit du coût maximal avant envoi, envoi de l'opération préparée exacte, remboursement de la différence après le reçu via `waitUntil` (25 s max, sinon l'app garde le coût maximal), remboursement intégral si l'envoi échoue.
+  - `creditTopUp` : l'événement, le solde et le registre sont écrits dans un seul `db.batch`, jamais un événement marqué traité sans crédit.
+  - Production exige `PAYMENTS=stripe` et `PRICE_FEED=coingecko` (des prix statiques factureraient faux).
+  - Les overrides de gas et de nonce sont ignorés pour les envois EVM sponsorisés ; un envoi sponsorisé sous session avec `broadcast: false` est refusé.
+  - Le rate limit par utilisateur final de la section 8.1 reste à faire avec T5.5.

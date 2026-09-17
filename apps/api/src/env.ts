@@ -23,6 +23,14 @@ export interface Env {
   MOCK_KEY_SEED?: string;
   /** JSON map of RPC endpoints (may embed provider keys, so set it as a secret). */
   RPC_URLS?: string;
+  /** Gas sponsoring top-ups (T4.6): `mock` or `stripe`. */
+  PAYMENTS?: string;
+  /** USD prices of native gas assets: `static` or `coingecko`. */
+  PRICE_FEED?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  /** EVM gas sponsoring (T4.5). Without it, EVM sponsored sends are refused. */
+  PIMLICO_API_KEY?: string;
 }
 
 const optionalString = z
@@ -64,6 +72,13 @@ export const EnvSchema = z
           return z.NEVER;
         }
       }),
+    /** `mock` signs webhooks with a public test secret: development and tests only. */
+    PAYMENTS: z.enum(['mock', 'stripe']).default('mock'),
+    /** `static` uses fixed prices (ETH 3000, SOL 150, POL 0.5 USD): development and tests only. */
+    PRICE_FEED: z.enum(['static', 'coingecko']).default('static'),
+    STRIPE_SECRET_KEY: optionalString,
+    STRIPE_WEBHOOK_SECRET: optionalString,
+    PIMLICO_API_KEY: optionalString,
   })
   .superRefine((env, ctx) => {
     if (env.ENVIRONMENT === 'production') {
@@ -76,9 +91,21 @@ export const EnvSchema = z
       if (env.MOCK_KEY_SEED) {
         ctx.addIssue({ code: 'custom', message: 'MOCK_KEY_SEED must not be set in production' });
       }
+      if (env.PAYMENTS !== 'stripe') {
+        ctx.addIssue({ code: 'custom', message: 'PAYMENTS must be stripe in production' });
+      }
+      if (env.PRICE_FEED !== 'coingecko') {
+        ctx.addIssue({ code: 'custom', message: 'PRICE_FEED must be coingecko in production' });
+      }
     }
     if (env.MAILER === 'resend' && !env.RESEND_API_KEY) {
       ctx.addIssue({ code: 'custom', message: 'RESEND_API_KEY is required when MAILER=resend' });
+    }
+    if (env.PAYMENTS === 'stripe' && (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are required when PAYMENTS=stripe',
+      });
     }
   });
 export type ParsedEnv = z.infer<typeof EnvSchema>;
@@ -105,6 +132,11 @@ export function parseEnv(env: Env): ParsedEnv {
     APPLE_APP_BUNDLE_IDENTIFIER: env.APPLE_APP_BUNDLE_IDENTIFIER,
     MOCK_KEY_SEED: env.MOCK_KEY_SEED,
     RPC_URLS: env.RPC_URLS,
+    PAYMENTS: env.PAYMENTS,
+    PRICE_FEED: env.PRICE_FEED,
+    STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET,
+    PIMLICO_API_KEY: env.PIMLICO_API_KEY,
   });
   if (!result.success) {
     // Messages only, never the values: some of these are secrets.

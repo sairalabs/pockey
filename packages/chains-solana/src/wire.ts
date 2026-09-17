@@ -84,11 +84,27 @@ class Reader {
   }
 }
 
+export interface ParsedInstruction {
+  programIdIndex: number;
+  accountIndexes: number[];
+  data: Uint8Array;
+}
+
+export interface ParsedAddressTableLookup {
+  accountKey: Uint8Array;
+  writableIndexes: number[];
+  readonlyIndexes: number[];
+}
+
 export interface ParsedMessage {
   version: 'legacy' | 0;
   numRequiredSignatures: number;
+  numReadonlySigned: number;
+  numReadonlyUnsigned: number;
   staticAccountKeys: Uint8Array[];
   recentBlockhash: Uint8Array;
+  instructions: ParsedInstruction[];
+  addressTableLookups: ParsedAddressTableLookup[];
 }
 
 /** Parses a full message. Throws if any byte is left over. */
@@ -128,18 +144,22 @@ export function parseMessage(messageBytes: Uint8Array): ParsedMessage {
   const recentBlockhash = reader.take(PUBLIC_KEY_LENGTH);
 
   const numInstructions = reader.shortVec();
+  const instructions: ParsedInstruction[] = [];
   for (let i = 0; i < numInstructions; i++) {
-    reader.u8(); // programIdIndex
-    reader.skip(reader.shortVec()); // account indexes
-    reader.skip(reader.shortVec()); // data
+    const programIdIndex = reader.u8();
+    const accountIndexes = Array.from(reader.take(reader.shortVec()));
+    const data = reader.take(reader.shortVec());
+    instructions.push({ programIdIndex, accountIndexes, data });
   }
 
+  const addressTableLookups: ParsedAddressTableLookup[] = [];
   if (version === 0) {
     const numLookups = reader.shortVec();
     for (let i = 0; i < numLookups; i++) {
-      reader.skip(PUBLIC_KEY_LENGTH); // table account
-      reader.skip(reader.shortVec()); // writable indexes
-      reader.skip(reader.shortVec()); // readonly indexes
+      const accountKey = reader.take(PUBLIC_KEY_LENGTH);
+      const writableIndexes = Array.from(reader.take(reader.shortVec()));
+      const readonlyIndexes = Array.from(reader.take(reader.shortVec()));
+      addressTableLookups.push({ accountKey, writableIndexes, readonlyIndexes });
     }
   }
 
@@ -147,7 +167,16 @@ export function parseMessage(messageBytes: Uint8Array): ParsedMessage {
     throw new SolanaTransactionError('Transaction message has trailing bytes');
   }
 
-  return { version, numRequiredSignatures, staticAccountKeys, recentBlockhash };
+  return {
+    version,
+    numRequiredSignatures,
+    numReadonlySigned,
+    numReadonlyUnsigned,
+    staticAccountKeys,
+    recentBlockhash,
+    instructions,
+    addressTableLookups,
+  };
 }
 
 export interface ParsedTransaction {

@@ -252,7 +252,7 @@ describe('EVM signing (T2.1 + T2.3)', () => {
     expect(sentEvm).toHaveLength(1);
   });
 
-  it('refuses a chain the app did not enable, sponsoring, and the wrong family', async () => {
+  it('refuses a chain the app did not enable, disabled sponsoring, and the wrong family', async () => {
     const mainnet = await post(`/v1/wallets/${evm.id}/send-transaction`, {
       chain: 'evm',
       chainId: 1,
@@ -266,7 +266,8 @@ describe('EVM signing (T2.1 + T2.3)', () => {
       to: '0x4200000000000000000000000000000000000006',
       sponsored: true,
     });
-    expect(sponsored.status).toBe(400);
+    // The seed app keeps gas sponsoring off (sponsoring.test.ts covers the enabled paths).
+    expect(sponsored.status).toBe(403);
 
     const wrongFamily = await post(`/v1/wallets/${solana.id}/sign-typed-data`, {
       chain: 'evm',

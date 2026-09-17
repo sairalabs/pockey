@@ -15,6 +15,13 @@
       "when": 1789570373233,
       "tag": "0001_auth_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789611810479,
+      "tag": "0002_sponsoring",
+      "breakpoints": true
     }
   ]
 }

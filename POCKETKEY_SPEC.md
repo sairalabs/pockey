@@ -395,12 +395,12 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 ### Phase 4 : session signers + gas (semaine 5)
 
-- [ ] **T4.1** Policies Turnkey : mapping `SigningPolicy` -> policy Turnkey. Création, suppression.
-- [ ] **T4.2** Routes sessions + `/v1/server/*` signature déléguée. Vérification locale avant Turnkey.
-- [ ] **T4.3** `useSessionSigners` dans react/core.
-- [ ] **T4.4** `GasSponsor` port + impl Solana (fee payer par app, budget).
-- [ ] **T4.5** `GasSponsor` impl EVM : ERC-4337 via Pimlico, smart account Kernel, `sponsored: true` sur sendTransaction.
-- [ ] **T4.6** Prépaiement sponsoring : Stripe checkout, `sponsor_balances`, décrément à l'usage.
+- [x] **T4.1** Policies Turnkey : mapping `SigningPolicy` -> policy Turnkey. Création, suppression.
+- [x] **T4.2** Routes sessions + `/v1/server/*` signature déléguée. Vérification locale avant Turnkey.
+- [x] **T4.3** `useSessionSigners` dans react/core.
+- [x] **T4.4** `GasSponsor` port + impl Solana (fee payer par app, budget).
+- [x] **T4.5** `GasSponsor` impl EVM : ERC-4337 via Pimlico, smart account Kernel, `sponsored: true` sur sendTransaction.
+- [x] **T4.6** Prépaiement sponsoring : Stripe checkout, `sponsor_balances`, décrément à l'usage.
 
 ### Phase 5 : dashboard + billing (semaine 6)
 

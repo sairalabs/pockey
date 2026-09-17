@@ -29,3 +29,10 @@ export const MeResponse = z.object({
   user: EndUser,
 });
 export type MeResponse = z.infer<typeof MeResponse>;
+
+/** `GET /v1/server/users` (secret API key). Cursor pagination, newest first. */
+export const ServerUserList = z.object({
+  users: z.array(EndUser),
+  nextCursor: z.string().nullable(),
+});
+export type ServerUserList = z.infer<typeof ServerUserList>;

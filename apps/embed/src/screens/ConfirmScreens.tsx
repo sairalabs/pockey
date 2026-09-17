@@ -27,22 +27,24 @@ import type { ConfirmStatus, ScreenActions } from '../lib/state';
 import { summarizeSolanaTransaction } from '../lib/solana-tx';
 import type { ScreenProps } from './types';
 
-function ConfirmFooter({
+export function ConfirmFooter({
   status,
   error,
   primaryLabel,
+  cancelLabel = 'Cancel',
   actions,
 }: {
   status: ConfirmStatus;
   error: EmbedError | null;
   primaryLabel: string;
+  cancelLabel?: string;
   actions: ScreenActions;
 }) {
   const pending = status === 'pending';
   return (
     <ConfirmButtons>
       <Button testId="pk-confirm-cancel" onClick={actions.cancel} disabled={pending}>
-        Cancel
+        {cancelLabel}
       </Button>
       <Button
         variant="primary"

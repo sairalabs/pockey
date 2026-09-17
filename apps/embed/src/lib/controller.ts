@@ -1,11 +1,12 @@
 import type { PocketkeyClient } from '@pocketkey/core';
-import type {
-  EmbedError,
-  EndUser,
-  HostRequest,
-  HostResponseDataMap,
-  PublicAppConfig,
-  Wallet,
+import {
+  durationToSeconds,
+  type EmbedError,
+  type EndUser,
+  type HostRequest,
+  type HostResponseDataMap,
+  type PublicAppConfig,
+  type Wallet,
 } from '@pocketkey/types';
 import { appDisplayName, effectiveConfig } from './config';
 import { EmbedFailure, toEmbedError, toFailure, userRejected } from './errors';
@@ -25,7 +26,10 @@ import {
 } from './state';
 import type { WalletAdapter } from './wallets';
 
-export type EmbedClient = Pick<PocketkeyClient, 'ready' | 'getConfig' | 'auth' | 'wallets'>;
+export type EmbedClient = Pick<
+  PocketkeyClient,
+  'ready' | 'getConfig' | 'auth' | 'wallets' | 'sessions'
+>;
 
 export interface ControllerDeps {
   client: EmbedClient;
@@ -585,6 +589,39 @@ export function createController(deps: ControllerDeps): Controller {
           call,
         );
       }
+      case 'createSession': {
+        const { input } = request;
+        const wallet = await requireWallet(input.walletId);
+        if (input.policy.chain !== wallet.chainFamily) {
+          throw new EmbedFailure(
+            'unsupported',
+            `A ${input.policy.chain} policy cannot apply to a ${wallet.chainFamily} wallet.`,
+          );
+        }
+        await ensureConfig();
+        return confirm(
+          {
+            name: 'session',
+            origin: context.origin,
+            wallet,
+            policy: input.policy,
+            expiresAt: now() + durationToSeconds(input.policy.expiresIn) * 1000,
+            status: 'idle',
+            error: null,
+          },
+          () => client.sessions.create(input),
+        );
+      }
+      /* No UI for these: a session exists so the app can sign without asking again. */
+      case 'listSessions':
+        return {
+          sessions: await client.sessions.list(),
+        } satisfies HostResponseDataMap['listSessions'];
+      case 'revokeSession':
+        await client.sessions.revoke(request.sessionId);
+        return { ok: true } satisfies HostResponseDataMap['revokeSession'];
+      case 'signWithSession':
+        return client.sessions.sign(request.sessionId, request.request);
       case 'exportWallet': {
         const wallet = await requireWallet(request.walletId);
         await ensureConfig();
@@ -714,7 +751,10 @@ export function createController(deps: ControllerDeps): Controller {
       const screen = store.get().screen;
       if (!task || task.settled || task.locked) return;
       if (isConfirmScreen(screen) && screen.status === 'error' && screen.error) {
-        task.reject(new EmbedFailure(screen.error.code, screen.error.message));
+        const { error } = screen;
+        const reason =
+          'reason' in error && typeof error.reason === 'string' ? error.reason : undefined;
+        task.reject(new EmbedFailure(error.code, error.message, reason));
         return;
       }
       task.onDismiss();

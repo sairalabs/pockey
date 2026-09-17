@@ -91,11 +91,19 @@ describe('MockKeyProvider', () => {
       endUserId: 'usr_test',
       auth: { type: 'email', email: 'a@b.co' },
     });
+    const wallet = await kp.createWallet({ subOrgId, curve: 'secp256k1' });
+    const expiresAt = new Date(Date.now() + 86_400_000);
     const { policyId } = await kp.createPolicy({
       subOrgId,
+      walletId: wallet.walletId,
       policy: { chain: 'evm', expiresIn: '1d', maxValuePerTx: '1000' },
+      expiresAt,
     });
     expect(kp.policiesOf(subOrgId)).toHaveLength(1);
+    expect(kp.policyRecordsOf(subOrgId)[0]).toMatchObject({
+      walletId: wallet.walletId,
+      expiresAt,
+    });
     await kp.deletePolicy({ subOrgId, policyId });
     expect(kp.policiesOf(subOrgId)).toHaveLength(0);
     await expect(kp.deletePolicy({ subOrgId, policyId })).rejects.toMatchObject({

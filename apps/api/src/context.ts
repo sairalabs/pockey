@@ -15,6 +15,8 @@ export interface Variables {
   /** Set by `requireUser`. */
   endUserId: string;
   sessionFamilyId: string;
+  /** Set by `requireApiKey` on `/v1/server/*`. */
+  apiKeyId: string;
 }
 
 export interface AppEnv {

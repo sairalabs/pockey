@@ -1,8 +1,10 @@
 import { base64, hex } from '@scure/base';
 import {
+  durationToSeconds,
   EVM_CHAINS,
   type ChainFamily,
   type SignMessageInput,
+  type SigningPolicy,
   type SolanaCluster,
 } from '@pocketkey/types';
 
@@ -115,3 +117,62 @@ export function formatCountdown(seconds: number): string {
 }
 
 export const PLAUSIBLE_EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}$/;
+
+/* Session signer policies */
+
+const DURATION_UNITS = [
+  { seconds: 86_400, one: 'day', many: 'days' },
+  { seconds: 3_600, one: 'hour', many: 'hours' },
+  { seconds: 60, one: 'minute', many: 'minutes' },
+] as const;
+
+/** `7d` to `7 days`, `120m` to `2 hours`: the largest unit that divides the duration evenly. */
+export function formatDuration(duration: string): string {
+  const seconds = durationToSeconds(duration);
+  const unit =
+    DURATION_UNITS.find((candidate) => seconds % candidate.seconds === 0) ?? DURATION_UNITS[2];
+  const count = Math.floor(seconds / unit.seconds);
+  return `${String(count)} ${count === 1 ? unit.one : unit.many}`;
+}
+
+/** Local date and time, `Sep 24, 2026, 10:00 AM` in en-US. */
+export function formatDateTime(
+  epochMs: number,
+  options: { locale?: string; timeZone?: string } = {},
+): string {
+  return new Intl.DateTimeFormat(options.locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    ...(options.timeZone ? { timeZone: options.timeZone } : {}),
+  }).format(epochMs);
+}
+
+/** `Base, Arbitrum One` for an EVM allowlist, `Solana` for Solana, null when any EVM chain is allowed. */
+export function policyNetworks(policy: SigningPolicy): string | null {
+  if (policy.chain === 'solana') return 'Solana';
+  const chains = policy.allowedChains ?? [];
+  return chains.length > 0 ? chains.map((id) => evmNetworkName(id)).join(', ') : null;
+}
+
+/** Native symbol a policy value cap is counted in. */
+export function policySymbol(policy: SigningPolicy): string {
+  if (policy.chain === 'solana') return 'SOL';
+  const chains = policy.allowedChains ?? [];
+  const polygon = chains.filter((id) => id === 137).length;
+  if (polygon === 0) return 'ETH';
+  return polygon === chains.length ? 'POL' : 'ETH or POL';
+}
+
+export interface AmountView {
+  /** Shortened for display, trailing zeros trimmed. */
+  short: string;
+  /** Full precision, for the title attribute. */
+  full: string;
+}
+
+/** A smallest unit amount (wei, lamports) under a policy, with its symbol. */
+export function formatPolicyAmount(amount: string, policy: SigningPolicy): AmountView {
+  const full = formatUnits(BigInt(amount), policy.chain === 'solana' ? 9 : 18);
+  const symbol = policySymbol(policy);
+  return { short: `${shortenDecimal(full)} ${symbol}`, full: `${full} ${symbol}` };
+}

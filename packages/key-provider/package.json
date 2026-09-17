@@ -17,8 +17,11 @@
   "dependencies": {
     "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
+    "@pocketkey/chains-evm": "workspace:*",
+    "@pocketkey/chains-solana": "workspace:*",
     "@pocketkey/types": "workspace:*",
-    "@scure/base": "^2.0.0"
+    "@scure/base": "^2.0.0",
+    "viem": "^2.56.5"
   },
   "devDependencies": {
     "@pocketkey/config": "workspace:*",

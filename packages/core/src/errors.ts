@@ -1,4 +1,9 @@
-import { ApiErrorBody, type ApiErrorCode } from '@pocketkey/types';
+import {
+  ApiErrorBody,
+  POLICY_VIOLATIONS,
+  type ApiErrorCode,
+  type PolicyViolation,
+} from '@pocketkey/types';
 
 /**
  * Stable error codes surfaced by the SDK: every documented API code plus the
@@ -46,6 +51,26 @@ export class PocketkeyError extends Error {
 
 export function isPocketkeyError(e: unknown): e is PocketkeyError {
   return e instanceof PocketkeyError;
+}
+
+/** Why a session policy refused a request: a stable policy reason, or the key provider denied it. */
+export type SessionPolicyRefusal = PolicyViolation | 'provider_denied';
+
+const REFUSALS: ReadonlySet<string> = new Set<string>([...POLICY_VIOLATIONS, 'provider_denied']);
+
+function isRefusal(value: unknown): value is SessionPolicyRefusal {
+  return typeof value === 'string' && REFUSALS.has(value);
+}
+
+/**
+ * The `details.reason` of a `policy_violation` error, or null for any other error
+ * (including a reason this SDK version does not know yet).
+ */
+export function policyViolationReason(error: unknown): SessionPolicyRefusal | null {
+  if (!isPocketkeyError(error) || error.code !== 'policy_violation') return null;
+  const details = error.details;
+  if (typeof details !== 'object' || details === null || !('reason' in details)) return null;
+  return isRefusal(details.reason) ? details.reason : null;
 }
 
 function codeFromStatus(status: number): ApiErrorCode {

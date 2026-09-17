@@ -63,7 +63,8 @@ export function makeServerConfig(overrides: Partial<PublicAppConfig> = {}): Publ
   } as PublicAppConfig;
 }
 
-export type Reply = { data: unknown } | { error: { code: string; message: string } } | 'ignore';
+export type Reply =
+  { data: unknown } | { error: { code: string; message: string; reason?: string } } | 'ignore';
 
 type Handler = (request: HostRequest) => Reply;
 
@@ -90,7 +91,8 @@ export class FakeEmbed {
       if (reply === 'ignore') return;
       queueMicrotask(() => {
         if ('data' in reply) this.respond(message.requestId, reply.data);
-        else this.fail(message.requestId, reply.error.code, reply.error.message);
+        else
+          this.fail(message.requestId, reply.error.code, reply.error.message, reply.error.reason);
       });
     });
     contentWindow.postMessage = postMessage as unknown as Window['postMessage'];
@@ -143,8 +145,9 @@ export class FakeEmbed {
     this.send({ type: 'response', requestId, ok: true, data });
   }
 
-  fail(requestId: string, code: string, message = code): void {
-    this.send({ type: 'response', requestId, ok: false, error: { code, message } });
+  fail(requestId: string, code: string, message = code, reason?: string): void {
+    const error = reason === undefined ? { code, message } : { code, message, reason };
+    this.send({ type: 'response', requestId, ok: false, error });
   }
 }
 

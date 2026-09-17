@@ -9,6 +9,7 @@ import { SignMessageScreen, SignTypedDataScreen, TransactionScreen } from './Con
 import { EmailCodeScreen } from './EmailCodeScreen';
 import { LoginScreen } from './LoginScreen';
 import { ErrorScreen, ExportScreen, SuccessScreen } from './OutcomeScreens';
+import { SessionScreen } from './SessionScreen';
 import type { AppInfo } from './types';
 
 export function ScreenView({
@@ -44,6 +45,8 @@ export function ScreenView({
       return <SignTypedDataScreen screen={screen} {...common} />;
     case 'transaction':
       return <TransactionScreen screen={screen} {...common} />;
+    case 'session':
+      return <SessionScreen screen={screen} {...common} />;
     case 'export':
       return <ExportScreen screen={screen} {...common} />;
     case 'error':

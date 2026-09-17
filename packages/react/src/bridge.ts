@@ -11,7 +11,7 @@ import {
   type HostResponseDataMap,
   type LoginMethod,
 } from '@pocketkey/types';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { PocketkeyEmbedError } from './errors.js';
 
 /** Framework-free bridge to the embed iframe (section 4.1). Never talks to the API. */
@@ -75,6 +75,17 @@ interface Pending {
   type: HostRequestType;
   resolve: (data: unknown) => void;
   reject: (error: PocketkeyEmbedError) => void;
+}
+
+/**
+ * `error.reason` rides next to the `{ code, message }` of `EmbedError`, which strips unknown
+ * keys: read it from the raw message.
+ */
+const ErrorReason = z.object({ error: z.object({ reason: z.string().min(1).max(64) }) });
+
+function errorReason(data: unknown): string | undefined {
+  const parsed = ErrorReason.safeParse(data);
+  return parsed.success ? parsed.data.error.reason : undefined;
 }
 
 let requestCounter = 0;
@@ -281,6 +292,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
             new PocketkeyEmbedError(
               message.error?.code ?? 'internal',
               message.error?.message ?? `The ${entry.type} request failed.`,
+              errorReason(event.data),
             ),
           );
           return;

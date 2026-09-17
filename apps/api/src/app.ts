@@ -15,7 +15,11 @@ import { appRoutes } from './routes/apps.js';
 import { authRoutes } from './routes/auth.js';
 import { health } from './routes/health.js';
 import { meRoutes } from './routes/me.js';
+import { serverRoutes } from './routes/server.js';
+import { sessionRoutes } from './routes/sessions.js';
+import { sponsorRoutes } from './routes/sponsor.js';
 import { walletRoutes } from './routes/wallets.js';
+import { webhookRoutes } from './routes/webhooks.js';
 
 export function createApp() {
   const app = new Hono<AppEnv>();
@@ -62,6 +66,11 @@ export function createApp() {
   app.route('/v1/auth', authRoutes);
   app.route('/v1/me', meRoutes);
   app.route('/v1/wallets', walletRoutes);
+  app.route('/v1/sessions', sessionRoutes);
+  app.route('/v1/server', serverRoutes);
+  app.route('/v1/sponsor', sponsorRoutes);
+  // Provider webhooks: outside /v1, so no app header and no CORS.
+  app.route('/webhooks', webhookRoutes);
 
   return app;
 }

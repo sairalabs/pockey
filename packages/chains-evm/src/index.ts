@@ -20,6 +20,9 @@ export {
   serializeSignedTransaction,
   signTransaction,
   transactionSigningHash,
+  serializeUnsignedTransaction,
+  parseEvmTransaction,
+  type ParsedEvmTransaction,
   type EvmRpc,
   type PreparedEvmTransaction,
 } from './transaction.js';

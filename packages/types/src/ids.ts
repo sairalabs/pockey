@@ -15,6 +15,8 @@ export const ID_PREFIXES = {
   usageEvent: 'evt',
   webhook: 'whk',
   refreshToken: 'rtk',
+  ledgerEntry: 'led',
+  systemWallet: 'swl',
 } as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES];

@@ -3,6 +3,7 @@ export {
   AUTH_COOKIES_HEADER,
   createPocketkey,
   DEFAULT_BASE_URL,
+  isSessionActive,
   type AuthListener,
   type OAuthProvider,
   type PocketkeyClient,
@@ -13,7 +14,9 @@ export {
 export {
   isPocketkeyError,
   PocketkeyError,
+  policyViolationReason,
   type PocketkeyErrorCode,
   type PocketkeyErrorOptions,
+  type SessionPolicyRefusal,
 } from './errors.js';
 export { localStorageStorage, memoryStorage, type TokenStorage } from './storage.js';

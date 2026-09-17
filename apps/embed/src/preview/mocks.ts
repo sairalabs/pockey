@@ -1,5 +1,11 @@
 import { base58, base64, hex } from '@scure/base';
-import { EvmAddress, Wallet, type LoginMethod } from '@pocketkey/types';
+import {
+  durationToSeconds,
+  EvmAddress,
+  SigningPolicy,
+  Wallet,
+  type LoginMethod,
+} from '@pocketkey/types';
 import type { Screen, WalletOption } from '../lib/state';
 
 /** Static mock data for the preview gallery. Nothing here touches the network. */
@@ -62,6 +68,46 @@ const walletOptions: WalletOption[] = [
 const SPENDER = EvmAddress.parse('0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD');
 
 const GM = 'gm from the Pocketkey playground';
+
+const evmSessionPolicy = SigningPolicy.parse({
+  chain: 'evm',
+  expiresIn: '7d',
+  maxValuePerTx: '50000000000000000',
+  maxValueTotal: '500000000000000000',
+  allowedChains: [8453, 42161],
+  allowedContracts: [
+    SPENDER,
+    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    '0x4200000000000000000000000000000000000006',
+    '0x2626664c2603336E57B271c5C0b26F421741e481',
+    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  ],
+});
+
+const solanaSessionPolicy = SigningPolicy.parse({
+  chain: 'solana',
+  expiresIn: '2h',
+  maxValuePerTx: '100000000',
+  allowedPrograms: [
+    '11111111111111111111111111111111',
+    'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4',
+  ],
+});
+
+const unlimitedSessionPolicy = SigningPolicy.parse({ chain: 'evm', expiresIn: '15m' });
+
+function sessionScreen(wallet: Wallet, policy: SigningPolicy, now: number): Screen {
+  return {
+    name: 'session',
+    origin: PREVIEW_ORIGIN,
+    wallet,
+    policy,
+    expiresAt: now + durationToSeconds(policy.expiresIn) * 1000,
+    status: 'idle',
+    error: null,
+  };
+}
 
 export interface PreviewCard {
   id: string;
@@ -255,6 +301,21 @@ export function previewCards(now: number): PreviewCard[] {
         status: 'error',
         error: { code: 'policy_violation', message: 'This transaction exceeds the daily limit.' },
       },
+    },
+    {
+      id: 'session-evm',
+      label: 'Session consent, EVM with limits',
+      screen: sessionScreen(evmWallet, evmSessionPolicy, now),
+    },
+    {
+      id: 'session-solana',
+      label: 'Session consent, Solana programs',
+      screen: sessionScreen(solanaWallet, solanaSessionPolicy, now),
+    },
+    {
+      id: 'session-no-limit',
+      label: 'Session consent, no limit',
+      screen: sessionScreen(evmWallet, unlimitedSessionPolicy, now),
     },
     {
       id: 'export',

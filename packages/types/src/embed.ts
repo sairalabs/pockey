@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { Appearance, LoginMethod, PublicAppConfig } from './app.js';
 import { ChainFamily } from './chains.js';
+import {
+  CreateSessionInput,
+  SessionList,
+  SessionSigner,
+  SessionSignOutput,
+  SessionSignRequest,
+} from './session.js';
 import { EndUser } from './user.js';
 import {
   SendTransactionInput,
@@ -87,6 +94,16 @@ export const HostRequest = z.discriminatedUnion('type', [
   /** Opens the export screen. The key is revealed inside the iframe only. */
   request({ type: z.literal('exportWallet'), walletId: z.string() }),
   request({ type: z.literal('registerPasskey') }),
+  /** Session signers (T4.3). `createSession` shows a consent screen describing the policy. */
+  request({ type: z.literal('createSession'), input: CreateSessionInput }),
+  request({ type: z.literal('listSessions') }),
+  request({ type: z.literal('revokeSession'), sessionId: z.string() }),
+  /** Signs under an existing session without any UI. The policy is enforced server side. */
+  request({
+    type: z.literal('signWithSession'),
+    sessionId: z.string(),
+    request: SessionSignRequest,
+  }),
   /** Closes any open screen, rejecting the pending interactive request with `user_rejected`. */
   request({ type: z.literal('close') }),
 ]);
@@ -106,6 +123,10 @@ export const HostResponseData = {
   sendTransaction: SendTransactionOutput,
   exportWallet: z.object({ ok: z.literal(true) }),
   registerPasskey: z.object({ user: EndUser }),
+  createSession: SessionSigner,
+  listSessions: SessionList,
+  revokeSession: z.object({ ok: z.literal(true) }),
+  signWithSession: SessionSignOutput,
   close: z.object({ ok: z.literal(true) }),
 } satisfies Record<HostRequestType, z.ZodType>;
 
@@ -129,7 +150,12 @@ export const EMBED_ERROR_CODES = [
   'invalid_message',
 ] as const;
 
-export const EmbedError = z.object({ code: z.string().min(1), message: z.string() });
+export const EmbedError = z.object({
+  code: z.string().min(1),
+  message: z.string(),
+  /** Machine reason, e.g. a POLICY_VIOLATIONS entry for session refusals. */
+  reason: z.string().optional(),
+});
 export type EmbedError = z.infer<typeof EmbedError>;
 
 export const EmbedMessage = z.discriminatedUnion('type', [

@@ -259,6 +259,57 @@ export const sponsorBalances = sqliteTable('sponsor_balances', {
   updatedAt: timestamp('updated_at'),
 });
 
+/**
+ * Append-only audit of every balance movement (T4.6). `balance_cents` above is
+ * the fast path; this ledger explains it. Top-ups are positive, charges negative.
+ * `reference` is unique so a replayed webhook or a retried charge cannot count twice.
+ */
+export const sponsorLedger = sqliteTable(
+  'sponsor_ledger',
+  {
+    id: text('id').primaryKey(),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: ['topup', 'charge', 'refund'] }).notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    reference: text('reference').notNull(),
+    meta: json<Record<string, unknown>>('meta'),
+    createdAt: timestamp('created_at'),
+  },
+  (t) => [
+    uniqueIndex('sponsor_ledger_reference_idx').on(t.reference),
+    index('sponsor_ledger_app_idx').on(t.appId, t.createdAt),
+  ],
+);
+
+/**
+ * Wallets Pocketkey owns on behalf of an app (section 7.5): the Solana fee payer
+ * lives in a system sub-organization at the key provider, one per app.
+ */
+export const appSystemWallets = sqliteTable(
+  'app_system_wallets',
+  {
+    id: text('id').primaryKey(),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    purpose: text('purpose', { enum: ['solana_fee_payer'] }).notNull(),
+    keyProviderSubOrgId: text('key_provider_sub_org_id').notNull(),
+    keyProviderWalletId: text('key_provider_wallet_id').notNull(),
+    address: text('address').notNull(),
+    createdAt: timestamp('created_at'),
+  },
+  (t) => [uniqueIndex('app_system_wallets_purpose_idx').on(t.appId, t.purpose)],
+);
+
+/** Processed payment provider events, so webhook retries are idempotent. */
+export const paymentEvents = sqliteTable('payment_events', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  processedAt: timestamp('processed_at'),
+});
+
 export const webhooks = sqliteTable(
   'webhooks',
   {
@@ -393,3 +444,5 @@ export type WalletRow = typeof wallets.$inferSelect;
 export type SessionSignerRow = typeof sessionSigners.$inferSelect;
 export type UsageEventRow = typeof usageEvents.$inferSelect;
 export type UsageMonthlyRow = typeof usageMonthly.$inferSelect;
+export type SponsorLedgerRow = typeof sponsorLedger.$inferSelect;
+export type AppSystemWalletRow = typeof appSystemWallets.$inferSelect;

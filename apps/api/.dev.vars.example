@@ -19,6 +19,11 @@ MAILER=console
 # TURNKEY_API_PUBLIC_KEY=
 # TURNKEY_API_PRIVATE_KEY=
 # TURNKEY_ORG_ID=
+# Gas sponsoring. mock payments sign webhooks with a public test secret and static
+# prices are fixed (ETH 3000, SOL 150, POL 0.5 USD): production needs stripe and coingecko.
+# PAYMENTS=mock
+# PRICE_FEED=static
 # STRIPE_SECRET_KEY=
 # STRIPE_WEBHOOK_SECRET=
+# Without it, EVM sponsored sends answer 400 (Solana sponsoring still works).
 # PIMLICO_API_KEY=

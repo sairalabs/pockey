@@ -10,15 +10,20 @@ import {
   PublicAppId,
   RefreshToken,
   SendTransactionOutput,
+  SessionList,
+  SessionSigner,
+  SessionSignOutput,
   SignMessageOutput,
   SignTransactionOutput,
   Wallet,
   WalletList,
   WalletNonceOutput,
   type ChainFamily,
+  type CreateSessionInput,
   type EndUser,
   type EvmTransactionRequest,
   type SendTransactionInput,
+  type SessionSignRequestInput,
   type SignMessageInput,
   type SignTypedDataInput,
   type SolanaCluster,
@@ -171,6 +176,23 @@ export interface PocketkeyClient {
       }): Promise<SendTransactionOutput>;
     };
   };
+  /**
+   * Session signers (section 7.4): the user allows the app to sign within a
+   * policy without a confirmation each time. Policy refusals reject
+   * `policy_violation` (HTTP 403) with `details.reason`, see `policyViolationReason`.
+   */
+  sessions: {
+    /** `POST /v1/sessions`. Creates the key provider policy for the wallet. */
+    create(input: CreateSessionInput): Promise<SessionSigner>;
+    /** `GET /v1/sessions`, newest first, including revoked and expired sessions. */
+    list(): Promise<SessionSigner[]>;
+    /** `DELETE /v1/sessions/:id`. Idempotent. */
+    revoke(sessionId: string): Promise<void>;
+    /** `POST /v1/sessions/:id/sign`. No confirmation: the policy is enforced server side. */
+    sign(sessionId: string, request: SessionSignRequestInput): Promise<SessionSignOutput>;
+    /** Active = not revoked and not expired at call time. */
+    isActive(session: SessionSigner, now?: Date): boolean;
+  };
   /** Low level: typed request with app header, auth, bridge cookies, refresh-and-retry, Zod output validation. */
   request<T>(path: string, init: RequestOptions<T>): Promise<T>;
 }
@@ -187,6 +209,14 @@ const JWT = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
 const COOKIE_HEADER_VALUE = /^[\x20-\x7e]{0,8192}$/;
 const IsoDate = z.iso.datetime();
 const OtpSent = z.object({ success: z.boolean() });
+const RevokeOutput = z.object({ ok: z.literal(true) });
+
+/** Active = not revoked and not expired at `now` (default: call time). */
+export function isSessionActive(session: SessionSigner, now: Date = new Date()): boolean {
+  if (session.revokedAt !== null) return false;
+  const expiresAt = Date.parse(session.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt > now.getTime();
+}
 
 function notAuthenticated(message = 'Sign in first'): PocketkeyError {
   return new PocketkeyError('not_authenticated', message);
@@ -667,6 +697,30 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     },
   };
 
+  const sessionPath = (sessionId: string, action = '') =>
+    `/v1/sessions/${encodeURIComponent(sessionId)}${action ? `/${action}` : ''}`;
+
+  const sessions: PocketkeyClient['sessions'] = {
+    create(input) {
+      return authed('/v1/sessions', { method: 'POST', body: input, schema: SessionSigner });
+    },
+    async list() {
+      const out = await authed('/v1/sessions', { schema: SessionList });
+      return out.sessions;
+    },
+    async revoke(sessionId) {
+      await authed(sessionPath(sessionId), { method: 'DELETE', schema: RevokeOutput });
+    },
+    sign(sessionId, request) {
+      return authed(sessionPath(sessionId, 'sign'), {
+        method: 'POST',
+        body: request,
+        schema: SessionSignOutput,
+      });
+    },
+    isActive: isSessionActive,
+  };
+
   const client: PocketkeyClient = {
     appId,
     baseUrl,
@@ -834,6 +888,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     },
 
     wallets,
+    sessions,
 
     async request(path, init) {
       await ready();

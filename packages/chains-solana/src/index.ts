@@ -17,3 +17,15 @@ export {
 } from './transaction.js';
 export { createSolanaRpc, type SolanaRpc } from './rpc.js';
 export { buildSiwsMessage, verifySiwsLogin } from './siws.js';
+export {
+  COMPUTE_BUDGET_PROGRAM_ID,
+  computeBudget,
+  estimateFeeLamports,
+  inspectTransaction,
+  LAMPORTS_PER_SIGNATURE,
+  programIds,
+  SYSTEM_PROGRAM_ID,
+  systemTransferLamportsFrom,
+  type InspectedInstruction,
+  type InspectedTransaction,
+} from './inspect.js';

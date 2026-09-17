@@ -5,6 +5,7 @@ import type {
   SendTransactionInput,
   SignMessageInput,
   SignTypedDataInput,
+  SigningPolicy,
   TransactionRequest,
   Wallet,
 } from '@pocketkey/types';
@@ -81,6 +82,17 @@ export type Screen =
       error: EmbedError | null;
     }
   | {
+      /** Session signer consent (`createSession`). */
+      name: 'session';
+      origin: string;
+      wallet: Wallet;
+      policy: SigningPolicy;
+      /** Epoch ms the session would expire if allowed now. */
+      expiresAt: number;
+      status: ConfirmStatus;
+      error: EmbedError | null;
+    }
+  | {
       name: 'export';
       wallet: Wallet;
       status: 'idle' | 'revealing' | 'revealed' | 'simulated' | 'error';
@@ -91,7 +103,7 @@ export type Screen =
 
 export type ScreenName = Screen['name'];
 export type ScreenOf<N extends ScreenName> = Extract<Screen, { name: N }>;
-export type ConfirmScreen = ScreenOf<'signMessage' | 'signTypedData' | 'transaction'>;
+export type ConfirmScreen = ScreenOf<'signMessage' | 'signTypedData' | 'transaction' | 'session'>;
 
 export function isScreen<N extends ScreenName>(
   screen: Screen | null,
@@ -105,7 +117,8 @@ export function isConfirmScreen(screen: Screen | null): screen is ConfirmScreen 
     screen !== null &&
     (screen.name === 'signMessage' ||
       screen.name === 'signTypedData' ||
-      screen.name === 'transaction')
+      screen.name === 'transaction' ||
+      screen.name === 'session')
   );
 }
 

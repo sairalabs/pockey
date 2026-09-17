@@ -5,11 +5,17 @@
  */
 export class PocketkeyEmbedError extends Error {
   readonly code: string;
+  /**
+   * For `policy_violation` (session signers): why the policy refused the request,
+   * `value_per_tx_exceeded`, `session_expired`, `provider_denied`...
+   */
+  readonly reason: string | undefined;
 
-  constructor(code: string, message: string) {
+  constructor(code: string, message: string, reason?: string) {
     super(message);
     this.name = 'PocketkeyEmbedError';
     this.code = code;
+    this.reason = reason;
   }
 }
 

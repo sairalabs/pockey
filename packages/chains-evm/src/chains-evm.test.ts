@@ -386,3 +386,27 @@ describe('SIWE', () => {
     expect(await verifySiweLogin({ message, signature, expectedNonce: nonce, now })).toBeNull();
   });
 });
+
+describe('unsigned serialization for key provider policies', () => {
+  it('round trips through parseEvmTransaction', async () => {
+    const { serializeUnsignedTransaction, parseEvmTransaction } = await import('./index.js');
+    const tx = {
+      chainId: 8453 as const,
+      to: '0x4200000000000000000000000000000000000006' as const,
+      value: 1234n,
+      data: '0xdeadbeef' as const,
+      nonce: 3,
+      gas: 21000n,
+      maxFeePerGas: 2n,
+      maxPriorityFeePerGas: 1n,
+    };
+    const parsed = parseEvmTransaction(serializeUnsignedTransaction(tx));
+    expect(parsed).toEqual({
+      chainId: 8453,
+      to: '0x4200000000000000000000000000000000000006',
+      value: 1234n,
+      data: '0xdeadbeef',
+      signed: false,
+    });
+  });
+});

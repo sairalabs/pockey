@@ -49,14 +49,16 @@ export function ScreenLayout({
             </IconButton>
           ) : null}
         </div>
-        {/* Without media the title shares the first row with the corner buttons. */}
-        <div
-          className={clsx('flex flex-col items-center pt-2 text-center', media ? 'px-2' : 'px-10')}
-        >
+        <div className="flex flex-col items-center px-2 pt-2 text-center">
           {media ? <div className="mb-4">{media}</div> : null}
+          {/* Without media the title shares the first row with the corner buttons; the subtitle
+              starts below them and can use the full width. */}
           <h2
             id={titleId}
-            className="text-[20px] leading-7 font-semibold tracking-[-0.01em] text-balance text-fg"
+            className={clsx(
+              'text-[20px] leading-7 font-semibold tracking-[-0.01em] text-balance text-fg',
+              !media && 'px-8',
+            )}
           >
             {title}
           </h2>

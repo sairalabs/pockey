@@ -1,10 +1,14 @@
 import {
   EvmChainId,
   type ChainFamily,
+  type CreateSessionInput,
   type EndUser,
   type EvmTransactionRequest,
   type HostResponseDataMap,
   type PublicAppConfig,
+  type SessionSigner,
+  type SessionSignOutput,
+  type SessionSignRequestInput,
   type SignMessageInput,
   type SignTypedDataInput,
   type SolanaCluster,
@@ -39,6 +43,39 @@ export type TransactionParams = EvmTransactionParams | SolanaTransactionParams;
 export type SendTransactionParams = TransactionParams & { sponsored?: boolean };
 export type SignMessageParams = z.input<typeof SignMessageInput>;
 export type SignTypedDataParams = z.input<typeof SignTypedDataInput>;
+/** `CreateSessionInput` with plain strings for ids and addresses (validated by the embed). */
+export type CreateSessionParams = z.input<typeof CreateSessionInput>;
+/** What to sign under a session: `{ kind: 'message' | 'typedData' | 'transaction', input }`. */
+export type SessionSignParams = SessionSignRequestInput;
+
+export interface SessionsSnapshot {
+  /** Newest first, including revoked and expired sessions. */
+  sessions: SessionSigner[];
+  loading: boolean;
+  /** A load already started for the current user: the lazy load runs once per user. */
+  requested: boolean;
+}
+
+const NO_SESSIONS: SessionsSnapshot = { sessions: [], loading: false, requested: false };
+
+type SessionsPatch = (sessions: SessionSigner[]) => SessionSigner[];
+
+/** Replaces the session with the same id, or puts it first (newest). */
+export function upsertSession(sessions: SessionSigner[], session: SessionSigner): SessionSigner[] {
+  return sessions.some((candidate) => candidate.id === session.id)
+    ? sessions.map((candidate) => (candidate.id === session.id ? session : candidate))
+    : [session, ...sessions];
+}
+
+export function markSessionRevoked(
+  sessions: SessionSigner[],
+  sessionId: string,
+  revokedAt: string,
+): SessionSigner[] {
+  return sessions.map((session) =>
+    session.id === sessionId && session.revokedAt === null ? { ...session, revokedAt } : session,
+  );
+}
 
 /** A chain family (`evm`, `solana`) or a wallet id (`wlt_...`). String autocomplete kept for the families. */
 export type WalletRef = ChainFamily | (string & Record<never, never>);
@@ -113,6 +150,13 @@ export class PocketkeyClient {
   #config: PocketkeyConfig | undefined;
   #onError: ((error: PocketkeyEmbedError) => void) | undefined;
   #evmProvider: EIP1193Provider | null = null;
+  #sessions: SessionsSnapshot = NO_SESSIONS;
+  #sessionListeners = new Set<() => void>();
+  /** Bumped when the user changes: late results for the previous user are dropped. */
+  #sessionsGeneration = 0;
+  #sessionsLoad: Promise<SessionSigner[]> | null = null;
+  /** Creations and revocations made while a load is in flight, replayed over its result. */
+  #sessionsPatches: SessionsPatch[] = [];
 
   constructor(config?: PocketkeyConfig) {
     this.#config = config;
@@ -130,10 +174,40 @@ export class PocketkeyClient {
   getSnapshot = (): ClientSnapshot => this.#snapshot;
 
   #update(patch: Partial<ClientSnapshot>): void {
+    const previousUserId = this.#snapshot.user?.id ?? null;
     const next = { ...this.#snapshot, ...patch };
     if (findWallet(next.user, 'solana')) next.solanaSeen = true;
     this.#snapshot = next;
+    if ((next.user?.id ?? null) !== previousUserId) this.#resetSessions();
     for (const listener of [...this.#listeners]) listener();
+  }
+
+  subscribeSessions = (listener: () => void): (() => void) => {
+    this.#sessionListeners.add(listener);
+    return () => {
+      this.#sessionListeners.delete(listener);
+    };
+  };
+
+  getSessionsSnapshot = (): SessionsSnapshot => this.#sessions;
+
+  #setSessions(patch: Partial<SessionsSnapshot>): void {
+    this.#sessions = { ...this.#sessions, ...patch };
+    for (const listener of [...this.#sessionListeners]) listener();
+  }
+
+  #patchSessions(patch: SessionsPatch): void {
+    if (this.#sessionsLoad) this.#sessionsPatches.push(patch);
+    this.#setSessions({ sessions: patch(this.#sessions.sessions) });
+  }
+
+  #resetSessions(): void {
+    this.#sessionsGeneration += 1;
+    this.#sessionsLoad = null;
+    this.#sessionsPatches = [];
+    if (this.#sessions === NO_SESSIONS) return;
+    this.#sessions = NO_SESSIONS;
+    for (const listener of [...this.#sessionListeners]) listener();
   }
 
   setConfig(config: PocketkeyConfig | undefined): void {
@@ -306,6 +380,71 @@ export class PocketkeyClient {
       },
       ...confirmField(options),
     });
+  };
+
+  /* Session signers */
+
+  /** Loads the sessions once per signed-in user. Failures stay silent: `refreshSessions` retries. */
+  loadSessionsOnce = (): void => {
+    if (!this.#snapshot.user || this.#sessions.requested) return;
+    this.refreshSessions().catch(() => undefined);
+  };
+
+  refreshSessions = (): Promise<SessionSigner[]> => {
+    if (!this.#snapshot.user) return Promise.reject(notAuthenticated());
+    if (this.#sessionsLoad) return this.#sessionsLoad;
+    const generation = this.#sessionsGeneration;
+    this.#sessionsPatches = [];
+    const load = this.#request('listSessions', {}).then(
+      ({ sessions }) => {
+        if (generation !== this.#sessionsGeneration) return sessions;
+        const merged = this.#sessionsPatches.reduce((list, patch) => patch(list), sessions);
+        this.#sessionsLoad = null;
+        this.#sessionsPatches = [];
+        this.#setSessions({ sessions: merged, loading: false });
+        return merged;
+      },
+      (error: unknown) => {
+        if (generation === this.#sessionsGeneration) {
+          this.#sessionsLoad = null;
+          this.#sessionsPatches = [];
+          this.#setSessions({ loading: false });
+        }
+        throw error;
+      },
+    );
+    this.#sessionsLoad = load;
+    this.#setSessions({ loading: true, requested: true });
+    return load;
+  };
+
+  /** Opens the consent screen. Resolves once the user allowed and the session exists. */
+  createSession = async (input: CreateSessionParams): Promise<SessionSigner> => {
+    if (!this.#snapshot.user) throw notAuthenticated();
+    const generation = this.#sessionsGeneration;
+    const session = await this.#request('createSession', { input });
+    if (generation === this.#sessionsGeneration) {
+      this.#patchSessions((sessions) => upsertSession(sessions, session));
+    }
+    return session;
+  };
+
+  revokeSession = async (sessionId: string): Promise<void> => {
+    if (!this.#snapshot.user) throw notAuthenticated();
+    const generation = this.#sessionsGeneration;
+    await this.#request('revokeSession', { sessionId });
+    if (generation !== this.#sessionsGeneration) return;
+    const revokedAt = new Date().toISOString();
+    this.#patchSessions((sessions) => markSessionRevoked(sessions, sessionId, revokedAt));
+  };
+
+  /** Signs without any UI. The session policy is enforced by the API and the key provider. */
+  signWithSession = async (
+    sessionId: string,
+    request: SessionSignParams,
+  ): Promise<SessionSignOutput> => {
+    if (!this.#snapshot.user) throw notAuthenticated();
+    return this.#request('signWithSession', { sessionId, request });
   };
 
   #completeTransaction(input: TransactionParams): EvmTransactionWire | SolanaTransactionWire {

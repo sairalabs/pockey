@@ -3,18 +3,22 @@ import type {
   EndUser,
   LoginMethod,
   SendTransactionOutput,
+  SessionSigner,
+  SessionSignOutput,
   SignMessageOutput,
   SignTransactionOutput,
   SolanaCluster,
   Wallet,
 } from '@pocketkey/types';
-import { useContext, useMemo, useSyncExternalStore } from 'react';
+import { useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
 import {
   findWallet,
   selectChainId,
   selectCluster,
   type ClientSnapshot,
+  type CreateSessionParams,
   type PocketkeyClient,
+  type SessionSignParams,
   type SendTransactionParams,
   type SignMessageParams,
   type SignOptions,
@@ -83,6 +87,31 @@ export interface UseSignResult {
     input: TransactionParams,
     options?: SignOptions,
   ) => Promise<SignTransactionOutput>;
+}
+
+export interface UseSessionSignersResult {
+  /**
+   * The user's session signers, newest first, including revoked and expired ones (active means
+   * `revokedAt === null` and `expiresAt` in the future). Loaded lazily the first time the hook
+   * is used while authenticated, cleared on logout.
+   */
+  sessions: SessionSigner[];
+  /** True while the list loads, including before the first load starts for a signed-in user. */
+  loading: boolean;
+  /** Refetches the list. Rejects `not_authenticated` when logged out. */
+  refresh: () => Promise<SessionSigner[]>;
+  /**
+   * Opens the consent screen describing the policy. Resolves with the session once the user
+   * allowed it, rejects `user_rejected` when they deny. `sessions` updates without a refetch.
+   */
+  createSession: (input: CreateSessionParams) => Promise<SessionSigner>;
+  /** Revokes the session (idempotent). `sessions` updates without a refetch. */
+  revokeSession: (sessionId: string) => Promise<void>;
+  /**
+   * Signs under a session without showing anything. A refusal rejects `policy_violation` with
+   * `error.reason` (`value_per_tx_exceeded`, `session_expired`, `provider_denied`...).
+   */
+  signWithSession: (sessionId: string, request: SessionSignParams) => Promise<SessionSignOutput>;
 }
 
 const NO_WALLETS: Wallet[] = [];
@@ -193,5 +222,34 @@ export function useSign(): UseSignResult {
       signTransaction: client.signTransaction,
     }),
     [client],
+  );
+}
+
+export function useSessionSigners(): UseSessionSignersResult {
+  const { client } = usePocketkeyContext('useSessionSigners');
+  const { user } = useSnapshot(client);
+  const state = useSyncExternalStore(
+    client.subscribeSessions,
+    client.getSessionsSnapshot,
+    client.getSessionsSnapshot,
+  );
+  const userId = user?.id ?? null;
+
+  useEffect(() => {
+    if (userId !== null) client.loadSessionsOnce();
+  }, [client, userId, state.requested]);
+
+  const loading = state.loading || (userId !== null && !state.requested);
+
+  return useMemo(
+    () => ({
+      sessions: state.sessions,
+      loading,
+      refresh: client.refreshSessions,
+      createSession: client.createSession,
+      revokeSession: client.revokeSession,
+      signWithSession: client.signWithSession,
+    }),
+    [client, state.sessions, loading],
   );
 }
