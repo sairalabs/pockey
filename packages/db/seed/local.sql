@@ -11,7 +11,7 @@ VALUES (
   'Playground',
   'playground',
   '["http://localhost:3810","http://localhost:3800"]',
-  '{"loginMethods":["email","google","apple","passkey","wallet"],"chains":{"evm":[8453,84532],"solana":["devnet"]},"appearance":{"theme":"system","accent":"#7c3aed"},"embeddedWallets":{"createOnLogin":"all"},"gasSponsoring":{"evm":false,"solana":false,"solanaDailyCapLamports":"0"}}'
+  '{"loginMethods":["email","google","apple","passkey","wallet"],"chains":{"evm":[8453,84532],"solana":["devnet"]},"appearance":{"theme":"system","accent":"#d2042d"},"embeddedWallets":{"createOnLogin":"all"},"gasSponsoring":{"evm":false,"solana":false,"solanaDailyCapLamports":"0"}}'
 )
 ON CONFLICT(id) DO UPDATE SET allowed_origins = excluded.allowed_origins, config = excluded.config;
 

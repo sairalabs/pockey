@@ -49,7 +49,7 @@ export function WalletAddress({ wallet }: { wallet: Wallet }) {
   return (
     <span className="flex min-w-0 items-center gap-2" title={wallet.address}>
       <ChainIcon family={wallet.chainFamily} />
-      <span className="font-mono text-[13px] tabular-nums">
+      <span className="text-[13px] tabular-nums">
         {formatAddress(wallet.address, wallet.chainFamily)}
       </span>
     </span>

@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import type { CSSProperties, ReactNode } from 'react';
-import { accentForeground, DEFAULT_ACCENT, isHexColor, resolveTheme } from '../lib/theme';
+import { resolveAccentColors, resolveTheme } from '../lib/theme';
 import { useMediaQuery } from './hooks';
 
 export function ThemeScope({
@@ -15,17 +15,14 @@ export function ThemeScope({
   children: ReactNode;
 }) {
   const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
-  const color = isHexColor(accent) ? accent : DEFAULT_ACCENT;
+  const mode = resolveTheme(theme, prefersDark);
+  const colors = resolveAccentColors(accent, mode);
   const style = {
-    '--accent': color,
-    '--accent-fg': accentForeground(color),
+    '--accent': colors.accent,
+    '--accent-fg': colors.foreground,
   } as CSSProperties;
   return (
-    <div
-      className={clsx('pk-theme', className)}
-      data-theme={resolveTheme(theme, prefersDark)}
-      style={style}
-    >
+    <div className={clsx('pk-theme', className)} data-theme={mode} style={style}>
       {children}
     </div>
   );

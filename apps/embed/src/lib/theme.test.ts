@@ -1,18 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { accentForeground, contrastRatio, resolveTheme } from './theme';
+import { DEFAULT_ACCENT, resolveAccentColors, resolveTheme, textOnColor } from './theme';
 
 describe('theme', () => {
-  it('picks near black on a bright yellow accent', () => {
-    expect(accentForeground('#ffff00')).toBe('#0a0a0a');
+  it('defaults to cherry with white text', () => {
+    expect(DEFAULT_ACCENT).toBe('#d2042d');
+    expect(textOnColor(DEFAULT_ACCENT)).toBe('#ffffff');
   });
 
-  it('picks white on the default violet accent', () => {
-    expect(accentForeground('#7c3aed')).toBe('#ffffff');
+  it('picks near black text only on pale accents', () => {
+    expect(textOnColor('#ffff00')).toBe('#0a0a0a');
+    expect(textOnColor('#f97316')).toBe('#ffffff');
   });
 
-  it('computes WCAG contrast ratios', () => {
-    expect(contrastRatio('#ffffff', '#000000')).toBeCloseTo(21, 5);
-    expect(contrastRatio('#7c3aed', '#7c3aed')).toBeCloseTo(1, 5);
+  it('renders white primary buttons for a black accent on the dark theme', () => {
+    expect(resolveAccentColors('#0a0a0a', 'dark')).toMatchObject({
+      accent: '#fafafa',
+      foreground: '#0a0a0a',
+    });
+    expect(resolveAccentColors('#0a0a0a', 'light')).toMatchObject({
+      accent: '#0a0a0a',
+      foreground: '#ffffff',
+    });
   });
 
   it('resolves system against the color scheme preference', () => {

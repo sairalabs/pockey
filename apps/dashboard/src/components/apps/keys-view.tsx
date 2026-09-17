@@ -31,14 +31,16 @@ export function KeysView({ app }: { app: AppSummary }) {
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-[10px] bg-surface-2 ps-3 pe-1 py-1">
-          <code className="min-w-0 flex-1 truncate font-mono text-[13px]">{app.app.publicId}</code>
+          <span className="min-w-0 flex-1 truncate tabular-nums text-[13px]">
+            {app.app.publicId}
+          </span>
           <CopyButton value={app.app.publicId} label="Copy public app id" />
         </div>
         <ul className="flex flex-wrap gap-1.5">
           {app.app.allowedOrigins.map((origin) => (
             <li
               key={origin}
-              className="rounded-pill bg-surface-2 px-2.5 py-1 font-mono text-[12px] text-fg-2 shadow-border"
+              className="rounded-pill bg-surface-2 px-2.5 py-1 tabular-nums text-[12px] text-fg-2 shadow-border"
             >
               {origin}
             </li>

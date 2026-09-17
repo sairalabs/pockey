@@ -146,7 +146,7 @@ export function SponsoringView({ app }: { app: AppSummary }) {
             <tbody>
               {sponsoredTxs.map((tx) => (
                 <tr key={tx.hash}>
-                  <Td className="font-mono text-[13px]">{truncateMiddle(tx.hash, 8, 6)}</Td>
+                  <Td className="tabular-nums text-[13px]">{truncateMiddle(tx.hash, 8, 6)}</Td>
                   <Td className="text-fg-2">{tx.userIdentifier}</Td>
                   <Td className="text-fg-2">{tx.chain}</Td>
                   <Td className="text-right num">{formatEth(tx.gasWei, 6)}</Td>

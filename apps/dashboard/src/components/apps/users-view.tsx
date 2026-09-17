@@ -99,7 +99,7 @@ export function UsersView({ users }: { users: readonly EndUserRow[] }) {
                       {user.wallets.map((wallet) => (
                         <span
                           key={wallet.id}
-                          className="inline-flex h-6 items-center gap-1.5 rounded-pill bg-surface-2 ps-2 pe-2.5 font-mono text-[12px] text-fg-2 shadow-border"
+                          className="inline-flex h-6 items-center gap-1.5 rounded-pill bg-surface-2 ps-2 pe-2.5 tabular-nums text-[12px] text-fg-2 shadow-border"
                         >
                           <span
                             aria-hidden="true"

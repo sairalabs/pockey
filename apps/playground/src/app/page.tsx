@@ -79,7 +79,7 @@ function Row({ label, value, testId }: { label: string; value: string; testId?: 
   return (
     <div className="flex items-baseline justify-between gap-4 text-sm">
       <span className="text-fg-2">{label}</span>
-      <span data-testid={testId} className="num truncate font-mono">
+      <span data-testid={testId} className="num truncate tabular-nums">
         {value}
       </span>
     </div>
@@ -226,7 +226,7 @@ export default function Playground() {
               onChange={(event) => {
                 setMessage(event.target.value);
               }}
-              className="h-10 rounded-xl bg-surface-2 px-3 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="h-10 rounded-xl bg-surface-2 px-3 tabular-nums text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
           </label>
           <div className="flex flex-wrap gap-2">
@@ -340,7 +340,7 @@ export default function Playground() {
                 <span className={entry.ok ? 'text-ok' : 'text-danger'}>{entry.label}</span>
                 <span className="num text-xs text-fg-2">{entry.ms} ms</span>
               </div>
-              <pre className="mt-1 max-h-48 overflow-auto rounded-xl bg-surface-2 p-3 font-mono text-xs whitespace-pre-wrap break-all">
+              <pre className="mt-1 max-h-48 overflow-auto rounded-xl bg-surface-2 p-3 tabular-nums text-xs whitespace-pre-wrap break-all">
                 {entry.output}
               </pre>
             </li>

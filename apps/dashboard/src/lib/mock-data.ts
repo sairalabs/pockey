@@ -57,7 +57,7 @@ const playground = App.parse({
   config: {
     loginMethods: ['email', 'google', 'passkey'],
     chains: { evm: [8453, 42161], solana: ['mainnet-beta'] },
-    appearance: { theme: 'system', accent: '#7c3aed', name: 'Playground' },
+    appearance: { theme: 'system', accent: '#d2042d', name: 'Playground' },
     embeddedWallets: { createOnLogin: 'all' },
     gasSponsoring: { evm: true, solana: false, solanaDailyCapLamports: '0' },
   },

@@ -39,7 +39,7 @@ const CLUSTER_BY_CHAIN: Partial<Record<string, SolanaCluster>> = {
 };
 
 const ICON_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="#7c3aed"/><circle cx="40" cy="48" r="16" fill="none" stroke="#fff" stroke-width="8"/><path d="M56 48h24M70 48v12" stroke="#fff" stroke-width="8" stroke-linecap="round"/></svg>';
+  '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="#d2042d"/><circle cx="40" cy="48" r="16" fill="none" stroke="#fff" stroke-width="8"/><path d="M56 48h24M70 48v12" stroke="#fff" stroke-width="8" stroke-linecap="round"/></svg>';
 
 export const POCKETKEY_WALLET_ICON: `data:image/svg+xml;base64,${string}` = `data:image/svg+xml;base64,${btoa(ICON_SVG)}`;
 

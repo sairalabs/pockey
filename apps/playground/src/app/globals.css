@@ -8,7 +8,7 @@
   --text: #0a0a0a;
   --text-2: #52525b;
   --ring: oklch(0 0 0 / 0.08);
-  --accent: #7c3aed;
+  --accent: #d2042d;
   --danger: #dc2626;
   --ok: #16a34a;
 }
@@ -36,7 +36,6 @@
   --color-danger: var(--danger);
   --color-ok: var(--ok);
   --shadow-ring: 0 0 0 1px var(--ring);
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 body {
@@ -55,4 +54,12 @@ body {
 
 .num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Preference: no monospace anywhere, codes and hashes use the site font with tabular numbers. */
+code,
+kbd,
+samp,
+pre {
+  font-family: inherit;
 }

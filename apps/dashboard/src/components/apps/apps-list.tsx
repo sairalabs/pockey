@@ -81,9 +81,9 @@ export function AppsList({ initial }: { initial: readonly AppSummary[] }) {
             </Link>
 
             <div className="flex items-center gap-1 rounded-[10px] bg-surface-2 ps-3 pe-1 py-1">
-              <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-fg-2">
+              <span className="min-w-0 flex-1 truncate tabular-nums text-[12px] text-fg-2">
                 {entry.app.publicId}
-              </code>
+              </span>
               <CopyButton value={entry.app.publicId} label="Copy public app id" />
             </div>
 

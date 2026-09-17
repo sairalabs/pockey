@@ -77,7 +77,7 @@ function MessageBox({
         tabIndex={0}
         role="region"
         aria-label={label}
-        className="max-h-[200px] overflow-y-auto overscroll-contain rounded-xl bg-surface-2 px-4 py-3 font-mono text-[13px] leading-5 break-words whitespace-pre-wrap text-fg shadow-[inset_0_0_0_1px_var(--ring)]"
+        className="max-h-[200px] overflow-y-auto overscroll-contain rounded-xl bg-surface-2 px-4 py-3 text-[14px] leading-5 break-words whitespace-pre-wrap text-fg shadow-[inset_0_0_0_1px_var(--ring)]"
       >
         {children}
       </div>
@@ -159,7 +159,7 @@ const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 function TypedValue({ value }: { value: string }) {
   const [expanded, setExpanded] = useState(false);
   if (value.length <= SHORT_VALUE) {
-    return <span className="font-mono text-[13px] tabular-nums">{value}</span>;
+    return <span className="text-[13px] tabular-nums">{value}</span>;
   }
   const collapsed = EVM_ADDRESS.test(value) ? formatAddress(value, 'evm') : null;
   return (
@@ -170,7 +170,7 @@ function TypedValue({ value }: { value: string }) {
       onClick={() => {
         setExpanded((current) => !current);
       }}
-      className="min-w-0 rounded-md text-right font-mono text-[13px] text-fg tabular-nums hover:text-fg-2"
+      className="min-w-0 rounded-md text-right text-[13px] text-fg tabular-nums hover:text-fg-2"
     >
       {expanded ? (
         <span className="break-all">{value}</span>
@@ -244,7 +244,7 @@ export function SignTypedDataScreen({ screen, actions, titleId }: ScreenProps<'s
           <span className="truncate text-[15px] font-medium text-fg">
             {domain.name ?? 'Unknown app'}
           </span>
-          <span className="shrink-0 font-mono text-[13px] text-fg-2">{primaryType}</span>
+          <span className="shrink-0 text-[13px] text-fg-2">{primaryType}</span>
         </div>
         <TypedEntries entries={Object.entries(message)} depth={0} />
       </section>
@@ -284,7 +284,7 @@ function DataRow({ data }: { data: string }) {
         </span>
       </button>
       {open ? (
-        <div className="mt-2 max-h-[160px] overflow-y-auto rounded-lg bg-surface px-3 py-2 font-mono text-[12px] leading-5 break-all text-fg-2">
+        <div className="mt-2 max-h-[160px] overflow-y-auto rounded-lg bg-surface px-3 py-2 text-[12px] leading-5 break-all text-fg-2">
           {data}
         </div>
       ) : null}
@@ -303,7 +303,7 @@ export function TransactionScreen({ screen, actions, titleId }: ScreenProps<'tra
     rows = (
       <>
         <DetailRow label="To">
-          <span className="font-mono text-[13px] tabular-nums" title={input.to}>
+          <span className="text-[13px] tabular-nums" title={input.to}>
             {formatAddress(input.to, 'evm')}
           </span>
           <span className="-my-1 -mr-3">

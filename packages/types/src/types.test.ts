@@ -33,7 +33,7 @@ describe('AppConfig', () => {
     const config = AppConfig.parse({});
     expect(config.loginMethods).toEqual(['email', 'google', 'passkey']);
     expect(config.chains.evm).toEqual([8453]);
-    expect(config.appearance.accent).toBe('#7c3aed');
+    expect(config.appearance.accent).toBe('#d2042d');
     expect(config.embeddedWallets.createOnLogin).toBe('all');
     expect(config.gasSponsoring.evm).toBe(false);
   });

@@ -5,9 +5,11 @@ import {
   type CreateOnLogin,
   type EvmChainId,
   type LoginMethod,
+  normalizeHexColor,
   type SolanaCluster,
+  textOnColor,
 } from '@pocketkey/types';
-import { Check } from 'lucide-react';
+import { Check, Pipette } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +56,7 @@ const themeOptions = [
 ] as const;
 
 const accentSwatches = [
-  '#7c3aed',
+  '#d2042d',
   '#0052ff',
   '#059669',
   '#db2777',
@@ -75,6 +77,9 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
   const [draft, setDraft] = useState<AppConfig>(() => structuredClone(app.app.config));
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const isCustomAccent = !(accentSwatches as readonly string[]).includes(
+    draft.appearance.accent.toLowerCase(),
+  );
 
   const update = (patch: (current: AppConfig) => AppConfig) => {
     setDraft((current) => patch(current));
@@ -222,18 +227,54 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
                           }));
                         }}
                         className={cn(
-                          'flex size-8 items-center justify-center rounded-full text-white',
+                          'flex size-8 items-center justify-center rounded-full',
                           'transition-[transform,box-shadow] duration-150 ease-out active:scale-[0.96]',
                           selected
                             ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]'
                             : 'shadow-border hover:shadow-border-hover',
                         )}
-                        style={{ background: swatch }}
+                        style={{ background: swatch, color: textOnColor(swatch) }}
                       >
                         {selected ? <Check className="size-4" strokeWidth={2} /> : null}
                       </button>
                     );
                   })}
+                  <label
+                    htmlFor={`${id}-accent-native`}
+                    title="Custom color"
+                    className={cn(
+                      'relative flex size-8 cursor-pointer items-center justify-center rounded-full',
+                      'transition-[transform,box-shadow] duration-150 ease-out active:scale-[0.96]',
+                      isCustomAccent
+                        ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]'
+                        : 'shadow-border hover:shadow-border-hover',
+                    )}
+                    style={{
+                      background: isCustomAccent
+                        ? (normalizeHexColor(draft.appearance.accent) ?? 'transparent')
+                        : 'conic-gradient(from 90deg, #d2042d, #f59e0b, #16a34a, #0891b2, #0052ff, #db2777, #d2042d)',
+                    }}
+                  >
+                    <Pipette
+                      className="size-3.5"
+                      strokeWidth={2}
+                      style={{
+                        color: isCustomAccent ? textOnColor(draft.appearance.accent) : '#ffffff',
+                      }}
+                      aria-hidden="true"
+                    />
+                    <input
+                      id={`${id}-accent-native`}
+                      type="color"
+                      aria-label="Custom accent color"
+                      value={normalizeHexColor(draft.appearance.accent) ?? '#d2042d'}
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(event) => {
+                        const accent = event.target.value;
+                        update((c) => ({ ...c, appearance: { ...c.appearance, accent } }));
+                      }}
+                    />
+                  </label>
                   <label htmlFor={`${id}-accent`} className="sr-only">
                     Custom accent hex
                   </label>
@@ -242,9 +283,9 @@ export function ConfigurationPane({ app }: { app: AppSummary }) {
                     value={draft.appearance.accent}
                     maxLength={7}
                     spellCheck={false}
-                    className="h-8 w-28 font-mono text-[13px]"
+                    className="h-8 w-28 text-[13px] tabular-nums uppercase"
                     onChange={(event) => {
-                      const accent = event.target.value;
+                      const accent = normalizeHexColor(event.target.value) ?? event.target.value;
                       update((c) => ({ ...c, appearance: { ...c.appearance, accent } }));
                     }}
                   />

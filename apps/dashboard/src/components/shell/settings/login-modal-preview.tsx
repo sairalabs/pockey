@@ -1,6 +1,12 @@
 'use client';
 
-import type { Appearance, LoginMethod } from '@pocketkey/types';
+import {
+  resolveAccentColors,
+  THEME_SURFACE,
+  THEME_TEXT,
+  type Appearance,
+  type LoginMethod,
+} from '@pocketkey/types';
 import { Mail, ScanFace, Wallet } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 
@@ -44,12 +50,13 @@ export interface LoginModalPreviewProps {
 export function LoginModalPreview({ name, appearance, loginMethods }: LoginModalPreviewProps) {
   const prefersDark = usePrefersDark();
   const dark = appearance.theme === 'dark' || (appearance.theme === 'system' && prefersDark);
-  const accent = appearance.accent;
+  // Same rule as the embed: white text first, inverted accent when it melts into the surface.
+  const colors = resolveAccentColors(appearance.accent, dark ? 'dark' : 'light');
   const hasEmail = loginMethods.includes('email');
   const secondary = loginMethods.filter((m) => m !== 'email');
 
-  const bg = dark ? '#111111' : '#ffffff';
-  const fg = dark ? '#ffffff' : '#111111';
+  const bg = THEME_SURFACE[dark ? 'dark' : 'light'];
+  const fg = THEME_TEXT[dark ? 'dark' : 'light'];
   const muted = dark ? '#8a8a8a' : '#6b6b6b';
   const field = dark ? '#1c1c1c' : '#f4f4f5';
   const ring = dark ? 'oklch(1 0 0 / 0.1)' : 'oklch(0 0 0 / 0.08)';
@@ -71,7 +78,7 @@ export function LoginModalPreview({ name, appearance, loginMethods }: LoginModal
         <div className="flex items-center gap-2">
           <span
             className="inline-block size-6 rounded-[6px]"
-            style={{ background: accent }}
+            style={{ background: colors.accent }}
             aria-hidden="true"
           />
           <span className="text-[13px] font-semibold">{name || 'Your app'}</span>
@@ -91,8 +98,8 @@ export function LoginModalPreview({ name, appearance, loginMethods }: LoginModal
               you@example.com
             </div>
             <div
-              className="mt-2 flex h-8 items-center justify-center rounded-[8px] text-[11px] font-medium text-white"
-              style={{ background: accent }}
+              className="mt-2 flex h-8 items-center justify-center rounded-[8px] text-[11px] font-medium"
+              style={{ background: colors.accent, color: colors.foreground }}
             >
               {methodLabels.email}
             </div>

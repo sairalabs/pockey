@@ -8,9 +8,9 @@ import { ThemeScope } from '../components/ThemeScope';
 import { noopActions, type Nav } from '../lib/state';
 import { ScreenView } from '../screens/ScreenView';
 import type { AppInfo } from '../screens/types';
+import { ACCENT_PRESETS, AccentPicker } from './AccentPicker';
 import { PREVIEW_METHODS, PREVIEW_ORIGIN, previewCards, type PreviewCard } from './mocks';
 
-const ACCENTS = ['#7c3aed', '#0052ff', '#16a34a', '#0a0a0a'] as const;
 const NAV: Nav = { key: 1, direction: 1, keyboard: false };
 
 function Segment({
@@ -115,7 +115,7 @@ function Card({ card, app, mobile }: { card: PreviewCard; app: AppInfo; mobile: 
 
 export function Preview({ appId }: { appId: string }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [accent, setAccent] = useState<string>(ACCENTS[0]);
+  const [accent, setAccent] = useState<string>(ACCENT_PRESETS[0]);
   const [mobile, setMobile] = useState(false);
   const [cards] = useState(() => previewCards(Date.now()));
   const app: AppInfo = {
@@ -156,28 +156,7 @@ export function Preview({ appId }: { appId: string }) {
                   <Moon size={14} strokeWidth={2} aria-hidden="true" />
                 </Segment>
               </div>
-              <div className="flex items-center gap-1" role="group" aria-label="Accent">
-                {ACCENTS.map((swatch) => (
-                  <button
-                    key={swatch}
-                    type="button"
-                    aria-label={`Accent ${swatch}`}
-                    aria-pressed={accent === swatch}
-                    onClick={() => {
-                      setAccent(swatch);
-                    }}
-                    className="pk-press flex size-10 items-center justify-center rounded-full"
-                  >
-                    <span
-                      className={clsx(
-                        'size-6 rounded-full shadow-[inset_0_0_0_1px_oklch(0.5_0_0/0.25)]',
-                        accent === swatch && 'outline-2 outline-offset-2 outline-fg',
-                      )}
-                      style={{ background: swatch }}
-                    />
-                  </button>
-                ))}
-              </div>
+              <AccentPicker value={accent} mode={theme} onChange={setAccent} />
               <div className="flex rounded-xl bg-surface-2 p-0.5">
                 <Segment
                   pressed={mobile}

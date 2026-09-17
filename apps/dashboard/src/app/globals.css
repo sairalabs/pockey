@@ -62,10 +62,17 @@
   --ease-in-out-strong: var(--ease-in-out-strong);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 @layer base {
+  /* Preference: no monospace anywhere, codes and hashes use the site font with tabular numbers. */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: inherit;
+  }
+
   html {
     background: var(--bg);
   }

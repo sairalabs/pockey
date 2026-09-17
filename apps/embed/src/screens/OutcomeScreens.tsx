@@ -84,7 +84,7 @@ export function ExportScreen({ screen, actions, titleId }: ScreenProps<'export'>
       </DetailList>
       {status === 'revealed' && screen.privateKey ? (
         <div className="mt-3 flex items-start gap-1 rounded-xl bg-surface-2 py-2 pr-2 pl-4 shadow-[inset_0_0_0_1px_var(--ring)]">
-          <p className="min-w-0 flex-1 py-2 font-mono text-[13px] leading-5 break-all text-fg">
+          <p className="min-w-0 flex-1 py-2 text-[13px] leading-5 break-all text-fg">
             {screen.privateKey}
           </p>
           <CopyButton value={screen.privateKey} label="Copy private key" />

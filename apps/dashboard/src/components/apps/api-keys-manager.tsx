@@ -74,7 +74,7 @@ export function ApiKeysList({
           <p className="mt-0.5 text-[13px] text-fg-2">
             It is shown once. Only its hash and prefix are stored.
           </p>
-          <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-bg px-3 py-2 font-mono text-[13px]">
+          <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-bg px-3 py-2 tabular-nums text-[13px]">
             <span className="flex-1 truncate">{revealed}</span>
             <CopyButton value={revealed} label="Copy secret key" />
           </div>
@@ -102,7 +102,7 @@ export function ApiKeysList({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{key.name}</p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-fg-2">
-                  <span className="font-mono">{key.prefix}...</span>
+                  <span className="tabular-nums">{key.prefix}...</span>
                   <span>Created {formatDate(key.createdAt)}</span>
                   <span className="num">Last used {formatRelative(key.lastUsedAt)}</span>
                 </p>

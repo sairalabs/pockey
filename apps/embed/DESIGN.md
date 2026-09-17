@@ -12,7 +12,7 @@ The modal is the product (spec principle 4). It renders inside customer apps we 
 
 ## Theme tokens
 
-Light and dark, chosen by `appearance.theme` (`system` follows `prefers-color-scheme`). Accent from `appearance.accent` (default `#7c3aed`).
+Light and dark, chosen by `appearance.theme` (`system` follows `prefers-color-scheme`). Accent from `appearance.accent` (default cherry `#d2042d`). The color rules live in `packages/types/src/color.ts` and are shared with the dashboard preview.
 
 ```
                 light                  dark
@@ -24,10 +24,12 @@ Light and dark, chosen by `appearance.theme` (`system` follows `prefers-color-sc
 --text-3        #a3a3a3                #525252
 --ring          oklch(0 0 0 / 0.08)    oklch(1 0 0 / 0.08)
 --danger        #dc2626                #f87171
---accent        from config
---accent-fg     #ffffff or #0a0a0a, whichever contrasts more with the accent (WCAG luminance)
---accent-hover  color-mix(in oklch, var(--accent) 88%, var(--text))
+--accent        from config, replaced by --text when it melts into the surface (WCAG ratio below 1.35: black on dark, white on light)
+--accent-fg     #ffffff whenever white reaches APCA Lc 50 on the accent, #0a0a0a otherwise (white text first)
+--accent-hover  color-mix(in oklch, var(--accent) 90%, var(--accent-fg))
 ```
+
+No monospace anywhere, including hashes, addresses, codes and keys: use the site font with tabular numbers.
 
 Font: system stack `ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif` (no webfont: CSP and host neutrality). 15px body, 20px/600 titles, 13px secondary. Tabular numbers for codes, amounts, countdowns, addresses.
 
@@ -49,14 +51,14 @@ No em dash anywhere. Sentence case. Short.
 7. **Confirm signature** (`signMessage`, `signTypedData`)
    - Title `Sign message` or `Sign data`. Requester row: favicon-less origin chip `{host}`.
    - Wallet row: chain icon + truncated address `0x4bF0...F711` (middle truncation, tabular).
-   - Message box: mono 13px, 12px radius, max-height 200px scroll. Hex messages that decode to printable UTF-8 show decoded text with a `Hex` toggle.
+   - Message box: site font 14px with tabular numbers (never monospace), 12px radius, max-height 200px scroll. Hex messages that decode to printable UTF-8 show decoded text with a `Hex` toggle.
    - Typed data: `{domain.name}` + primary type, then a key/value list (nested objects indented one level, long values truncated with expand).
    - Buttons: `Cancel` secondary, `Sign` primary, full width row, 8px gap.
 8. **Confirm transaction** (`signTransaction`, `sendTransaction`)
    - Title `Confirm transaction`. Rows: `To` (truncated + copy icon), `Amount` (formatted with symbol ETH or SOL and full precision on hover), `Network` (name from chain id or cluster), `Data` (`{n} bytes` expandable) for EVM, `Instructions` count for Solana.
    - Primary label `Send` for send, `Sign` for sign.
    - Pending: the primary label cross-fades to a spinner, button width stays fixed (no layout shift).
-9. **Export**: warning icon, title `Export private key`, body `Anyone with this key has full control of this wallet. Never share it.` Hold-to-reveal button `Hold to reveal` (emil hold-to-delete pattern: 1.5s linear clip-path fill on press, 200ms ease-out snap back on release). Revealed state shows the key in a mono box with copy. With the mock key provider the bundle is not a key: show `Development build: export is simulated`.
+9. **Export**: warning icon, title `Export private key`, body `Anyone with this key has full control of this wallet. Never share it.` Hold-to-reveal button `Hold to reveal` (emil hold-to-delete pattern: 1.5s linear clip-path fill on press, 200ms ease-out snap back on release). Revealed state shows the key in a box with copy, site font, tabular numbers. With the mock key provider the bundle is not a key: show `Development build: export is simulated`.
 10. **Error**: inline where possible. Full screen fallback: title `Something went wrong`, the API message, `Close`.
 
 ## Motion (exact values)
@@ -80,4 +82,4 @@ No em dash anywhere. Sentence case. Short.
 
 ## Preview mode
 
-Opening the embed top level with `?preview=1&appId=...` renders every screen above on one page with mock data, plus theme (light, dark) and accent toggles. It exists so design can iterate without going through the host SDK.
+Opening the embed top level with `?preview=1&appId=...` renders every screen above on one page with mock data, plus theme (light, dark), accent presets (cherry, blue, green, black), a custom color (native picker and hex field) and a chip showing the resolved fill and text color. It exists so design can iterate without going through the host SDK.

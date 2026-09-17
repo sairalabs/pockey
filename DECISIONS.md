@@ -65,3 +65,13 @@ Journal des décisions non couvertes par `POCKETKEY_SPEC.md`. Une entrée = date
   - Mode `?preview=1` : tous les écrans en statique, clair et sombre, variantes d'accent et bottom sheet mobile, pour itérer sur le design sans passer par le SDK.
   - L'export affiche un avis « simulé » avec le fournisseur de clés mock ; le déchiffrement du bundle Turnkey réel reste à faire avec T0.5.
 - **E2E (T3.4)** : Playwright 1.63 (Chromium déjà en cache) démarre l'API sur wrangler dev (mailer console, code lu dans `.e2e/api.log`), l'embed sur Vite et la playground sur Next. Pas encore dans la CI GitHub : à ajouter avec `playwright install --with-deps` une fois validé sur un runner.
+
+## 2026-09-17 (design feedback)
+
+- **Accent par défaut : cerise `#d2042d`** à la place du violet, partout (schéma `AppConfig`, seed, embed, dashboard, playground, icône Wallet Standard).
+- **Règles de couleur partagées** dans `packages/types/src/color.ts`, utilisées par l'iframe et l'aperçu du dashboard pour qu'un développeur voie exactement le rendu final :
+  - Texte sur fond d'accent : blanc en priorité, noir seulement si le blanc passe sous APCA Lc 50. APCA plutôt que WCAG 2, qui sous-estime la lisibilité du blanc sur les couleurs saturées (orange, vert, rose restent en blanc).
+  - Accent qui se fond dans la surface (ratio WCAG sous 1,35) : remplacé par la couleur de texte du thème. Noir sur thème sombre donne des CTA blancs à texte noir ; blanc sur thème clair donne des CTA noirs.
+  - Hover : mélange de 10 % vers la couleur du texte du bouton.
+- **Couleur personnalisée** : sélecteur natif et champ hex (accepte `d2042d`, `#D2042D`, `#abc`) dans la galerie de l'iframe et dans le panneau Configuration du dashboard.
+- **Plus aucune police monospace** (préférence de Medhy) : adresses, hash, clés et codes en police du site avec chiffres tabulaires, `code`/`pre` héritent de la police.

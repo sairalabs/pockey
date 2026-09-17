@@ -83,7 +83,7 @@ export function NewAppDialog({ open, onOpenChange, onCreate }: NewAppDialogProps
               setOrigins(event.target.value);
             }}
             placeholder={'https://app.example.com\nhttp://localhost:3000'}
-            className="font-mono text-[13px]"
+            className="tabular-nums text-[13px]"
           />
         </Field>
         {error ? (

@@ -34,7 +34,7 @@ export function AccountMenu({ onManageAccount }: { onManageAccount: () => void }
           });
         }}
       >
-        <span className="font-mono text-[13px]">
+        <span className="tabular-nums text-[13px]">
           {copied ? 'Copied' : truncateMiddle(developer.address, 6, 4)}
         </span>
       </MenuItem>

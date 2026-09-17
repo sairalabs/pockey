@@ -72,7 +72,7 @@ export function AccountInformationPane() {
           <KeyValue label="Email">{email}</KeyValue>
           <KeyValue label="Wallet">
             <span className="inline-flex items-center gap-1">
-              <span className="font-mono text-[13px]">
+              <span className="tabular-nums text-[13px]">
                 {truncateMiddle(developer.address, 6, 4)}
               </span>
               <CopyButton value={developer.address} label="Copy address" />

@@ -476,7 +476,7 @@ describe('logout and config', () => {
       name: 'Test',
       loginMethods: ['email'],
       chains: { evm: [8453], solana: [] },
-      appearance: { theme: 'system', accent: '#7c3aed' },
+      appearance: { theme: 'system', accent: '#d2042d' },
       embeddedWallets: { createOnLogin: 'all' },
       allowedOrigins: [],
     };

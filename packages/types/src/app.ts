@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DEFAULT_ACCENT } from './color.js';
 import { EvmChainId, SolanaCluster } from './chains.js';
 import { AppId, DeveloperId, PublicAppId } from './ids.js';
 
@@ -12,7 +13,7 @@ const HexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Expected a 6-digit hex c
 
 export const Appearance = z.object({
   theme: z.enum(['light', 'dark', 'system']).default('system'),
-  accent: HexColor.default('#7c3aed'),
+  accent: HexColor.default(DEFAULT_ACCENT),
   /** Absolute URL or path served by the developer's origin. */
   logo: z.string().max(2048).optional(),
   /** Display name shown in the modal. Defaults to the app name. */
@@ -34,7 +35,7 @@ export type ChainsConfig = z.infer<typeof ChainsConfig>;
 export const AppConfig = z.object({
   loginMethods: z.array(LoginMethod).min(1).default(['email', 'google', 'passkey']),
   chains: ChainsConfig.default({ evm: [8453], solana: [] }),
-  appearance: Appearance.default({ theme: 'system', accent: '#7c3aed' }),
+  appearance: Appearance.default({ theme: 'system', accent: DEFAULT_ACCENT }),
   embeddedWallets: z
     .object({
       createOnLogin: CreateOnLogin.default('all'),

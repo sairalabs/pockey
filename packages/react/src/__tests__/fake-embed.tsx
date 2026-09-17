@@ -56,7 +56,7 @@ export function makeServerConfig(overrides: Partial<PublicAppConfig> = {}): Publ
     name: 'Test app',
     loginMethods: ['email', 'passkey'],
     chains: { evm: [8453], solana: ['devnet'] },
-    appearance: { theme: 'system', accent: '#7c3aed' },
+    appearance: { theme: 'system', accent: '#d2042d' },
     embeddedWallets: { createOnLogin: 'all' },
     allowedOrigins: ['https://app.example.com'],
     ...overrides,
