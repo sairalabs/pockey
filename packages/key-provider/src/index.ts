@@ -105,7 +105,13 @@ export class KeyProviderError extends Error {
   constructor(
     message: string,
     public readonly code:
-      'not_found' | 'invalid_input' | 'policy_denied' | 'provider_unavailable' | 'unknown',
+      | 'not_found'
+      | 'invalid_input'
+      | 'policy_denied'
+      /** The stamping credential is unknown or expired (end user session gone). */
+      | 'unauthenticated'
+      | 'provider_unavailable'
+      | 'unknown',
     options?: ErrorOptions,
   ) {
     super(message, options);
