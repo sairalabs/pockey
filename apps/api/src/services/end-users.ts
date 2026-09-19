@@ -1,7 +1,4 @@
 import {
-  baAccount,
-  baPasskey,
-  baUser,
   endUserIdentities,
   endUsers,
   newId,
@@ -17,9 +14,9 @@ import { ApiError } from '../errors.js';
 import { toBase64Url } from '../lib/crypto.js';
 
 /**
- * Maps authentication results to Pocketkey end users (section 4.2).
- * One end user per app per person. Better Auth users map 1:1 through
- * `end_users.auth_user_id`; wallet-only users are found by their identity.
+ * Maps verified identities to Pocketkey end users (section 4.2). One end user per
+ * app per person. The key provider verifies every login ceremony; this module only
+ * decides which end user a verified identity belongs to.
  */
 
 export interface ResolvedEndUser {
@@ -77,109 +74,61 @@ export async function markActive(
   }
 }
 
-/** After an email OTP, OAuth or passkey login handled by Better Auth. */
-export async function resolveFromAuthUser(
+/**
+ * Finds the end user behind a verified identity, or creates one. Identities are
+ * unique per app (section 4.2): the same email in two apps is two end users.
+ * EVM addresses are stored lowercase, prefixed with the chain family.
+ */
+export async function resolveFromIdentity(
   db: Db,
   app: AppRow,
-  authUserId: string,
+  identity: { type: IdentityType; identifier: string },
 ): Promise<ResolvedEndUser> {
-  const authUser = await db.query.baUser.findFirst({
-    where: and(eq(baUser.id, authUserId), eq(baUser.appId, app.id)),
-  });
-  // Defense in depth: the tenant adapter already scopes users, recheck anyway.
-  if (!authUser) throw new ApiError('unauthorized', 'Session does not belong to this app');
-
-  let isNewUser = false;
-  let endUser = await db.query.endUsers.findFirst({ where: eq(endUsers.authUserId, authUserId) });
-  if (!endUser) {
-    const id = newId('usr');
-    const [created] = await db
-      .insert(endUsers)
-      .values({ id, appId: app.id, authUserId })
-      .onConflictDoNothing()
-      .returning();
-    // A concurrent login may have created it first; read it back in that case.
-    endUser =
-      created ??
-      (await db.query.endUsers.findFirst({ where: eq(endUsers.authUserId, authUserId) }));
-    isNewUser = Boolean(created);
-  }
-  if (!endUser) throw new ApiError('internal', 'Could not create end user');
-
-  const identities: IdentityInput[] = [
-    {
-      type: 'email',
-      identifier: authUser.email.toLowerCase(),
-      verifiedAt: authUser.emailVerified ? authUser.updatedAt : null,
-    },
-  ];
-
-  const accounts = await db.select().from(baAccount).where(eq(baAccount.userId, authUserId));
-  for (const account of accounts) {
-    if (account.providerId === 'google' || account.providerId === 'apple') {
-      identities.push({
-        type: account.providerId,
-        identifier: account.accountId,
-        verifiedAt: account.createdAt,
-      });
-    }
-  }
-
-  const passkeys = await db.select().from(baPasskey).where(eq(baPasskey.userId, authUserId));
-  for (const key of passkeys) {
-    identities.push({ type: 'passkey', identifier: key.credentialID, verifiedAt: key.createdAt });
-  }
-
-  await upsertIdentities(db, app, endUser.id, identities);
-  return { endUserId: endUser.id, isNewUser };
-}
-
-/** After a SIWE or SIWS login. EVM addresses are stored lowercase. */
-export async function resolveFromWallet(
-  db: Db,
-  app: AppRow,
-  chainFamily: ChainFamily,
-  address: string,
-): Promise<ResolvedEndUser> {
-  const identifier = `${chainFamily}:${chainFamily === 'evm' ? address.toLowerCase() : address}`;
-  const existing = await db.query.endUserIdentities.findFirst({
-    where: and(
-      eq(endUserIdentities.appId, app.id),
-      eq(endUserIdentities.type, 'wallet'),
-      eq(endUserIdentities.identifier, identifier),
-    ),
-  });
+  const where = and(
+    eq(endUserIdentities.appId, app.id),
+    eq(endUserIdentities.type, identity.type),
+    eq(endUserIdentities.identifier, identity.identifier),
+  );
+  const existing = await db.query.endUserIdentities.findFirst({ where });
   if (existing) return { endUserId: existing.endUserId, isNewUser: false };
 
   const endUserId = newId('usr');
   await db.insert(endUsers).values({ id: endUserId, appId: app.id });
-  const [identity] = await db
+  const [created] = await db
     .insert(endUserIdentities)
     .values({
       id: newId('idn'),
       endUserId,
       appId: app.id,
-      type: 'wallet',
-      identifier,
+      type: identity.type,
+      identifier: identity.identifier,
       verifiedAt: new Date(),
     })
     .onConflictDoNothing()
     .returning();
 
-  if (!identity) {
-    // Lost a race with a concurrent first login of the same wallet.
+  if (!created) {
+    // Lost a race with a concurrent first login of the same identity.
     await db.delete(endUsers).where(eq(endUsers.id, endUserId));
-    const winner = await db.query.endUserIdentities.findFirst({
-      where: and(
-        eq(endUserIdentities.appId, app.id),
-        eq(endUserIdentities.type, 'wallet'),
-        eq(endUserIdentities.identifier, identifier),
-      ),
-    });
-    if (!winner) throw new ApiError('internal', 'Could not resolve wallet user');
+    const winner = await db.query.endUserIdentities.findFirst({ where });
+    if (!winner) throw new ApiError('internal', 'Could not resolve the end user');
     return { endUserId: winner.endUserId, isNewUser: false };
   }
   return { endUserId, isNewUser: true };
+}
+
+/** Adds an identity to an existing end user (a passkey enrolled later). Idempotent. */
+export async function addIdentity(
+  db: Db,
+  app: AppRow,
+  endUserId: string,
+  identity: { type: IdentityType; identifier: string },
+): Promise<void> {
+  await upsertIdentities(db, app, endUserId, [{ ...identity, verifiedAt: new Date() }]);
+}
+
+export function walletIdentifier(chainFamily: ChainFamily, address: string): string {
+  return `${chainFamily}:${chainFamily === 'evm' ? address.toLowerCase() : address}`;
 }
 
 /** Full public shape of `GET /v1/me` and of every login response. */

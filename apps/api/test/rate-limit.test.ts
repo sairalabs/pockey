@@ -1,4 +1,3 @@
-import type { AuthResponse } from '@pocketkey/types';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Env } from '../src/env.js';
 import { setRateLimiterForTests } from '../src/middleware/rate-limit.js';
@@ -19,7 +18,6 @@ import {
   loginAsDeveloper,
   loginWithEmail,
   postJson,
-  randomDevice,
   request,
   SEED,
   seedDb,
@@ -95,13 +93,7 @@ describe('rate limiting (T5.5)', () => {
   });
 
   it('stops a brute force on one email without touching the others', async () => {
-    const device = randomDevice();
-    const send = (email: string) =>
-      postJson(
-        '/v1/auth/email-otp/send-verification-otp',
-        { email, type: 'sign-in' },
-        { 'X-Pocketkey-Device': device },
-      );
+    const send = (email: string) => postJson('/v1/auth/email/start', { email });
 
     for (let attempt = 0; attempt < RATE_LIMIT_DEFAULTS.authIdentity.limit; attempt++) {
       expect((await send('rl-brute@test.dev')).status).toBe(200);
@@ -114,6 +106,28 @@ describe('rate limiting (T5.5)', () => {
 
     // Another identity on the same app is untouched.
     expect((await send('rl-other@test.dev')).status).toBe(200);
+  });
+
+  it('caps every expensive auth route per app, and only those', async () => {
+    await fill('authApp', SEED.app.publicId);
+    const expensive = [
+      '/v1/auth/email/start',
+      '/v1/auth/email/verify',
+      '/v1/auth/email/login',
+      '/v1/auth/wallet/lookup',
+      '/v1/auth/wallet/login',
+      '/v1/auth/passkey/login',
+      '/v1/auth/oauth/exchange',
+    ];
+    for (const path of expensive) {
+      const res = await postJson(path, {});
+      expect(res.status, path).toBe(429);
+      expect((await res.json<ErrorBody>()).error.details?.scope, path).toBe('authApp');
+    }
+
+    // Refresh is cheap and must keep working while logins are throttled.
+    const refresh = await postJson('/v1/auth/refresh', { refreshToken: 'nope' });
+    expect(refresh.status).toBe(400);
   });
 
   it('caps a secret API key on /v1/server/*', async () => {
@@ -129,21 +143,16 @@ describe('rate limiting (T5.5)', () => {
   });
 
   it('caps sponsored sends per end user, before any balance is read', async () => {
-    const login: AuthResponse = (await loginWithEmail('rl-sponsor@test.dev')).body;
-    const wallet = login.user.wallets.find((row) => row.chainFamily === 'evm');
-    expect(wallet).toBeDefined();
+    const { body: login, device } = await loginWithEmail('rl-sponsor@test.dev');
+    const wallet = device.wallet('evm');
     await fill('sponsoredSend', login.user.id);
 
-    const body = {
+    // Sponsored EVM sends are counted when the user operation is prepared.
+    const { res } = await device.prepare(wallet, {
       chain: 'evm',
       chainId: 84532,
       to: '0x4200000000000000000000000000000000000006',
       sponsored: true,
-    };
-    const res = await request(`/v1/wallets/${wallet?.id ?? ''}/send-transaction`, {
-      method: 'POST',
-      headers: { ...bearer(login.accessToken), 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
     });
     // Sponsoring is off on the seed app, so anything but 429 means the cap runs
     // after the business logic instead of before it.
@@ -151,12 +160,12 @@ describe('rate limiting (T5.5)', () => {
     expect((await res.json<ErrorBody>()).error.details?.scope).toBe('sponsoredSend');
 
     // The same wallet without sponsoring is not touched by that scope.
-    const plain = await request(`/v1/wallets/${wallet?.id ?? ''}/sign-message`, {
-      method: 'POST',
-      headers: { ...bearer(login.accessToken), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chain: 'evm', message: 'hello' }),
-    });
-    expect(plain.status).toBe(200);
+    const plain = await postJson(
+      `/v1/wallets/${wallet.id}/sign-message`,
+      await device.signMessageBody(wallet, { chain: 'evm', message: 'hello' }),
+      device.headers(),
+    );
+    expect(plain.status, await plain.clone().text()).toBe(200);
   });
 
   it('never limits health or the dashboard', async () => {

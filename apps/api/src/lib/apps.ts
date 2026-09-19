@@ -17,7 +17,10 @@ type CachedApp = Omit<AppRow, 'createdAt'> & { createdAt: string };
 
 function getCache(): Cache | undefined {
   // `caches.default` exists on Workers and in Miniflare. Guard for other runtimes.
-  return typeof caches === 'undefined' ? undefined : caches.default;
+  // Cast: when DOM types are in scope (browser packages in tests), they hide `default`.
+  return typeof caches === 'undefined'
+    ? undefined
+    : (caches as unknown as { default: Cache }).default;
 }
 
 export async function loadAppByPublicId(

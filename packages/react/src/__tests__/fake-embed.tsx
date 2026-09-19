@@ -59,6 +59,11 @@ export function makeServerConfig(overrides: Partial<PublicAppConfig> = {}): Publ
     appearance: { theme: 'system', accent: '#d2042d' },
     embeddedWallets: { createOnLogin: 'all' },
     allowedOrigins: ['https://app.example.com'],
+    keyProvider: {
+      kind: 'emulator',
+      organizationId: 'org-parent',
+      signerPublicKey: '02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    },
     ...overrides,
   } as PublicAppConfig;
 }

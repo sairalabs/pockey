@@ -7,7 +7,10 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./mock": "./src/mock/index.ts"
+    "./turnkey": "./src/turnkey/server.ts",
+    "./client": "./src/turnkey/client.ts",
+    "./client/crypto": "./src/turnkey/client-crypto.ts",
+    "./testing": "./src/turnkey/testing.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -21,7 +24,9 @@
     "@pocketkey/chains-solana": "workspace:*",
     "@pocketkey/types": "workspace:*",
     "@scure/base": "^2.0.0",
-    "viem": "^2.56.5"
+    "viem": "^2.56.5",
+    "zod": "^4.6.5",
+    "@turnkey/crypto": "2.13.0"
   },
   "devDependencies": {
     "@pocketkey/config": "workspace:*",

@@ -1,11 +1,15 @@
 import {
   AuthResponse,
   AuthTokens,
-  DEVICE_ID_HEADER,
-  DeviceId,
+  durationToSeconds,
+  EmailOtpStartOutput,
+  EmailOtpVerifyOutput,
+  EndUser,
   ExportWalletOutput,
+  KeySession,
   LogoutOutput,
   MeResponse,
+  PreparedOperation,
   PublicAppConfig,
   PublicAppId,
   RefreshToken,
@@ -13,14 +17,13 @@ import {
   SessionList,
   SessionSigner,
   SessionSignOutput,
+  SignerSetupOutput,
   SignMessageOutput,
   SignTransactionOutput,
   Wallet,
   WalletList,
-  WalletNonceOutput,
   type ChainFamily,
   type CreateSessionInput,
-  type EndUser,
   type EvmTransactionRequest,
   type SendTransactionInput,
   type SessionSignRequestInput,
@@ -31,21 +34,14 @@ import {
 } from '@pocketkey/types';
 import { z } from 'zod';
 import { errorFromResponse, isPocketkeyError, PocketkeyError } from './errors.js';
+import type { KeyClient } from './keys.js';
 import { OAUTH_POPUP_TIMEOUT_MS, openPopup, popupHost, waitForOAuthCode } from './oauth.js';
-import {
-  AuthenticationOptions,
-  isPasskeySupported,
-  RegisteredPasskey,
-  RegistrationOptions,
-  runAuthentication,
-  runRegistration,
-} from './passkey.js';
+import { assertPasskey, createPasskey, isPasskeySupported } from './passkey.js';
 import { localStorageStorage, memoryStorage, type TokenStorage } from './storage.js';
 
 export const DEFAULT_BASE_URL = 'https://api.pocketkey.dev';
 
 export const APP_ID_HEADER = 'X-Pocketkey-App-Id';
-export const AUTH_COOKIES_HEADER = 'X-Pocketkey-Auth-Cookies';
 
 export interface PocketkeyOptions {
   /** Public app id (`pk_app_...`). Throws `PocketkeyError('bad_request')` when malformed. */
@@ -58,6 +54,13 @@ export interface PocketkeyOptions {
   fetch?: typeof fetch;
   /** Refresh proactively when the access token expires within this window. Default 60. */
   refreshLeewaySeconds?: number;
+  /**
+   * The user's key session (the embed iframe provides it). Without it, logins and
+   * signatures throw `unsupported`: Pocketkey cannot sign on anyone's behalf.
+   */
+  keys?: KeyClient;
+  /** WebAuthn relying party id. Defaults to the current host (the embed iframe). */
+  passkeyRpId?: string;
 }
 
 export interface SessionState {
@@ -79,6 +82,19 @@ export interface RequestOptions<T> {
   schema: z.ZodType<T>;
   headers?: Record<string, string>;
 }
+
+/** An external wallet signing the login request itself (one prompt). */
+export type WalletLogin =
+  | {
+      chainFamily: 'evm';
+      address: string;
+      personalSign: (message: string) => Promise<`0x${string}`>;
+    }
+  | {
+      chainFamily: 'solana';
+      address: string;
+      signMessage: (message: Uint8Array) => Promise<Uint8Array>;
+    };
 
 export interface PocketkeyClient {
   readonly appId: string;
@@ -104,28 +120,25 @@ export interface PocketkeyClient {
     refreshUser(): Promise<EndUser | null>;
     /** Fires on login, logout, user refresh and session loss. Returns an unsubscribe function. */
     onChange(listener: AuthListener): () => void;
+    /** The key provider emails a code. */
     sendEmailCode(email: string): Promise<void>;
+    /** Encrypts the code to the key provider, then signs up or logs in. */
     verifyEmailCode(email: string, code: string): Promise<AuthResponse>;
     /** Sends the code and remembers the email for `verifyOtp`. */
     loginWithEmail(email: string): Promise<void>;
     /** Verifies the code for the email given to `loginWithEmail`. Throws `bad_request` if none. */
     verifyOtp(code: string): Promise<AuthResponse>;
-    getWalletNonce(chainFamily: ChainFamily): Promise<WalletNonceOutput>;
-    loginWithSiwe(input: { message: string; signature: `0x${string}` }): Promise<AuthResponse>;
-    loginWithSiws(input: {
-      message: string;
-      signature: string;
-      publicKey: string;
-    }): Promise<AuthResponse>;
+    /** External wallet: it signs the login request (sign-up on first use). */
+    loginWithWallet(wallet: WalletLogin): Promise<AuthResponse>;
     passkey: {
       /** Never throws, whatever the runtime. */
       isSupported(): boolean;
-      /** Enrolls a passkey on the signed-in user (needs an email or passkey login in this storage). */
+      /** Enrolls a passkey on the signed-in user. */
       register(options?: { name?: string }): Promise<EndUser>;
       login(): Promise<AuthResponse>;
     };
     oauth: {
-      startUrl(provider: OAuthProvider): string;
+      startUrl(provider: OAuthProvider, sessionPublicKey: string): string;
       exchange(code: string): Promise<AuthResponse>;
       /**
        * Opens the popup synchronously (call it from a click handler), waits for
@@ -149,7 +162,8 @@ export interface PocketkeyClient {
     signTypedData(walletId: string, input: SignTypedDataInput): Promise<SignMessageOutput>;
     signTransaction(walletId: string, input: TransactionRequest): Promise<SignTransactionOutput>;
     sendTransaction(walletId: string, input: SendTransactionInput): Promise<SendTransactionOutput>;
-    exportWallet(walletId: string, targetPublicKey: string): Promise<ExportWalletOutput>;
+    /** Decrypted in this document with a one-time key. The API only relays ciphertext. */
+    exportWallet(walletId: string): Promise<{ privateKey: string }>;
     /**
      * Helpers on the user's EVM wallet. Throw `not_authenticated` when logged
      * out and `not_found` (details `{ reason: 'wallet_not_found' }`) without one.
@@ -182,7 +196,7 @@ export interface PocketkeyClient {
    * `policy_violation` (HTTP 403) with `details.reason`, see `policyViolationReason`.
    */
   sessions: {
-    /** `POST /v1/sessions`. Creates the key provider policy for the wallet. */
+    /** Creates the key provider policy (stamped here) and its mirror. */
     create(input: CreateSessionInput): Promise<SessionSigner>;
     /** `GET /v1/sessions`, newest first, including revoked and expired sessions. */
     list(): Promise<SessionSigner[]>;
@@ -193,7 +207,7 @@ export interface PocketkeyClient {
     /** Active = not revoked and not expired at call time. */
     isActive(session: SessionSigner, now?: Date): boolean;
   };
-  /** Low level: typed request with app header, auth, bridge cookies, refresh-and-retry, Zod output validation. */
+  /** Low level: typed request with app header, auth, refresh-and-retry, Zod output validation. */
   request<T>(path: string, init: RequestOptions<T>): Promise<T>;
 }
 
@@ -204,12 +218,16 @@ interface Session {
   refreshToken: string;
 }
 
+interface PendingOtp {
+  email: string;
+  otpId: string;
+  targetBundle: string;
+}
+
 const JWT = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
-/** Visible ASCII only: a stored value must never be able to inject a header. */
-const COOKIE_HEADER_VALUE = /^[\x20-\x7e]{0,8192}$/;
 const IsoDate = z.iso.datetime();
-const OtpSent = z.object({ success: z.boolean() });
 const RevokeOutput = z.object({ ok: z.literal(true) });
+const WalletLookup = z.object({ organizationId: z.string().nullable() });
 
 /** Active = not revoked and not expired at `now` (default: call time). */
 export function isSessionActive(session: SessionSigner, now: Date = new Date()): boolean {
@@ -220,13 +238,6 @@ export function isSessionActive(session: SessionSigner, now: Date = new Date()):
 
 function notAuthenticated(message = 'Sign in first'): PocketkeyError {
   return new PocketkeyError('not_authenticated', message);
-}
-
-function randomDeviceId(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(24));
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function isBrowser(): boolean {
@@ -242,6 +253,51 @@ function normalizeBaseUrl(raw: string): string {
     throw new PocketkeyError('bad_request', `Invalid baseUrl: ${raw}`);
   }
   return trimmed;
+}
+
+function randomToken(bytes: number): string {
+  const values = crypto.getRandomValues(new Uint8Array(bytes));
+  let binary = '';
+  for (const byte of values) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Key session failures surface as SDK errors the UI can act on. */
+function keyFailure(error: unknown): never {
+  if (isPocketkeyError(error)) throw error;
+  const reason = (error as { reason?: unknown }).reason;
+  if (reason === 'no_session') {
+    throw new PocketkeyError('not_authenticated', 'Sign in again to use your wallet', {
+      details: { reason: 'key_session_missing' },
+      cause: error,
+    });
+  }
+  if (reason === 'unsupported') {
+    throw new PocketkeyError(
+      'unsupported',
+      error instanceof Error ? error.message : 'Not available here',
+      { details: { reason }, cause: error },
+    );
+  }
+  if (reason === 'invalid_input') {
+    throw new PocketkeyError(
+      'bad_request',
+      error instanceof Error ? error.message : 'Invalid request',
+      { details: { reason }, cause: error },
+    );
+  }
+  if (reason === 'prepared_mismatch') {
+    throw new PocketkeyError(
+      'bad_request',
+      error instanceof Error ? error.message : 'The prepared transaction does not match',
+      { details: { reason: 'prepared_mismatch' }, cause: error },
+    );
+  }
+  throw new PocketkeyError(
+    'internal',
+    error instanceof Error ? error.message : 'Key session failure',
+    { cause: error },
+  );
 }
 
 export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
@@ -263,23 +319,32 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     refresh: `pocketkey:${appId}:refresh`,
     access: `pocketkey:${appId}:access`,
     accessExp: `pocketkey:${appId}:accessExp`,
-    authCookies: `pocketkey:${appId}:authCookies`,
-    device: `pocketkey:${appId}:device`,
+    keySession: `pocketkey:${appId}:keySession`,
   };
 
   let session: Session | null = null;
   let user: EndUser | null = null;
-  let authCookies = '';
+  let keySession: KeySession | null = null;
   let pendingEmail: string | null = null;
+  let pendingOtp: PendingOtp | null = null;
   let readyPromise: Promise<void> | null = null;
   let refreshing: Promise<void> | null = null;
-  let devicePromise: Promise<string> | null = null;
   let configPromise: Promise<PublicAppConfig> | null = null;
   /** False after a failed refresh token write: storage may then hold a stale, rotated token. */
   let storageInSync = true;
   const listeners = new Set<AuthListener>();
   /** Reads the live session after an await (defeats stale narrowing). */
   const currentSession = (): Session | null => session;
+
+  function keyClient(): KeyClient {
+    if (!options.keys) {
+      throw new PocketkeyError(
+        'unsupported',
+        'This client has no key session: logins and signatures run in the Pocketkey iframe',
+      );
+    }
+    return options.keys;
+  }
 
   /* Storage, always best effort: the in-memory state stays authoritative for this client. */
 
@@ -323,6 +388,17 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     };
   }
 
+  async function loadStoredKeySession(): Promise<KeySession | null> {
+    const raw = await read(keys.keySession);
+    if (raw === null) return null;
+    try {
+      const parsed = KeySession.safeParse(JSON.parse(raw));
+      return parsed.success ? parsed.data : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function storeTokens(tokens: AuthTokens): Promise<void> {
     session = {
       accessToken: tokens.accessToken,
@@ -334,10 +410,10 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     await write(keys.accessExp, tokens.accessTokenExpiresAt);
   }
 
-  async function setAuthCookies(value: string): Promise<void> {
-    authCookies = COOKIE_HEADER_VALUE.test(value) ? value : '';
-    if (authCookies) await write(keys.authCookies, authCookies);
-    else await erase(keys.authCookies);
+  async function setKeySession(next: KeySession | null): Promise<void> {
+    keySession = next;
+    if (next) await write(keys.keySession, JSON.stringify(next));
+    else await erase(keys.keySession);
   }
 
   function emit(next: EndUser | null): void {
@@ -362,18 +438,9 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     await erase(keys.refresh);
     await erase(keys.access);
     await erase(keys.accessExp);
+    await setKeySession(null);
+    await options.keys?.clear().catch(() => undefined);
     if (hadState) emit(null);
-  }
-
-  function deviceId(): Promise<string> {
-    devicePromise ??= (async () => {
-      const stored = DeviceId.safeParse(await read(keys.device));
-      if (stored.success) return stored.data;
-      const fresh = randomDeviceId();
-      await write(keys.device, fresh);
-      return fresh;
-    })();
-    return devicePromise;
   }
 
   /* HTTP */
@@ -393,7 +460,6 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   async function send<T>(path: string, init: RequestOptions<T>, retried = false): Promise<T> {
     const headers: Record<string, string> = { ...init.headers, [APP_ID_HEADER]: appId };
     if (init.body !== undefined) headers['Content-Type'] = 'application/json';
-    if (path.startsWith('/v1/auth/') && authCookies) headers[AUTH_COOKIES_HEADER] = authCookies;
     let token: string | undefined;
     if (init.auth) {
       token = await accessToken();
@@ -410,9 +476,6 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     } catch (e) {
       throw new PocketkeyError('network_error', 'Could not reach the Pocketkey API', { cause: e });
     }
-
-    const bridged = response.headers.get(AUTH_COOKIES_HEADER);
-    if (bridged !== null) await setAuthCookies(bridged);
 
     if (!response.ok) {
       const error = await errorFromResponse(response);
@@ -501,6 +564,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     if (!session) return null;
     try {
       const me = await send('/v1/me', { auth: true, schema: MeResponse });
+      if (me.keySession) await setKeySession(me.keySession);
       setUser(me.user);
       return me.user;
     } catch (e) {
@@ -510,11 +574,16 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   }
 
   async function restore(): Promise<void> {
-    const cookies = await read(keys.authCookies);
-    authCookies = cookies !== null && COOKIE_HEADER_VALUE.test(cookies) ? cookies : '';
     const stored = await loadStoredSession();
     if (!stored) return;
+    // Tokens without the session key that goes with them cannot sign: start over.
+    if (options.keys && !(await options.keys.hasSession().catch(() => false))) {
+      session = stored;
+      await clearSession();
+      return;
+    }
     session = stored;
+    keySession = await loadStoredKeySession();
     try {
       if (!isFresh(stored)) await refreshSession();
       if (!user) await loadUser();
@@ -529,48 +598,138 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     return user;
   }
 
+  /** The key provider accepted the login: activate the key, store tokens and user. */
   async function completeLogin(response: AuthResponse): Promise<AuthResponse> {
+    await keyClient().activate().catch(keyFailure);
     await storeTokens(response);
+    await setKeySession(response.keySession);
     pendingEmail = null;
+    pendingOtp = null;
     setUser(response.user);
     return response;
+  }
+
+  function requireKeySession(): KeySession {
+    if (!session) throw notAuthenticated();
+    if (!keySession) {
+      throw new PocketkeyError('not_authenticated', 'Sign in again to use your wallet', {
+        details: { reason: 'key_session_missing' },
+      });
+    }
+    return keySession;
+  }
+
+  async function withKeys<T>(run: (client: KeyClient) => Promise<T>): Promise<T> {
+    const client = keyClient();
+    try {
+      return await run(client);
+    } catch (error) {
+      return keyFailure(error);
+    }
   }
 
   /* Auth */
 
   async function sendEmailCode(email: string): Promise<void> {
     await ready();
-    await send('/v1/auth/email-otp/send-verification-otp', {
+    keyClient();
+    const normalized = email.trim().toLowerCase();
+    const start = await send('/v1/auth/email/start', {
       method: 'POST',
-      body: { email, type: 'sign-in' },
-      headers: { [DEVICE_ID_HEADER]: await deviceId() },
-      schema: OtpSent,
+      body: { email: normalized },
+      schema: EmailOtpStartOutput,
     });
+    pendingOtp = { email: normalized, ...start };
   }
 
   async function verifyEmailCode(email: string, code: string): Promise<AuthResponse> {
     await ready();
-    const response = await send('/v1/auth/sign-in/email-otp', {
+    const flow = pendingOtp;
+    if (flow?.email !== email.trim().toLowerCase()) {
+      throw new PocketkeyError('bad_request', 'Request a code for this email first');
+    }
+    const encryptedOtpBundle = await withKeys((client) =>
+      client.encryptOtp({ code: code.trim(), targetBundle: flow.targetBundle }),
+    );
+    const verified = await send('/v1/auth/email/verify', {
       method: 'POST',
-      body: { email, otp: code },
-      headers: { [DEVICE_ID_HEADER]: await deviceId() },
+      body: { otpId: flow.otpId, encryptedOtpBundle },
+      schema: EmailOtpVerifyOutput,
+    });
+    const body =
+      verified.mode === 'signup'
+        ? {
+            mode: 'signup' as const,
+            otpId: flow.otpId,
+            ...(await withKeys((client) =>
+              client.signupProof({
+                verificationToken: verified.verificationToken,
+                email: flow.email,
+              }),
+            )),
+          }
+        : {
+            mode: 'login' as const,
+            otpId: flow.otpId,
+            ...(await withKeys((client) =>
+              client.loginProof({ verificationToken: verified.verificationToken }),
+            )),
+          };
+    const response = await send('/v1/auth/email/login', {
+      method: 'POST',
+      body,
       schema: AuthResponse,
     });
     return completeLogin(response);
+  }
+
+  async function loginWithWallet(wallet: WalletLogin): Promise<AuthResponse> {
+    await ready();
+    const lookup = await send('/v1/auth/wallet/lookup', {
+      method: 'POST',
+      body: { chainFamily: wallet.chainFamily, address: wallet.address },
+      schema: WalletLookup,
+    });
+    const organizationId =
+      lookup.organizationId ?? (await client.getConfig()).keyProvider.organizationId;
+    const request = await withKeys((client) =>
+      client.loginRequest({
+        organizationId,
+        credential:
+          wallet.chainFamily === 'evm'
+            ? { kind: 'evm-wallet', personalSign: wallet.personalSign }
+            : { kind: 'solana-wallet', address: wallet.address, signMessage: wallet.signMessage },
+      }),
+    );
+    const response = await send('/v1/auth/wallet/login', {
+      method: 'POST',
+      body: { chainFamily: wallet.chainFamily, request },
+      schema: AuthResponse,
+    });
+    return completeLogin(response);
+  }
+
+  function rpId(): string {
+    if (options.passkeyRpId) return options.passkeyRpId;
+    const host = (globalThis as { location?: { hostname?: string } }).location?.hostname;
+    if (!host) throw new PocketkeyError('unsupported', 'Passkeys need a browser page');
+    return host;
   }
 
   async function exchangeOAuthCode(code: string): Promise<AuthResponse> {
     await ready();
+    const publicKey = await withKeys((client) => client.pendingPublicKey());
     const response = await send('/v1/auth/oauth/exchange', {
       method: 'POST',
-      body: { code },
+      body: { code, publicKey },
       schema: AuthResponse,
     });
     return completeLogin(response);
   }
 
-  function oauthStartUrl(provider: OAuthProvider): string {
-    return `${baseUrl}/v1/auth/oauth/${appId}/${provider}/start`;
+  function oauthStartUrl(provider: OAuthProvider, sessionPublicKey: string): string {
+    const query = new URLSearchParams({ publicKey: sessionPublicKey });
+    return `${baseUrl}/v1/auth/oauth/${appId}/${provider}/start?${query.toString()}`;
   }
 
   async function authed<T>(path: string, init: Omit<RequestOptions<T>, 'auth'>): Promise<T> {
@@ -596,6 +755,47 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     return wallet;
   }
 
+  /** A wallet of the signed-in user, by id, with the key session that signs for it. */
+  async function ownWallet(walletId: string): Promise<{ wallet: Wallet; keys: KeySession }> {
+    await ready();
+    const ks = requireKeySession();
+    let wallet = user?.wallets.find((w) => w.id === walletId);
+    wallet ??= (await loadUser())?.wallets.find((w) => w.id === walletId);
+    if (!wallet) {
+      throw new PocketkeyError('not_found', 'Wallet not found', {
+        details: { reason: 'wallet_not_found' },
+      });
+    }
+    return { wallet, keys: ks };
+  }
+
+  /** EVM transactions get their nonce, gas and fees (or user operation) from the API first. */
+  async function prepare(
+    walletId: string,
+    input: SendTransactionInput,
+  ): Promise<PreparedOperation> {
+    if (input.chain === 'solana') return { kind: 'none' };
+    return authed(walletPath(walletId, 'prepare'), {
+      method: 'POST',
+      body: { input },
+      schema: PreparedOperation,
+    });
+  }
+
+  async function stampedTransaction(walletId: string, input: SendTransactionInput) {
+    const { wallet, keys: ks } = await ownWallet(walletId);
+    const prepared = await prepare(walletId, input);
+    const request = await withKeys((client) =>
+      client.signTransaction({
+        organizationId: ks.organizationId,
+        address: wallet.address,
+        transaction: input,
+        prepared,
+      }),
+    );
+    return { request, ...(prepared.kind === 'none' ? {} : { ticket: prepared.ticket }) };
+  }
+
   const wallets: PocketkeyClient['wallets'] = {
     async list() {
       const out = await authed('/v1/wallets', { schema: WalletList });
@@ -615,40 +815,67 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     get(chainFamily) {
       return user?.wallets.find((w) => w.chainFamily === chainFamily) ?? null;
     },
-    signMessage(walletId, input) {
+    async signMessage(walletId, input) {
+      const { wallet, keys: ks } = await ownWallet(walletId);
+      const request = await withKeys((client) =>
+        client.signMessage({
+          organizationId: ks.organizationId,
+          address: wallet.address,
+          message: input,
+        }),
+      );
       return authed(walletPath(walletId, 'sign-message'), {
         method: 'POST',
-        body: input,
+        body: { input, request },
         schema: SignMessageOutput,
       });
     },
-    signTypedData(walletId, input) {
+    async signTypedData(walletId, input) {
+      const { wallet, keys: ks } = await ownWallet(walletId);
+      const request = await withKeys((client) =>
+        client.signTypedData({
+          organizationId: ks.organizationId,
+          address: wallet.address,
+          typedData: input,
+        }),
+      );
       return authed(walletPath(walletId, 'sign-typed-data'), {
         method: 'POST',
-        body: input,
+        body: { input, request },
         schema: SignMessageOutput,
       });
     },
-    signTransaction(walletId, input) {
+    async signTransaction(walletId, input) {
+      const signed = await stampedTransaction(walletId, { ...input, sponsored: false });
       return authed(walletPath(walletId, 'sign-transaction'), {
         method: 'POST',
-        body: input,
+        body: { input, ...signed },
         schema: SignTransactionOutput,
       });
     },
-    sendTransaction(walletId, input) {
+    async sendTransaction(walletId, input) {
+      const signed = await stampedTransaction(walletId, input);
       return authed(walletPath(walletId, 'send-transaction'), {
         method: 'POST',
-        body: input,
+        body: { input, ...signed },
         schema: SendTransactionOutput,
       });
     },
-    exportWallet(walletId, targetPublicKey) {
-      return authed(walletPath(walletId, 'export'), {
+    async exportWallet(walletId) {
+      const { wallet, keys: ks } = await ownWallet(walletId);
+      const { request, reveal } = await withKeys((client) =>
+        client.exportAccount({
+          organizationId: ks.organizationId,
+          address: wallet.address,
+          chainFamily: wallet.chainFamily,
+        }),
+      );
+      const out = await authed(walletPath(walletId, 'export'), {
         method: 'POST',
-        body: { targetPublicKey },
+        body: { request },
         schema: ExportWalletOutput,
       });
+      return { privateKey: await withKeys(() => reveal(out.encryptedBundle)) };
     },
     evm: {
       async signMessage(message) {
@@ -697,12 +924,59 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     },
   };
 
+  /** Adds the Pocketkey signer to the user's sub-organization, once. */
+  async function ensureSigner(ks: KeySession): Promise<string> {
+    if (ks.signerUserId) return ks.signerUserId;
+    const config = await client.getConfig();
+    const createSigner = await withKeys((keysClient) =>
+      keysClient.createSigner({
+        organizationId: ks.organizationId,
+        signerPublicKey: config.keyProvider.signerPublicKey,
+      }),
+    );
+    const { signerUserId } = await authed('/v1/sessions/signer', {
+      method: 'POST',
+      body: { createSigner },
+      schema: SignerSetupOutput,
+    });
+    const grant = await withKeys((keysClient) =>
+      keysClient.grantRevoke({ organizationId: ks.organizationId, signerUserId }),
+    );
+    await authed('/v1/sessions/signer/permission', {
+      method: 'POST',
+      body: { request: grant },
+      schema: RevokeOutput,
+    });
+    await setKeySession({ ...ks, signerUserId });
+    return signerUserId;
+  }
+
   const sessionPath = (sessionId: string, action = '') =>
     `/v1/sessions/${encodeURIComponent(sessionId)}${action ? `/${action}` : ''}`;
 
   const sessions: PocketkeyClient['sessions'] = {
-    create(input) {
-      return authed('/v1/sessions', { method: 'POST', body: input, schema: SessionSigner });
+    async create(input) {
+      const { wallet, keys: ks } = await ownWallet(input.walletId);
+      const signerUserId = await ensureSigner(ks);
+      const account = ks.accounts[wallet.chainFamily];
+      const expiresAt = new Date(Date.now() + durationToSeconds(input.policy.expiresIn) * 1000);
+      const policyName = `pocketkey:ses:${randomToken(15)}`;
+      const request = await withKeys((client) =>
+        client.sessionPolicy({
+          organizationId: ks.organizationId,
+          policyName,
+          policy: input.policy,
+          walletId: account.walletId,
+          address: account.address,
+          signerUserId,
+          expiresAt,
+        }),
+      );
+      return authed('/v1/sessions', {
+        method: 'POST',
+        body: { ...input, policyName, expiresAt: expiresAt.toISOString(), request },
+        schema: SessionSigner,
+      });
     },
     async list() {
       const out = await authed('/v1/sessions', { schema: SessionList });
@@ -765,77 +1039,65 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
         }
         return verifyEmailCode(pendingEmail, code);
       },
-      async getWalletNonce(chainFamily) {
-        await ready();
-        return send('/v1/auth/wallet/nonce', {
-          method: 'POST',
-          body: { chainFamily },
-          schema: WalletNonceOutput,
-        });
-      },
-      async loginWithSiwe(input) {
-        await ready();
-        const response = await send('/v1/auth/wallet/verify', {
-          method: 'POST',
-          body: { chainFamily: 'evm', message: input.message, signature: input.signature },
-          schema: AuthResponse,
-        });
-        return completeLogin(response);
-      },
-      async loginWithSiws(input) {
-        await ready();
-        const response = await send('/v1/auth/wallet/verify', {
-          method: 'POST',
-          body: {
-            chainFamily: 'solana',
-            message: input.message,
-            signature: input.signature,
-            publicKey: input.publicKey,
-          },
-          schema: AuthResponse,
-        });
-        return completeLogin(response);
-      },
+      loginWithWallet,
 
       passkey: {
         isSupported: isPasskeySupported,
         async register(registerOptions = {}) {
           await ready();
-          if (!session) throw notAuthenticated();
+          const ks = requireKeySession();
           if (!isPasskeySupported()) {
             throw new PocketkeyError('unsupported', 'Passkeys are not supported in this browser');
           }
-          const optionsJSON = await send('/v1/auth/passkey/generate-register-options', {
-            schema: RegistrationOptions,
+          const config = await client.getConfig();
+          const label =
+            user?.identities.find((identity) => identity.type === 'email')?.identifier ??
+            config.appearance.name ??
+            config.name;
+          const name = registerOptions.name ?? label;
+          const { challenge, attestation } = await createPasskey({
+            rpId: rpId(),
+            rpName: config.appearance.name ?? config.name,
+            userName: label,
           });
-          const response = await runRegistration(optionsJSON);
-          await send('/v1/auth/passkey/verify-registration', {
+          const request = await withKeys((keysClient) =>
+            keysClient.addPasskey({
+              organizationId: ks.organizationId,
+              userId: ks.userId,
+              name,
+              challenge,
+              attestation,
+            }),
+          );
+          const updated = await authed('/v1/auth/passkey/register', {
             method: 'POST',
-            body:
-              registerOptions.name === undefined
-                ? { response }
-                : { response, name: registerOptions.name },
-            schema: RegisteredPasskey,
+            body: { request },
+            schema: EndUser,
           });
-          const refreshed = await loadUser();
-          if (!refreshed) throw notAuthenticated();
-          return refreshed;
+          setUser(updated);
+          return updated;
         },
         async login() {
           await ready();
           if (!isPasskeySupported()) {
             throw new PocketkeyError('unsupported', 'Passkeys are not supported in this browser');
           }
-          const optionsJSON = await send('/v1/auth/passkey/generate-authenticate-options', {
-            schema: AuthenticationOptions,
-          });
-          const response = await runAuthentication(optionsJSON);
-          const login = await send('/v1/auth/passkey/verify-authentication', {
+          const config = await client.getConfig();
+          const request = await withKeys((keysClient) =>
+            keysClient.loginRequest({
+              organizationId: config.keyProvider.organizationId,
+              credential: {
+                kind: 'passkey',
+                assert: (challenge) => assertPasskey({ rpId: rpId(), challenge }),
+              },
+            }),
+          );
+          const response = await send('/v1/auth/passkey/login', {
             method: 'POST',
-            body: { response },
+            body: { request },
             schema: AuthResponse,
           });
-          return completeLogin(login);
+          return completeLogin(response);
         },
       },
 
@@ -843,7 +1105,8 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
         startUrl: oauthStartUrl,
         exchange: exchangeOAuthCode,
         loginWithPopup(provider, popupOptions = {}) {
-          // No await before window.open: browsers only allow popups inside the user gesture.
+          // No await before window.open: browsers only allow popups inside the user
+          // gesture. The popup opens blank and navigates once the session key exists.
           const host = popupHost();
           if (!host) {
             return Promise.reject(
@@ -856,16 +1119,26 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
           } catch {
             return Promise.reject(new PocketkeyError('bad_request', 'Invalid apiOrigin'));
           }
-          const popup = openPopup(host, oauthStartUrl(provider));
+          const popup = openPopup(host, 'about:blank');
           if (!popup) {
             return Promise.reject(
               new PocketkeyError('popup_blocked', 'The browser blocked the sign-in popup'),
             );
           }
-          return waitForOAuthCode(host, popup, {
-            expectedOrigin,
-            timeoutMs: popupOptions.timeoutMs ?? OAUTH_POPUP_TIMEOUT_MS,
-          }).then(exchangeOAuthCode);
+          return (async () => {
+            try {
+              const publicKey = await withKeys((keysClient) => keysClient.pendingPublicKey());
+              popup.location.href = oauthStartUrl(provider, publicKey);
+            } catch (error) {
+              popup.close();
+              throw error;
+            }
+            const code = await waitForOAuthCode(host, popup, {
+              expectedOrigin,
+              timeoutMs: popupOptions.timeoutMs ?? OAUTH_POPUP_TIMEOUT_MS,
+            });
+            return exchangeOAuthCode(code);
+          })();
         },
       },
 
@@ -880,9 +1153,9 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
           }
         }
         pendingEmail = null;
+        pendingOtp = null;
         // clearSession emits when state remains; a session lost during the call already emitted.
         await clearSession();
-        await setAuthCookies('');
         if (!hadState) emit(null);
       },
     },

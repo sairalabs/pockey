@@ -1,10 +1,13 @@
 import {
-  CreateSessionInput,
+  CreateSessionBody,
   SessionList,
   SessionSigner,
   SessionSignerId,
   SessionSignOutput,
   SessionSignRequest,
+  SignerPermissionInput,
+  SignerSetupInput,
+  SignerSetupOutput,
 } from '@pocketkey/types';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
@@ -18,9 +21,11 @@ import { enforceRateLimit } from '../middleware/rate-limit.js';
 import { requireUser } from '../middleware/user.js';
 import {
   createSession,
+  grantRevokePermission,
   listSessions,
   loadUserSession,
   revokeSession,
+  setupSigner,
   signWithSession,
   toSessionSigner,
   type SessionDeps,
@@ -46,7 +51,23 @@ export const RevokeSessionOutput = z.object({ ok: z.literal(true) });
 export const sessionRoutes = new Hono<AppEnv>()
   .use(requireApp, requireUser)
 
-  .post('/', validate('json', CreateSessionInput), async (c) => {
+  /** Adds the Pocketkey signer to the user's sub-organization (stamped in the iframe). */
+  .post('/signer', validate('json', SignerSetupInput), async (c) => {
+    const signerUserId = await setupSigner(
+      deps(c),
+      c.var.endUserId,
+      c.req.valid('json').createSigner,
+    );
+    return c.json(SignerSetupOutput.parse({ signerUserId }));
+  })
+
+  /** Lets the signer revoke session policies, so revocation works from the API too. */
+  .post('/signer/permission', validate('json', SignerPermissionInput), async (c) => {
+    await grantRevokePermission(deps(c), c.var.endUserId, c.req.valid('json').request);
+    return c.json(RevokeSessionOutput.parse({ ok: true }));
+  })
+
+  .post('/', validate('json', CreateSessionBody), async (c) => {
     const row = await createSession(deps(c), c.var.endUserId, c.req.valid('json'));
     return c.json(SessionSigner.parse(toSessionSigner(row)), 201);
   })

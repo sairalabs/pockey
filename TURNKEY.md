@@ -1,68 +1,52 @@
-# Turnkey checklist (T0.5)
+# Turnkey integration (T0.5)
 
-Everything Pocketkey needs from Turnkey before the mock key provider can be replaced, and every assumption our code makes that has not been run against a real Turnkey account yet.
+Pocketkey runs on Turnkey, non-custodial (decision of 2026-09-19, see `DECISIONS.md`). This file says how it works, what was verified against the real Turnkey API, and what is left to check by hand.
 
-Related code: `packages/key-provider/src/index.ts` (the port), `packages/key-provider/src/mock/` (what the real adapter must reproduce), `packages/key-provider/src/turnkey/policy.ts` (policy mapping), `DECISIONS.md` (2026-09-17 sections).
+## How it works
 
-## 1. Credentials to obtain
+Three credentials, three kinds of power:
 
-| Secret                    | Where it goes                        | Notes                                                                  |
-| ------------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
-| `TURNKEY_ORG_ID`          | Wrangler secret, `.dev.vars` locally | Parent organization id                                                 |
-| `TURNKEY_API_PUBLIC_KEY`  | same                                 | API key of the Pocketkey backend user                                  |
-| `TURNKEY_API_PRIVATE_KEY` | same                                 | P-256 private key, signs every request (never leaves Wrangler secrets) |
+| Credential                                                  | Who holds it                    | What it can do                                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parent API key (`TURNKEY_API_*`)                            | Pocketkey API (Wrangler secret) | Create sub-organizations, run login ceremonies (OTP, OAuth). Nothing inside a user sub-organization.                                         |
+| Session key (P-256, non-extractable)                        | The embed iframe, IndexedDB     | Everything the user can do: sign, export, add a passkey, create session policies. Expires with the Pocketkey session (30 days).              |
+| Signer key (`TURNKEY_SIGNER_*`, defaults to the parent key) | Pocketkey API                   | Only what a user policy allows (session signers), and deleting those policies. Sole owner of the per-app Solana fee payer sub-organizations. |
 
-Also needed: a sandbox or test organization we can create sub-organizations in without touching production data.
+Every request touching a user key is stamped in the iframe and relayed by the API, which checks it matches the route (`packages/key-provider/src/turnkey/provider.ts`, `relay`) and cannot change it.
 
-## 2. Questions that change the product
+Code map:
 
-1. **Price per active wallet and per signature.** Section 11 of the spec assumes 0.02 to 0.03 USD per active wallet. Above 0.04 USD we must move from 0.06 to 0.08 USD per monthly active wallet.
-2. **Free tier and rate limits.** How many sub-organizations, wallets and signatures per second before we pay or get throttled. This sets how many free users we can absorb.
-3. **Sub-organization limits.** One sub-organization per end user is our model (section 4.2). Confirm there is no practical cap and no per sub-organization cost.
-4. **Export.** Confirm the export flow returns a bundle encrypted to a client public key (section 8.4) and which curve and format that key must use, so the iframe can decrypt it. Today the embed shows a simulated export.
+- `packages/key-provider/src/index.ts`: the `KeyProvider` port.
+- `packages/key-provider/src/turnkey/`: wire format, stamps, HTTP client, provider, policy mapping, HPKE port, the in-memory emulator (`emulator/`), the browser side (`client.ts`, `key-client.ts`, `client-crypto.ts`).
+- `apps/embed/src/lib/keys.ts`: IndexedDB key store, production builds pin Turnkey's enclave key.
+- `packages/core/src/keys.ts`: the provider-agnostic `KeyClient` the SDK uses.
 
-## 3. Policy language, to verify before trusting sessions
+## Verified live (organization "Saira Labs", 2026-09-19)
 
-`packages/key-provider/src/turnkey/policy.ts` builds policies from these assumptions, none of which have been executed against Turnkey:
+`packages/key-provider/src/turnkey/live.test.ts` (run with `TURNKEY_LIVE=1`) and the two spikes behind the decision:
 
-- Activity names: `ACTIVITY_TYPE_SIGN_TRANSACTION_V2`, `ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2`, `ACTIVITY_TYPE_SIGN_RAW_PAYLOADS`.
-- Consensus expression: `approvers.any(user, user.id == '<id>')`.
-- Fields: `wallet.id`, `activity.type`, `eth.tx.chain_id`, `eth.tx.to`, `eth.tx.value`, `solana.tx.program_keys`, `solana.tx.transfers`.
-- Operators: `in`, `all(...)`, `&&`, `||`, `<=`.
-- Address casing: we lowercase EVM addresses in conditions. Confirm comparisons are case-insensitive, or that Turnkey normalizes.
+- the parent key cannot sign, export or add a user in a user sub-organization;
+- sub-organization and wallet (EVM and Solana accounts) created in one call;
+- external wallet sign-up and login (EIP-191 and ed25519 stamps), passkey registration and login addressed to the parent (the provider finds the sub-organization);
+- session policies: signer user, revoke permission, `wallet.id` plus `wallet_account.address` binding, `eth.tx.*` and `solana.tx.*` conditions, native expiry (`time`), revocation by the signer, no policy creation by the signer;
+- EVM and Solana transaction signing, Solana raw messages, export decrypted against Turnkey's production enclave key;
+- about one second of propagation after creating a wallet, user or policy (retried for 5 seconds).
 
-Two limits we already know and work around, worth confirming:
+## Left to check by hand
 
-- **No expiry in a policy.** We delete the policy on an hourly cron and also refuse expired sessions in the API.
-- **No running total.** `maxValueTotal` is enforced only by Pocketkey, with an atomic reservation.
+1. **Email OTP end to end with a real inbox**: sign up then log in once with `KEY_PROVIDER=turnkey`. Covers `INIT_OTP_V3`, `VERIFY_OTP_V2`, the sign-up client signature (`signupV2` usage) and `OTP_LOGIN_V2`, whose message formats come from `@turnkey/core` and are exercised only against the emulator so far.
+2. **Google sign-in** with real OAuth keys: Turnkey must accept our ID token (nonce = SHA-256 of the session public key) at sub-organization creation and in `OAUTH_LOGIN`.
+3. **Apple sign-in**: same, plus the Apple client secret (a signed JWT) in `APPLE_CLIENT_SECRET`.
+4. **The OTP email template**: app name and logo come from the app appearance. Sending from our own domain needs a verified domain at Turnkey.
 
-## 4. The open security question
+## Questions for Turnkey
 
-A session that may sign messages needs raw payload signing, and Turnkey cannot tell a message hash from a transaction hash. That is why `allowMessages` is off by default and shown on the consent screen.
+1. **Price** per active wallet and per signature. Section 11 assumes 0.02 to 0.03 USD per monthly active wallet; above 0.04 USD the price moves from 0.06 to 0.08 USD.
+2. **Limits**: sub-organizations per parent, activities per second, free tier.
+3. **Raw payloads under a policy**: can a policy only allow payloads Turnkey hashes itself? Today a session that signs messages (`allowMessages`) can sign any 32-byte digest while it lives, which is why it is capped at 24 hours.
+4. **ERC-4337**: can a policy parse user operations? A sponsored EVM send under a session is a raw digest for Turnkey.
 
-Ask Turnkey whether a policy can restrict raw payload signing to payloads Turnkey hashes itself, for example by pinning `hash_function` or the payload encoding. If yes, a session could allow messages without allowing arbitrary hashes, and the warning on the consent screen could be softened.
+## Local development
 
-Same question for ERC-4337: a sponsored EVM transaction is signed as a user operation hash, so no `eth.tx.*` condition applies. Ask whether Turnkey can parse user operations, or whether they recommend a different pattern for smart accounts.
-
-## 5. What the adapter must implement
-
-`packages/key-provider/src/turnkey/` must satisfy the port and match the mock's behavior, which the test suite already pins:
-
-- `createSubOrganization` (one per end user, with the end user as the root user of that sub-organization).
-- `createWallet` for secp256k1 (EVM) and ed25519 (Solana).
-- `signRaw` with `hash` and `raw` encodings, and the `sessionPolicyId` variant.
-- `signTransaction` for EVM (unsigned EIP-1559 serialization) and Solana (base64, keeping other signatures), with the `sessionPolicyId` variant.
-- `createPolicy` (bound to a wallet, with an expiry we enforce) and `deletePolicy`.
-- `exportWallet` returning a bundle encrypted to the client key.
-
-Plan: keep the mock as the default in development and tests, and switch with `KEY_PROVIDER=turnkey`. The environment validation already refuses `mock` in production.
-
-## 6. Migration of existing data
-
-Local development wallets were created by the mock and have no Turnkey counterpart. Before switching, decide whether to wipe the local D1 (simplest) or keep both providers side by side per wallet, which would mean storing the provider name on the wallet row.
-
-## 7. Follow-ups decided on 2026-09-17
-
-- **One signing path.** Interactive user signatures still go through `signRaw` plus local assembly, while sessions go through `signTransaction`. During T0.5, move everything to `signTransaction` so Turnkey sees and can constrain every transaction, and keep `signRaw` for messages only.
-- **Second provider (Para).** Before adding it (section 14 of the spec), confirm it can sign a full transaction under a policy. If it cannot, sessions would be protected by our API alone with that provider, which breaks the promise of section 8.1.
-- **Shorter sessions when messages are allowed.** A session with `allowMessages` is closer to a blank cheque, so its maximum duration should be shorter than the 30 days allowed for transaction-only sessions. Planned: 24 hours, enforced in `SigningPolicy` and shown on the consent screen.
+- `KEY_PROVIDER=mock` (default): the emulator. OTP codes are printed in the API log like before. State is lost when wrangler restarts: wipe the local D1 then (`rm -rf apps/api/.wrangler/state` and re-run the migrations and seed).
+- `KEY_PROVIDER=turnkey` with `TURNKEY_ORG_ID`, `TURNKEY_API_PUBLIC_KEY`, `TURNKEY_API_PRIVATE_KEY` in `apps/api/.dev.vars`: real sub-organizations, real OTP emails. Local users created with the emulator do not exist at Turnkey: wipe the local D1 when switching.

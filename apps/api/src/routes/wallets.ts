@@ -1,16 +1,18 @@
 import {
   CreateWalletInput,
-  ExportWalletInput,
   EvmChainId,
+  ExportWalletInput,
   ExportWalletOutput,
-  SendTransactionInput,
+  PreparedOperation,
+  PrepareTransactionInput,
+  SendTransactionBody,
   SendTransactionOutput,
-  SignMessageInput,
+  SignMessageBody,
   SignMessageOutput,
+  SignTransactionBody,
   SignTransactionOutput,
-  SignTypedDataInput,
+  SignTypedDataBody,
   SmartAccountOutput,
-  TransactionRequest,
   Wallet,
   WalletList,
 } from '@pocketkey/types';
@@ -27,6 +29,7 @@ import {
   createWallet,
   exportWallet,
   listWallets,
+  prepareOperation,
   sendTransaction,
   signMessage,
   signTransaction,
@@ -46,7 +49,11 @@ const deps = (c: Context<AppEnv>): WalletDeps => ({
 
 export const SmartAccountQuery = z.object({ chainId: z.coerce.number().pipe(EvmChainId) });
 
-/** Section 7.2 wallet routes. Every route is end-user scoped. */
+/**
+ * Section 7.2 wallet routes. Every route is end-user scoped, and every signature
+ * comes with the request the iframe stamped (`request`): the API relays it and
+ * cannot sign anything on its own.
+ */
 export const walletRoutes = new Hono<AppEnv>()
   .use(requireApp, requireUser)
 
@@ -60,37 +67,55 @@ export const walletRoutes = new Hono<AppEnv>()
     return c.json(WalletList.parse({ wallets: rows.map(toWallet) }));
   })
 
-  .post('/:id/sign-message', validate('json', SignMessageInput), async (c) => {
-    const out = await signMessage(deps(c), c.var.endUserId, c.req.param('id'), c.req.valid('json'));
+  .post('/:id/sign-message', validate('json', SignMessageBody), async (c) => {
+    const { input, request } = c.req.valid('json');
+    const out = await signMessage(deps(c), c.var.endUserId, c.req.param('id'), input, request);
     return c.json(SignMessageOutput.parse(out));
   })
 
-  .post('/:id/sign-typed-data', validate('json', SignTypedDataInput), async (c) => {
-    const out = await signTypedData(
-      deps(c),
-      c.var.endUserId,
-      c.req.param('id'),
-      c.req.valid('json'),
-    );
+  .post('/:id/sign-typed-data', validate('json', SignTypedDataBody), async (c) => {
+    const { input, request } = c.req.valid('json');
+    const out = await signTypedData(deps(c), c.var.endUserId, c.req.param('id'), input, request);
     return c.json(SignMessageOutput.parse(out));
   })
 
-  .post('/:id/sign-transaction', validate('json', TransactionRequest), async (c) => {
+  /** Nonce, gas and fees (EVM) or the sponsored user operation, for the iframe to sign. */
+  .post('/:id/prepare', validate('json', PrepareTransactionInput), async (c) => {
+    const { input } = c.req.valid('json');
+    // Section 8.1: gas sponsoring abuse is capped per end user, before anything
+    // talks to a bundler.
+    if (input.sponsored) await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
+    const out = await prepareOperation(deps(c), c.var.endUserId, c.req.param('id'), input);
+    return c.json(PreparedOperation.parse(out));
+  })
+
+  .post('/:id/sign-transaction', validate('json', SignTransactionBody), async (c) => {
+    const { input, request, ticket } = c.req.valid('json');
     const out = await signTransaction(
       deps(c),
       c.var.endUserId,
       c.req.param('id'),
-      c.req.valid('json'),
+      input,
+      request,
+      ticket,
     );
     return c.json(SignTransactionOutput.parse(out));
   })
 
-  .post('/:id/send-transaction', validate('json', SendTransactionInput), async (c) => {
-    const input = c.req.valid('json');
-    // Section 8.1: gas sponsoring abuse is capped per end user, before anything
-    // reads a balance or talks to a bundler.
-    if (input.sponsored) await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
-    const out = await sendTransaction(deps(c), c.var.endUserId, c.req.param('id'), input);
+  .post('/:id/send-transaction', validate('json', SendTransactionBody), async (c) => {
+    const { input, request, ticket } = c.req.valid('json');
+    // Sponsored EVM sends were counted at `prepare`; Solana ones have no prepare step.
+    if (input.sponsored && input.chain === 'solana') {
+      await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
+    }
+    const out = await sendTransaction(
+      deps(c),
+      c.var.endUserId,
+      c.req.param('id'),
+      input,
+      request,
+      ticket,
+    );
     return c.json(SendTransactionOutput.parse(out));
   })
 
@@ -105,7 +130,7 @@ export const walletRoutes = new Hono<AppEnv>()
       deps(c),
       c.var.endUserId,
       c.req.param('id'),
-      c.req.valid('json').targetPublicKey,
+      c.req.valid('json').request,
     );
     return c.json(ExportWalletOutput.parse(out));
   });

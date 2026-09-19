@@ -1,112 +1,131 @@
-import { verifySiweLogin } from '@pocketkey/chains-evm';
-import { verifySiwsLogin } from '@pocketkey/chains-solana';
-import { apps, type AppRow } from '@pocketkey/db';
+import { secp256k1 } from '@noble/curves/secp256k1.js';
+import type { AppRow } from '@pocketkey/db';
+import { KeyProviderError, type ProviderSession } from '@pocketkey/key-provider';
 import {
+  AddPasskeyInput,
   AppConfig,
   AuthResponse,
   AuthTokens,
-  DEVICE_ID_HEADER,
-  DeviceId,
+  EmailOtpLoginInput,
+  EmailOtpStartInput,
+  EmailOtpStartOutput,
+  EmailOtpVerifyInput,
+  EmailOtpVerifyOutput,
   type LoginMethod,
   LogoutOutput,
+  OAuthExchangeInput,
   PublicAppId,
   RefreshInput,
-  WalletNonceInput,
-  WalletNonceOutput,
-  WalletVerifyInput,
+  SessionPublicKey,
+  StampedLoginInput,
+  WalletLoginInput,
 } from '@pocketkey/types';
-import { eq } from 'drizzle-orm';
+import { base58 } from '@scure/base';
 import { Hono, type Context } from 'hono';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { publicKeyToAddress } from 'viem/utils';
 import { z } from 'zod';
-import { createEndUserAuth, type EndUserAuth } from '../auth/better-auth.js';
-import { consumeChallenge, createChallenge, findLiveChallenge } from '../auth/challenges.js';
 import {
-  AUTH_COOKIES_HEADER,
-  bridgeResponseCookies,
-  cookieHeadersFrom,
-  withBridgedCookies,
-} from '../auth/cookie-bridge.js';
+  consumeChallenge,
+  createChallenge,
+  findLiveChallenge,
+  setChallengePayload,
+} from '../auth/challenges.js';
 import { issueTokens, revokeFamily, rotateRefreshToken } from '../auth/tokens.js';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
 import { loadAppByPublicId } from '../lib/apps.js';
-import { normalizeAuthError } from '../lib/auth-error.js';
+import { randomBytes, sha256Hex, toBase64Url } from '../lib/crypto.js';
+import {
+  callbackUrl,
+  exchangeCode,
+  nonceFor,
+  oidcCredentials,
+  startAuthorization,
+  type OidcProvider,
+} from '../lib/oidc.js';
 import { getRpcFactory } from '../lib/rpc.js';
-import { randomAlphanumeric, randomBytes, sha256Hex, toBase64Url } from '../lib/crypto.js';
 import { validate } from '../lib/validate.js';
 import { requireApp } from '../middleware/app.js';
 import { requireUser } from '../middleware/user.js';
-import { createWalletsOnLogin } from '../services/wallets.js';
 import {
+  addIdentity,
   loadEndUser,
   markActive,
-  resolveFromAuthUser,
-  resolveFromWallet,
-  type ResolvedEndUser,
+  resolveFromIdentity,
+  walletIdentifier,
 } from '../services/end-users.js';
+import {
+  attachSubOrganization,
+  endUserBySubOrg,
+  keySessionOf,
+  loadEndUserRow,
+  relayFailure,
+} from '../services/key-session.js';
+import { providerFailure } from '../services/provider-failure.js';
+import { createWalletsOnLogin } from '../services/wallets.js';
 
-const NONCE_TTL_SECONDS = 5 * 60;
+/**
+ * End user authentication (section 4, non-custodial since 2026-09-19).
+ *
+ * The key provider runs every ceremony that grants access to keys: it sends and
+ * checks email codes, verifies OIDC tokens, passkey and wallet signatures, and
+ * registers the iframe session key. This API maps the verified identity to a
+ * Pocketkey end user and issues Pocketkey tokens; it never holds a credential that
+ * could sign for the user.
+ */
+
+const OTP_TTL_SECONDS = 10 * 60;
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
 const EXCHANGE_CODE_TTL_SECONDS = 2 * 60;
 const OAUTH_PROVIDERS = ['google', 'apple'] as const;
-type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
+/** Matches the refresh token: the iframe session key lives as long as the Pocketkey session. */
+const SESSION_KEY_SECONDS = 30 * 24 * 3600;
 
 type Ctx = Context<AppEnv>;
 
-/* Helpers */
-
-function loginMethodsOf(app: AppRow): Set<LoginMethod> {
-  return new Set(AppConfig.parse(app.config).loginMethods);
-}
-
 function requireMethod(app: AppRow, method: LoginMethod): void {
-  if (!loginMethodsOf(app).has(method)) {
+  if (!AppConfig.parse(app.config).loginMethods.includes(method)) {
     throw new ApiError('forbidden', `Login method "${method}" is disabled for this app`);
   }
 }
 
-async function deviceBinding(c: Ctx, required: boolean): Promise<string | undefined> {
-  const raw = c.req.header(DEVICE_ID_HEADER);
-  if (!raw) {
-    if (required) throw new ApiError('bad_request', `Missing ${DEVICE_ID_HEADER} header`);
-    return undefined;
-  }
-  const parsed = DeviceId.safeParse(raw);
-  if (!parsed.success) throw new ApiError('bad_request', `Malformed ${DEVICE_ID_HEADER} header`);
-  return (await sha256Hex(parsed.data)).slice(0, 32);
-}
-
-function authFor(c: Ctx, app: AppRow, binding?: string): EndUserAuth {
-  return createEndUserAuth({
-    db: c.var.db,
-    app,
-    config: c.var.config,
-    mailer: c.var.mailer,
-    deviceBinding: binding,
-  });
+function appDisplayName(app: AppRow): string {
+  return AppConfig.parse(app.config).appearance.name ?? app.name;
 }
 
 async function completeLogin(
   c: Ctx,
   app: AppRow,
-  resolved: ResolvedEndUser,
+  endUserId: string,
+  isNewUser: boolean,
 ): Promise<AuthResponse> {
-  await markActive(c.var.db, app, resolved.endUserId);
+  await markActive(c.var.db, app, endUserId);
   // T2.3: embedded wallets exist before the SDK receives the user.
   await createWalletsOnLogin(
     { db: c.var.db, keyProvider: c.var.keyProvider, rpc: getRpcFactory(c.var.config), app },
-    resolved.endUserId,
+    endUserId,
   );
   const tokens = await issueTokens({
     db: c.var.db,
     config: c.var.config,
     app,
-    endUserId: resolved.endUserId,
+    endUserId,
     userAgent: c.req.header('User-Agent'),
   });
-  const user = await loadEndUser(c.var.db, app, resolved.endUserId);
-  return AuthResponse.parse({ ...tokens, user, isNewUser: resolved.isNewUser });
+  const user = await loadEndUser(c.var.db, app, endUserId);
+  const keySession = keySessionOf(await loadEndUserRow(c.var.db, app, endUserId));
+  if (!keySession) throw new ApiError('internal', 'Login without a key provider sub-organization');
+  return AuthResponse.parse({ ...tokens, user, isNewUser, keySession });
+}
+
+/** A session registered at the provider must belong to an end user of this app. */
+async function endUserOfSession(c: Ctx, app: AppRow, session: ProviderSession) {
+  const user = await endUserBySubOrg(c.var.db, app, session.subOrgId);
+  if (!user) {
+    // A credential of another app, or a sub-organization we never recorded.
+    throw new ApiError('unauthorized', 'No account for this credential in this app');
+  }
+  return user;
 }
 
 function oauthResultPage(embedOrigin: string, payload: { code?: string; error?: string }): string {
@@ -116,105 +135,277 @@ function oauthResultPage(embedOrigin: string, payload: { code?: string; error?: 
   return `<!doctype html><meta charset="utf-8"><title>Pocketkey</title><script>(function(){var m=${message};if(window.opener){window.opener.postMessage(m,${target});}window.close();})();</script><p>You can close this window.</p>`;
 }
 
-/**
- * Only these Better Auth endpoints are reachable. Everything else (password
- * flows, user updates, account deletion, admin) stays closed by default.
- */
-const PROXY_ALLOWLIST: {
-  pattern: RegExp;
-  method?: LoginMethod;
-  deviceBound?: boolean;
-  signsIn?: boolean;
-}[] = [
-  { pattern: /^\/email-otp\/send-verification-otp$/, method: 'email', deviceBound: true },
-  { pattern: /^\/sign-in\/email-otp$/, method: 'email', deviceBound: true, signsIn: true },
-  { pattern: /^\/passkey\/generate-register-options$/, method: 'passkey' },
-  { pattern: /^\/passkey\/verify-registration$/, method: 'passkey' },
-  { pattern: /^\/passkey\/list-user-passkeys$/, method: 'passkey' },
-  { pattern: /^\/passkey\/delete-passkey$/, method: 'passkey' },
-  { pattern: /^\/passkey\/generate-authenticate-options$/, method: 'passkey' },
-  { pattern: /^\/passkey\/verify-authentication$/, method: 'passkey', signsIn: true },
-  { pattern: /^\/get-session$/ },
-  { pattern: /^\/sign-out$/ },
-];
+const EmailOtpPayload = z.object({ verificationToken: z.string().min(1) });
+const OAuthStatePayload = z.object({
+  provider: z.enum(OAUTH_PROVIDERS),
+  publicKey: SessionPublicKey,
+  codeVerifier: z.string().nullable(),
+});
+const ExchangePayload = z.object({
+  provider: z.enum(OAUTH_PROVIDERS),
+  publicKey: SessionPublicKey,
+  idToken: z.string().min(1),
+  subject: z.string().min(1),
+  email: z.string().nullable(),
+});
 
-const SendOtpBody = z.object({ email: z.email(), type: z.literal('sign-in') });
-const ExchangeInput = z.object({ code: z.string().min(16).max(128) });
-const NONCE_LINE = /^Nonce: ([A-Za-z0-9]+)$/m;
+/** Compressed public key of a wallet stamp to its address. */
+function walletAddress(chainFamily: 'evm' | 'solana', publicKey: string): string {
+  if (chainFamily === 'solana') {
+    return base58.encode(Uint8Array.from(publicKey.match(/../g) ?? [], (h) => parseInt(h, 16)));
+  }
+  const uncompressed = secp256k1.Point.fromHex(publicKey).toHex(false);
+  return publicKeyToAddress(`0x${uncompressed}`);
+}
 
 /* Routes, mounted at /v1/auth */
 
 export const authRoutes = new Hono<AppEnv>()
-  /* T1.3: external wallets */
-  .post('/wallet/nonce', requireApp, validate('json', WalletNonceInput), async (c) => {
-    requireMethod(c.var.app, 'wallet');
-    const { chainFamily } = c.req.valid('json');
-    const nonce = randomAlphanumeric(32);
-    const expiresAt = await createChallenge(c.var.db, {
-      id: nonce,
-      appId: c.var.app.id,
-      purpose: chainFamily === 'evm' ? 'siwe' : 'siws',
-      ttlSeconds: NONCE_TTL_SECONDS,
+  /* Email OTP, in three steps. The provider sends the code; the iframe encrypts it
+     to the provider enclave with its session key, so the code never reaches us. */
+
+  .post('/email/start', requireApp, validate('json', EmailOtpStartInput), async (c) => {
+    const app = c.var.app;
+    requireMethod(app, 'email');
+    const email = c.req.valid('json').email.trim().toLowerCase();
+    const logo = AppConfig.parse(app.config).appearance.logo;
+    const { otpId, encryptionTargetBundle } = await c.var.keyProvider
+      .startEmailOtp({
+        email,
+        appName: appDisplayName(app),
+        ...(logo?.startsWith('https://') ? { logoUrl: logo } : {}),
+      })
+      .catch(providerFailure);
+    await createChallenge(c.var.db, {
+      id: otpId,
+      appId: app.id,
+      purpose: 'email_otp',
+      subject: email,
+      ttlSeconds: OTP_TTL_SECONDS,
     });
-    return c.json(WalletNonceOutput.parse({ nonce, expiresAt: expiresAt.toISOString() }));
+    return c.json(EmailOtpStartOutput.parse({ otpId, targetBundle: encryptionTargetBundle }));
   })
 
-  .post('/wallet/verify', requireApp, validate('json', WalletVerifyInput), async (c) => {
+  .post('/email/verify', requireApp, validate('json', EmailOtpVerifyInput), async (c) => {
+    const app = c.var.app;
+    requireMethod(app, 'email');
+    const input = c.req.valid('json');
+    const flow = await findLiveChallenge(c.var.db, {
+      id: input.otpId,
+      appId: app.id,
+      purpose: 'email_otp',
+    });
+    if (!flow?.subject) throw new ApiError('bad_request', 'This code expired, request a new one');
+
+    let verificationToken: string;
+    try {
+      ({ verificationToken } = await c.var.keyProvider.verifyEmailOtp(input));
+    } catch (error) {
+      if (error instanceof KeyProviderError && error.code === 'invalid_input') {
+        throw new ApiError('bad_request', 'That code is not valid', { reason: 'invalid_code' });
+      }
+      return providerFailure(error);
+    }
+    await setChallengePayload(c.var.db, {
+      id: input.otpId,
+      appId: app.id,
+      purpose: 'email_otp',
+      payload: { verificationToken },
+    });
+
+    const identity = await c.var.db.query.endUserIdentities.findFirst({
+      where: (t, { and: all, eq: is }) =>
+        all(is(t.appId, app.id), is(t.type, 'email'), is(t.identifier, flow.subject ?? '')),
+    });
+    const owner = identity ? await loadEndUserRow(c.var.db, app, identity.endUserId) : null;
+    const mode = owner?.keyProviderSubOrgId ? 'login' : 'signup';
+    return c.json(EmailOtpVerifyOutput.parse({ verificationToken, mode }));
+  })
+
+  .post('/email/login', requireApp, validate('json', EmailOtpLoginInput), async (c) => {
+    const app = c.var.app;
+    requireMethod(app, 'email');
+    const input = c.req.valid('json');
+    // Only a verified flow is consumed: calling login too early must not burn the code.
+    const pending = await findLiveChallenge(c.var.db, {
+      id: input.otpId,
+      appId: app.id,
+      purpose: 'email_otp',
+    });
+    if (!EmailOtpPayload.safeParse(pending?.payload).success) {
+      throw new ApiError('bad_request', 'Verify the code first, or request a new one');
+    }
+    const flow = await consumeChallenge(c.var.db, {
+      id: input.otpId,
+      appId: app.id,
+      purpose: 'email_otp',
+    });
+    const payload = EmailOtpPayload.safeParse(flow?.payload);
+    if (!flow?.subject || !payload.success) {
+      throw new ApiError('bad_request', 'This code expired, request a new one');
+    }
+    const email = flow.subject;
+    const { verificationToken } = payload.data;
+
+    const resolved = await resolveFromIdentity(c.var.db, app, { type: 'email', identifier: email });
+    const user = await loadEndUserRow(c.var.db, app, resolved.endUserId);
+
+    if (input.mode === 'signup') {
+      if (user.keyProviderSubOrgId) {
+        throw new ApiError('conflict', 'This account exists, sign in instead', {
+          reason: 'account_exists',
+        });
+      }
+      const created = await c.var.keyProvider
+        .createSubOrganization({
+          endUserId: user.id,
+          root: {
+            kind: 'email',
+            email,
+            sessionKey: input.sessionKey,
+            verificationToken,
+            clientSignature: input.clientSignature,
+          },
+        })
+        .catch(relayFailure);
+      await attachSubOrganization(c.var.db, user.id, created);
+      return c.json(await completeLogin(c, app, user.id, true));
+    }
+
+    if (!user.keyProviderSubOrgId) {
+      throw new ApiError('bad_request', 'No account yet, sign up instead', {
+        reason: 'account_missing',
+      });
+    }
+    await c.var.keyProvider
+      .otpLogin({
+        subOrgId: user.keyProviderSubOrgId,
+        verificationToken,
+        publicKey: input.publicKey,
+        clientSignature: input.clientSignature,
+        expirationSeconds: SESSION_KEY_SECONDS,
+      })
+      .catch(relayFailure);
+    return c.json(await completeLogin(c, app, user.id, resolved.isNewUser));
+  })
+
+  /* External wallets. The wallet signs the provider login request itself, which
+     carries the iframe session key: one wallet prompt, and only that key logs in. */
+
+  .post(
+    '/wallet/lookup',
+    requireApp,
+    validate(
+      'json',
+      z.object({ chainFamily: z.enum(['evm', 'solana']), address: z.string().min(32).max(64) }),
+    ),
+    async (c) => {
+      const app = c.var.app;
+      requireMethod(app, 'wallet');
+      const { chainFamily, address } = c.req.valid('json');
+      const identity = await c.var.db.query.endUserIdentities.findFirst({
+        where: (t, { and: all, eq: is }) =>
+          all(
+            is(t.appId, app.id),
+            is(t.type, 'wallet'),
+            is(t.identifier, walletIdentifier(chainFamily, address)),
+          ),
+      });
+      const owner = identity ? await loadEndUserRow(c.var.db, app, identity.endUserId) : null;
+      return c.json({ organizationId: owner?.keyProviderSubOrgId ?? null });
+    },
+  )
+
+  .post('/wallet/login', requireApp, validate('json', WalletLoginInput), async (c) => {
     const app = c.var.app;
     requireMethod(app, 'wallet');
-    const input = c.req.valid('json');
+    const { chainFamily, request } = c.req.valid('json');
+    const keyProvider = c.var.keyProvider;
 
-    const nonce = NONCE_LINE.exec(input.message)?.[1];
-    if (!nonce) throw new ApiError('bad_request', 'Message has no nonce');
-    // Consumed before verification: a nonce gets exactly one attempt (replay, section 8.1).
-    const challenge = await consumeChallenge(c.var.db, {
-      id: nonce,
-      appId: app.id,
-      purpose: input.chainFamily === 'evm' ? 'siwe' : 'siws',
-    });
-    if (!challenge) throw new ApiError('unauthorized', 'Nonce is unknown, expired or already used');
-
-    const domains = [c.var.config.EMBED_ORIGIN, ...app.allowedOrigins].map(
-      (origin) => new URL(origin).host,
-    );
-
-    let address: string | null = null;
-    for (const domain of domains) {
-      if (input.chainFamily === 'evm') {
-        const result = await verifySiweLogin({
-          message: input.message,
-          signature: input.signature as `0x${string}`,
-          expectedNonce: nonce,
-          expectedDomain: domain,
-        });
-        address = result?.address ?? null;
-      } else {
-        address =
-          verifySiwsLogin({
-            message: input.message,
-            signature: input.signature,
-            publicKey: input.publicKey,
-            expectedNonce: nonce,
-            expectedDomain: domain,
-          })?.address ?? null;
-      }
-      if (address) break;
+    const signer = keyProvider.inspectStamp(request);
+    const expectedScheme = chainFamily === 'evm' ? 'secp256k1' : 'ed25519';
+    if (signer?.scheme !== expectedScheme || !('publicKey' in signer)) {
+      throw new ApiError('unauthorized', 'The wallet signature does not verify');
     }
-    if (!address) throw new ApiError('unauthorized', 'Signature verification failed');
+    const login = keyProvider.readLoginRequest(request);
+    if (!login) throw new ApiError('bad_request', 'Not a login request');
+    const address = walletAddress(chainFamily, signer.publicKey);
+    const resolved = await resolveFromIdentity(c.var.db, app, {
+      type: 'wallet',
+      identifier: walletIdentifier(chainFamily, address),
+    });
+    const user = await loadEndUserRow(c.var.db, app, resolved.endUserId);
 
-    const resolved = await resolveFromWallet(c.var.db, app, input.chainFamily, address);
-    return c.json(await completeLogin(c, app, resolved));
+    if (!user.keyProviderSubOrgId) {
+      // Sign-up: the signed request must target the parent organization, and its
+      // session key becomes a second root credential next to the wallet key.
+      if (login.organizationId !== keyProvider.info().organizationId) {
+        throw new ApiError('bad_request', 'Unexpected login target');
+      }
+      const created = await keyProvider
+        .createSubOrganization({
+          endUserId: user.id,
+          root: {
+            kind: 'wallet',
+            chainFamily,
+            publicKey: signer.publicKey,
+            sessionKey: {
+              apiKeyName: `session-${Date.now()}`,
+              publicKey: login.publicKey,
+              expirationSeconds: String(login.expirationSeconds),
+            },
+          },
+        })
+        .catch(relayFailure);
+      await attachSubOrganization(c.var.db, user.id, created);
+      return c.json(await completeLogin(c, app, user.id, true));
+    }
+
+    const session = await keyProvider
+      .relay(request, { kind: 'login', subOrgId: user.keyProviderSubOrgId })
+      .catch(relayFailure);
+    const owner = await endUserOfSession(c, app, session);
+    if (owner.id !== user.id) throw new ApiError('unauthorized', 'Credential mismatch');
+    return c.json(await completeLogin(c, app, user.id, false));
   })
 
-  /* T1.4: session lifecycle */
-  .post('/session/exchange', requireApp, async (c) => {
+  /* Passkeys. A login addressed to the parent organization: the provider finds the
+     sub-organization of the credential, we map it to an end user of this app. */
+
+  .post('/passkey/login', requireApp, validate('json', StampedLoginInput), async (c) => {
     const app = c.var.app;
-    const auth = authFor(c, app);
-    const session = await auth.api.getSession({ headers: withBridgedCookies(c.req.raw.headers) });
-    if (!session) throw new ApiError('unauthorized', 'No authentication session to exchange');
-    const resolved = await resolveFromAuthUser(c.var.db, app, session.user.id);
-    return c.json(await completeLogin(c, app, resolved));
+    requireMethod(app, 'passkey');
+    const { request } = c.req.valid('json');
+    const session = await c.var.keyProvider.relay(request, { kind: 'login' }).catch(relayFailure);
+    const user = await endUserOfSession(c, app, session);
+    return c.json(await completeLogin(c, app, user.id, false));
   })
+
+  /** Enrolls a passkey on the signed-in user: an authenticator of their sub-organization. */
+  .post(
+    '/passkey/register',
+    requireApp,
+    requireUser,
+    validate('json', AddPasskeyInput),
+    async (c) => {
+      const app = c.var.app;
+      requireMethod(app, 'passkey');
+      const user = await loadEndUserRow(c.var.db, app, c.var.endUserId);
+      const keySession = keySessionOf(user);
+      if (!keySession) throw new ApiError('bad_request', 'This user has no wallet yet');
+      const { credentialId } = await c.var.keyProvider
+        .relay(c.req.valid('json').request, {
+          kind: 'addPasskey',
+          subOrgId: keySession.organizationId,
+          userId: keySession.userId,
+        })
+        .catch(relayFailure);
+      await addIdentity(c.var.db, app, user.id, { type: 'passkey', identifier: credentialId });
+      return c.json(await loadEndUser(c.var.db, app, user.id));
+    },
+  )
+
+  /* Session lifecycle */
 
   .post('/refresh', requireApp, validate('json', RefreshInput), async (c) => {
     const { tokens } = await rotateRefreshToken({
@@ -228,186 +419,172 @@ export const authRoutes = new Hono<AppEnv>()
   })
 
   .post('/logout', requireApp, requireUser, async (c) => {
+    // The iframe drops its session key; the provider key expires on its own.
     await revokeFamily(c.var.db, c.var.sessionFamilyId);
-    const bridged = withBridgedCookies(c.req.raw.headers);
-    if (bridged.has('Cookie')) {
-      // Best effort: also end the Better Auth session kept for passkey enrollment.
-      await authFor(c, c.var.app)
-        .api.signOut({ headers: bridged })
-        .catch(() => undefined);
-    }
-    c.header(AUTH_COOKIES_HEADER, '');
     return c.json(LogoutOutput.parse({ ok: true }));
   })
 
-  /* OAuth popup flow. The popup is a first-party window on the API origin, so
-     real cookies work there even when the iframe itself is cookie-less. */
+  /* OAuth popup. First-party window on the API origin; the nonce commits to the
+     iframe session key given in the start URL. */
+
   .get('/oauth/:publicAppId/:provider/start', async (c) => {
     const publicId = PublicAppId.safeParse(c.req.param('publicAppId'));
     const provider = z.enum(OAUTH_PROVIDERS).safeParse(c.req.param('provider'));
-    if (!publicId.success || !provider.success)
+    const publicKey = SessionPublicKey.safeParse(c.req.query('publicKey'));
+    if (!publicId.success || !provider.success) {
       throw new ApiError('not_found', 'Unknown app or provider');
+    }
+    if (!publicKey.success) throw new ApiError('bad_request', 'Missing session public key');
 
     const { app } = await loadAppByPublicId(c.var.db, publicId.data);
     if (!app) throw new ApiError('app_id_invalid', 'Unknown app id');
     requireMethod(app, provider.data);
-
-    const config = c.var.config;
-    const configured =
-      provider.data === 'google'
-        ? Boolean(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET)
-        : Boolean(config.APPLE_CLIENT_ID && config.APPLE_CLIENT_SECRET);
-    if (!configured)
+    const credentials = oidcCredentials(c.var.config, provider.data);
+    if (!credentials) {
       throw new ApiError(
         'bad_request',
         `${provider.data} sign-in is not configured on this server`,
       );
+    }
 
-    const apiOrigin = new URL(config.API_BASE_URL).origin;
-    const auth = authFor(c, app);
-    const response = await auth.handler(
-      new Request(`${apiOrigin}/v1/auth/sign-in/social`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Origin: apiOrigin },
-        body: JSON.stringify({
-          provider: provider.data satisfies OAuthProvider,
-          callbackURL: `${apiOrigin}/v1/auth/oauth/${app.publicId}/complete`,
-          errorCallbackURL: `${apiOrigin}/v1/auth/oauth/${app.publicId}/complete`,
-          disableRedirect: true,
-        }),
-      }),
-    );
-    if (!response.ok) return normalizeAuthError(c.var.requestId, response);
-
-    const { url } = await response.clone().json<{ url: string }>();
-    const state = new URL(url).searchParams.get('state');
-    if (!state) throw new ApiError('internal', 'Provider URL has no state');
+    const start = await startAuthorization({
+      provider: provider.data,
+      clientId: credentials.clientId,
+      redirectUri: callbackUrl(c.var.config, provider.data),
+      nonce: await nonceFor(publicKey.data),
+    });
     await createChallenge(c.var.db, {
-      id: await sha256Hex(state),
+      id: await sha256Hex(start.state),
       appId: app.id,
       purpose: 'oauth_state',
+      payload: {
+        provider: provider.data,
+        publicKey: publicKey.data,
+        codeVerifier: start.codeVerifier,
+      },
       ttlSeconds: OAUTH_STATE_TTL_SECONDS,
     });
-
-    const redirect = new Response(null, {
+    return new Response(null, {
       status: 302,
-      headers: { Location: url, 'Cache-Control': 'no-store' },
+      headers: { Location: start.url, 'Cache-Control': 'no-store' },
     });
-    for (const cookie of response.headers.getSetCookie())
-      redirect.headers.append('Set-Cookie', cookie);
-    return redirect;
   })
 
   /* Provider callback. Google sends GET with a query, Apple sends a form POST. */
   .on(['GET', 'POST'], '/callback/:provider', async (c) => {
-    let state = c.req.query('state');
-    if (!state && c.req.method === 'POST') {
-      const form = await c.req.raw
-        .clone()
-        .formData()
-        .catch(() => null);
-      const value = form?.get('state');
-      state = typeof value === 'string' ? value : undefined;
-    }
-    if (!state) throw new ApiError('bad_request', 'Missing OAuth state');
-
-    const challenge = await findLiveChallenge(c.var.db, {
-      id: await sha256Hex(state),
-      purpose: 'oauth_state',
-    });
-    if (!challenge) throw new ApiError('bad_request', 'Unknown or expired OAuth state');
-    const app = await c.var.db.query.apps.findFirst({ where: eq(apps.id, challenge.appId) });
-    if (!app) throw new ApiError('bad_request', 'Unknown or expired OAuth state');
-
-    return normalizeAuthError(c.var.requestId, await authFor(c, app).handler(c.req.raw));
-  })
-
-  .get('/oauth/:publicAppId/complete', async (c) => {
     const embedOrigin = c.var.config.EMBED_ORIGIN;
     c.header('Cache-Control', 'no-store');
-    const publicId = PublicAppId.safeParse(c.req.param('publicAppId'));
-    const app = publicId.success
-      ? (await loadAppByPublicId(c.var.db, publicId.data)).app
-      : undefined;
-    if (!app) return c.html(oauthResultPage(embedOrigin, { error: 'unknown_app' }), 404);
+    const provider = z.enum(OAUTH_PROVIDERS).safeParse(c.req.param('provider'));
+    let params: URLSearchParams = new URL(c.req.url).searchParams;
+    if (c.req.method === 'POST') {
+      const form = await c.req.raw.formData().catch(() => null);
+      params = new URLSearchParams();
+      form?.forEach((value, key) => {
+        if (typeof value === 'string') params.set(key, value);
+      });
+    }
+    const state = params.get('state');
+    if (!provider.success || !state) {
+      return c.html(oauthResultPage(embedOrigin, { error: 'invalid_request' }), 400);
+    }
 
-    const providerError = c.req.query('error');
-    if (providerError)
+    const stateId = await sha256Hex(state);
+    const pending = await findLiveChallenge(c.var.db, { id: stateId, purpose: 'oauth_state' });
+    const statePayload = OAuthStatePayload.safeParse(pending?.payload);
+    if (!pending || !statePayload.success || statePayload.data.provider !== provider.data) {
+      return c.html(oauthResultPage(embedOrigin, { error: 'expired' }), 400);
+    }
+    await consumeChallenge(c.var.db, { id: stateId, appId: pending.appId, purpose: 'oauth_state' });
+
+    const providerError = params.get('error');
+    if (providerError) {
       return c.html(oauthResultPage(embedOrigin, { error: providerError.slice(0, 64) }), 400);
+    }
+    const code = params.get('code');
+    const credentials = oidcCredentials(c.var.config, provider.data);
+    if (!code || !credentials) {
+      return c.html(oauthResultPage(embedOrigin, { error: 'invalid_request' }), 400);
+    }
 
-    const session = await authFor(c, app).api.getSession({ headers: c.req.raw.headers });
-    if (!session) return c.html(oauthResultPage(embedOrigin, { error: 'no_session' }), 401);
+    let exchanged: Awaited<ReturnType<typeof exchangeCode>>;
+    try {
+      exchanged = await exchangeCode({
+        provider: provider.data,
+        ...credentials,
+        redirectUri: callbackUrl(c.var.config, provider.data),
+        code,
+        codeVerifier: statePayload.data.codeVerifier,
+        expectedNonce: await nonceFor(statePayload.data.publicKey),
+        ...(oidcFetchForTests ? { fetch: oidcFetchForTests } : {}),
+      });
+    } catch {
+      return c.html(oauthResultPage(embedOrigin, { error: 'provider_refused' }), 400);
+    }
 
-    const code = toBase64Url(randomBytes(32));
+    const exchangeCodeValue = toBase64Url(randomBytes(32));
     await createChallenge(c.var.db, {
-      id: await sha256Hex(code),
-      appId: app.id,
+      id: await sha256Hex(exchangeCodeValue),
+      appId: pending.appId,
       purpose: 'exchange_code',
-      subject: session.user.id,
+      payload: {
+        provider: provider.data,
+        publicKey: statePayload.data.publicKey,
+        idToken: exchanged.idToken,
+        subject: exchanged.claims.sub,
+        email: exchanged.claims.email ?? null,
+      },
       ttlSeconds: EXCHANGE_CODE_TTL_SECONDS,
     });
-    return c.html(oauthResultPage(embedOrigin, { code }));
+    return c.html(oauthResultPage(embedOrigin, { code: exchangeCodeValue }));
   })
 
-  .post('/oauth/exchange', requireApp, validate('json', ExchangeInput), async (c) => {
+  .post('/oauth/exchange', requireApp, validate('json', OAuthExchangeInput), async (c) => {
     const app = c.var.app;
+    const input = c.req.valid('json');
     const challenge = await consumeChallenge(c.var.db, {
-      id: await sha256Hex(c.req.valid('json').code),
+      id: await sha256Hex(input.code),
       appId: app.id,
       purpose: 'exchange_code',
     });
-    if (!challenge?.subject)
+    const payload = ExchangePayload.safeParse(challenge?.payload);
+    if (!payload.success) {
       throw new ApiError('unauthorized', 'Exchange code is unknown, expired or already used');
-    const resolved = await resolveFromAuthUser(c.var.db, app, challenge.subject);
-    return c.json(await completeLogin(c, app, resolved));
-  })
-
-  /* T1.1 / T1.2: Better Auth for email OTP and passkeys, behind an allowlist */
-  .on(['GET', 'POST'], '/*', requireApp, async (c) => {
-    const app = c.var.app;
-    const path = c.req.path.replace(/^\/v1\/auth/, '');
-    const route = PROXY_ALLOWLIST.find((entry) => entry.pattern.test(path));
-    if (!route) throw new ApiError('not_found', `No auth route for ${c.req.method} ${c.req.path}`);
-    if (route.method) requireMethod(app, route.method);
-
-    if (path === '/email-otp/send-verification-otp') {
-      const body = SendOtpBody.safeParse(
-        await c.req.raw
-          .clone()
-          .json()
-          .catch(() => null),
-      );
-      if (!body.success)
-        throw new ApiError(
-          'validation_failed',
-          'Expected { email, type: "sign-in" }',
-          body.error.issues,
-        );
     }
-
-    const binding = await deviceBinding(c, route.deviceBound ?? false);
-    const auth = authFor(c, app, binding);
-    const forwarded = new Request(c.req.raw, { headers: withBridgedCookies(c.req.raw.headers) });
-    const response = await auth.handler(forwarded);
-
-    if (!response.ok)
-      return normalizeAuthError(
-        c.var.requestId,
-        bridgeResponseCookies(c.req.raw.headers, response),
-      );
-
-    if (route.signsIn) {
-      const session = await auth.api.getSession({
-        headers: cookieHeadersFrom(response, c.req.raw.headers),
-      });
-      if (!session) throw new ApiError('internal', 'Sign-in succeeded without a session');
-      const resolved = await resolveFromAuthUser(c.var.db, app, session.user.id);
-      const body = await completeLogin(c, app, resolved);
-      const bridged = bridgeResponseCookies(c.req.raw.headers, response);
-      return c.json(body, 200 as ContentfulStatusCode, {
-        [AUTH_COOKIES_HEADER]: bridged.headers.get(AUTH_COOKIES_HEADER) ?? '',
-      });
+    const { provider, idToken, subject, publicKey } = payload.data;
+    if (publicKey !== input.publicKey) {
+      throw new ApiError('unauthorized', 'This sign-in was started with another session key');
     }
+    requireMethod(app, provider);
 
-    return bridgeResponseCookies(c.req.raw.headers, response);
+    const resolved = await resolveFromIdentity(c.var.db, app, {
+      type: provider,
+      identifier: subject,
+    });
+    const user = await loadEndUserRow(c.var.db, app, resolved.endUserId);
+    let subOrgId = user.keyProviderSubOrgId;
+    if (!subOrgId) {
+      const created = await c.var.keyProvider
+        .createSubOrganization({
+          endUserId: user.id,
+          root: { kind: 'oidc', providerName: provider satisfies OidcProvider, oidcToken: idToken },
+        })
+        .catch(relayFailure);
+      await attachSubOrganization(c.var.db, user.id, created);
+      subOrgId = created.subOrgId;
+    }
+    await c.var.keyProvider
+      .oauthLogin({
+        subOrgId,
+        oidcToken: idToken,
+        publicKey,
+        expirationSeconds: SESSION_KEY_SECONDS,
+      })
+      .catch(relayFailure);
+    return c.json(await completeLogin(c, app, user.id, resolved.isNewUser));
   });
+
+/* Test hook: the OIDC token endpoint, replaced in tests (no network in workerd tests). */
+let oidcFetchForTests: typeof fetch | null = null;
+export function setOidcFetchForTests(fetchFn: typeof fetch | null): void {
+  oidcFetchForTests = fetchFn;
+}

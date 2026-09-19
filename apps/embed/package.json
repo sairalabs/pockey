@@ -15,6 +15,7 @@
     "@pocketkey/chains-evm": "workspace:*",
     "@pocketkey/chains-solana": "workspace:*",
     "@pocketkey/core": "workspace:*",
+    "@pocketkey/key-provider": "workspace:*",
     "@pocketkey/types": "workspace:*",
     "@scure/base": "^2.0.0",
     "clsx": "^2.1.1",

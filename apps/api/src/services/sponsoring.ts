@@ -93,14 +93,10 @@ export async function ensureSolanaFeePayer(
   const existing = await findFeePayer(deps.db, app.id);
   if (existing) return existing;
 
-  const { subOrgId } = await deps.keyProvider
-    .createSubOrganization({
-      endUserId: `system:${app.id}`,
-      auth: { type: 'email', email: `system+${app.id}@users.pocketkey.dev` },
-    })
-    .catch(providerFailure);
-  const wallet = await deps.keyProvider
-    .createWallet({ subOrgId, curve: 'ed25519' })
+  // A system sub-organization owned by the Pocketkey signer only: the app's gas
+  // money, never a user key.
+  const { subOrgId, account } = await deps.keyProvider
+    .createSystemAccount({ name: `fee-payer-${app.id}`, chainFamily: 'solana' })
     .catch(providerFailure);
 
   await deps.db
@@ -110,8 +106,8 @@ export async function ensureSolanaFeePayer(
       appId: app.id,
       purpose: 'solana_fee_payer',
       keyProviderSubOrgId: subOrgId,
-      keyProviderWalletId: wallet.walletId,
-      address: wallet.address,
+      keyProviderWalletId: account.walletId,
+      address: account.address,
     })
     .onConflictDoNothing();
 

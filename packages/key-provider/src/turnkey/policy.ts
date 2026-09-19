@@ -1,26 +1,29 @@
 import { COMPUTE_BUDGET_PROGRAM_ID } from '@pocketkey/chains-solana';
 import type { SigningPolicy } from '@pocketkey/types';
+import { ACTIVITY } from './wire.js';
 
 /**
  * Maps a Pocketkey `SigningPolicy` to a Turnkey policy (T4.1, section 7.4).
- * Pure: no Turnkey SDK import, the Turnkey adapter sends the result as is.
+ * Pure: the iframe builds the policy it stamps with this function, and the API
+ * rebuilds it to check that the relayed body is exactly what the user consented to.
  *
- * TO RE-VERIFY DURING T0.5: the condition and consensus syntax below follows the
- * Turnkey policy language as documented when this was written (`approvers.any`,
- * `wallet.id`, `activity.type`, `eth.tx.chain_id`, `eth.tx.to`, `eth.tx.value`,
- * `solana.tx.program_keys`, `solana.tx.transfers`). It has not been run against a
- * Turnkey sandbox yet. Check field names, list operators and address casing
- * against the Turnkey docs and a real `createPolicy` call before relying on it.
+ * Verified against a live organization on 2026-09-19 (TURNKEY.md): consensus on the
+ * delegated user id, `eth.tx.*` and `solana.tx.*` fields, list operators, and the
+ * `time` expression of `CREATE_POLICY_V3`, so Turnkey itself refuses after expiry.
  *
- * Not expressible in a Turnkey policy, so enforced by Pocketkey only:
- * - `maxValueTotal` (policies are stateless),
- * - `expiresIn` (policies cannot express a date; the hourly cron deletes expired ones).
+ * Every ALLOW policy of the delegated user is OR-ed with the others, and one Turnkey
+ * wallet holds both the EVM and the Solana account. So each policy is bound to the
+ * exact account address as well as the wallet: a Solana session with no program
+ * allowlist must never let an EVM transaction through.
+ *
+ * Still enforced by Pocketkey only: `maxValueTotal` (policies are stateless).
  */
 
 export const TURNKEY_ACTIVITY = {
-  signTransaction: 'ACTIVITY_TYPE_SIGN_TRANSACTION_V2',
-  signRawPayload: 'ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2',
+  signTransaction: ACTIVITY.signTransaction,
+  signRawPayload: ACTIVITY.signRawPayload,
   signRawPayloads: 'ACTIVITY_TYPE_SIGN_RAW_PAYLOADS',
+  deletePolicy: ACTIVITY.deletePolicy,
 } as const;
 
 export interface TurnkeyPolicy {
@@ -28,15 +31,20 @@ export interface TurnkeyPolicy {
   effect: 'EFFECT_ALLOW';
   consensus: string;
   condition: string;
+  time?: string;
   notes: string;
 }
 
 export interface TurnkeyPolicyTarget {
   /** Turnkey wallet id the policy is bound to. */
   walletId: string;
-  /** Turnkey user holding the API key our backend signs with for this session. */
+  /** Account address inside that wallet, exactly as Turnkey returned it. */
+  address: string;
+  /** Turnkey user holding the Pocketkey signer key in this sub-organization. */
   sessionUserId: string;
   policyName: string;
+  /** Turnkey refuses every signature at or after this instant. */
+  expiresAt: Date;
   /**
    * Allows raw payload signing (session message and typed data signatures).
    * Turnkey cannot tell a message digest from a transaction digest, so a raw
@@ -52,6 +60,11 @@ export function quote(value: string): string {
 }
 
 const list = (values: readonly string[]) => `[${values.join(', ')}]`;
+
+/** RFC 3339 at second precision with a `Z` offset, the only form Turnkey accepts. */
+export function policyTimestamp(date: Date): string {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
 
 export function toTurnkeyPolicy(policy: SigningPolicy, target: TurnkeyPolicyTarget): TurnkeyPolicy {
   const txConditions = [`activity.type == ${quote(TURNKEY_ACTIVITY.signTransaction)}`];
@@ -89,16 +102,34 @@ export function toTurnkeyPolicy(policy: SigningPolicy, target: TurnkeyPolicyTarg
     );
   }
 
-  const condition = `wallet.id == ${quote(target.walletId)} && (${allowed.join(' || ')})`;
+  const condition =
+    `wallet.id == ${quote(target.walletId)} && ` +
+    `wallet_account.address == ${quote(target.address)} && (${allowed.join(' || ')})`;
 
-  const pocketkeyOnly = ['expiry'];
-  if (policy.maxValueTotal !== undefined) pocketkeyOnly.push('maxValueTotal');
+  const pocketkeyOnly =
+    policy.maxValueTotal !== undefined ? ' Enforced by Pocketkey only: maxValueTotal.' : '';
 
   return {
     policyName: target.policyName,
     effect: 'EFFECT_ALLOW',
     consensus: `approvers.any(user, user.id == ${quote(target.sessionUserId)})`,
     condition,
-    notes: `Pocketkey session signer (${policy.chain}, ${policy.expiresIn}). Enforced by Pocketkey only: ${pocketkeyOnly.join(', ')}.`,
+    time: `time.now < Timestamp(${quote(policyTimestamp(target.expiresAt))})`,
+    notes: `Pocketkey session signer (${policy.chain}, ${policy.expiresIn}).${pocketkeyOnly}`,
+  };
+}
+
+/**
+ * Lets the Pocketkey signer delete policies in this sub-organization, so a session
+ * can be revoked from the API (developer backend, dashboard, expiry cleanup). It can
+ * only remove power: creating policies still needs the end user.
+ */
+export function revokePermissionPolicy(sessionUserId: string): TurnkeyPolicy {
+  return {
+    policyName: 'pocketkey:revoke',
+    effect: 'EFFECT_ALLOW',
+    consensus: `approvers.any(user, user.id == ${quote(sessionUserId)})`,
+    condition: `activity.type == ${quote(TURNKEY_ACTIVITY.deletePolicy)}`,
+    notes: 'Lets Pocketkey revoke session signers. It cannot create or widen them.',
   };
 }

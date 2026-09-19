@@ -20,6 +20,7 @@ export const appRoutes = new Hono<AppEnv>().get('/:appId/config', requireApp, (c
   }
 
   const config = AppConfig.parse(app.config);
+  const facts = c.var.keyProvider.info();
   const body: PublicAppConfig = {
     appId: PublicAppId.parse(app.publicId),
     name: app.name,
@@ -28,6 +29,14 @@ export const appRoutes = new Hono<AppEnv>().get('/:appId/config', requireApp, (c
     appearance: config.appearance,
     embeddedWallets: { createOnLogin: config.embeddedWallets.createOnLogin },
     allowedOrigins: app.allowedOrigins,
+    keyProvider: {
+      kind: facts.kind,
+      organizationId: facts.organizationId,
+      signerPublicKey: facts.signerPublicKey,
+      ...(facts.enclaveSignerPublicKey
+        ? { enclaveSignerPublicKey: facts.enclaveSignerPublicKey }
+        : {}),
+    },
   };
   return c.json(PublicAppConfig.parse(body));
 });

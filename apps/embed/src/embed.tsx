@@ -1,8 +1,10 @@
 import { createPocketkey, localStorageStorage } from '@pocketkey/core';
+import type { PublicAppConfig } from '@pocketkey/types';
 import { StrictMode } from 'react';
 import type { Root } from 'react-dom/client';
 import { App } from './App';
 import { createController } from './lib/controller';
+import { createEmbedKeyClient } from './lib/keys';
 import { createMessenger, type IncomingMessage } from './lib/messenger';
 import { installModalityTracking } from './lib/modality';
 import { createEmbedStore } from './lib/state';
@@ -15,11 +17,15 @@ const CLOSE_FALLBACK_MS = 400;
 /** Wires the client, controller, messenger and UI. Runs once, outside React. */
 export function startEmbed(root: Root, appId: string): void {
   let client;
+  // The session key lives here, in IndexedDB. The config tells the key client which
+  // provider it talks to (production builds only ever trust Turnkey's enclave key).
+  let config: PublicAppConfig | null = null;
   try {
     client = createPocketkey({
       appId,
       baseUrl: import.meta.env.VITE_POCKETKEY_API_URL ?? DEFAULT_API_URL,
       storage: localStorageStorage(),
+      keys: createEmbedKeyClient(appId, () => config),
     });
   } catch (error) {
     console.error('[pocketkey] invalid embed configuration', error);
@@ -49,7 +55,10 @@ export function startEmbed(root: Root, appId: string): void {
         window.removeEventListener('message', onMessage);
       };
     },
-    getConfig: () => client.getConfig(),
+    getConfig: async () => {
+      config = await client.getConfig();
+      return config;
+    },
     handle: controller.handle,
     onAuthChange: (listener) => client.auth.onChange(listener),
   });

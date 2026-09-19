@@ -28,8 +28,14 @@ export interface Env {
   /** Dashboard sign-in with GitHub (T5.1). Without both, only email OTP is offered. */
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
-  /** Local development only: makes mock wallets survive restarts. */
-  MOCK_KEY_SEED?: string;
+  /* Turnkey (KEY_PROVIDER=turnkey). The API key is Pocketkey's parent credential. */
+  TURNKEY_API_BASE_URL?: string;
+  TURNKEY_ORG_ID?: string;
+  TURNKEY_API_PUBLIC_KEY?: string;
+  TURNKEY_API_PRIVATE_KEY?: string;
+  /** Session signer and system wallet key. Defaults to the parent API key. */
+  TURNKEY_SIGNER_PUBLIC_KEY?: string;
+  TURNKEY_SIGNER_PRIVATE_KEY?: string;
   /** JSON map of RPC endpoints (may embed provider keys, so set it as a secret). */
   RPC_URLS?: string;
   /** Gas sponsoring top-ups (T4.6): `mock` or `stripe`. */
@@ -73,7 +79,12 @@ export const EnvSchema = z
     APPLE_APP_BUNDLE_IDENTIFIER: optionalString,
     GITHUB_CLIENT_ID: optionalString,
     GITHUB_CLIENT_SECRET: optionalString,
-    MOCK_KEY_SEED: optionalString,
+    TURNKEY_API_BASE_URL: z.url().default('https://api.turnkey.com'),
+    TURNKEY_ORG_ID: optionalString,
+    TURNKEY_API_PUBLIC_KEY: optionalString,
+    TURNKEY_API_PRIVATE_KEY: optionalString,
+    TURNKEY_SIGNER_PUBLIC_KEY: optionalString,
+    TURNKEY_SIGNER_PRIVATE_KEY: optionalString,
     /**
      * JSON map of RPC endpoints, e.g. {"8453":"https://base...","solana:devnet":"https://..."}.
      * Missing entries fall back to public RPCs, fine for development only.
@@ -126,9 +137,6 @@ export const EnvSchema = z
       if (env.MAILER !== 'resend') {
         ctx.addIssue({ code: 'custom', message: 'MAILER must be resend in production' });
       }
-      if (env.MOCK_KEY_SEED) {
-        ctx.addIssue({ code: 'custom', message: 'MOCK_KEY_SEED must not be set in production' });
-      }
       if (env.PAYMENTS !== 'stripe') {
         ctx.addIssue({ code: 'custom', message: 'PAYMENTS must be stripe in production' });
       }
@@ -143,6 +151,22 @@ export const EnvSchema = z
             'STRIPE_ACTIVE_WALLET_PRICE_ID and STRIPE_ACTIVE_WALLET_METER_NAME are required in production',
         });
       }
+    }
+    if (
+      env.KEY_PROVIDER === 'turnkey' &&
+      (!env.TURNKEY_ORG_ID || !env.TURNKEY_API_PUBLIC_KEY || !env.TURNKEY_API_PRIVATE_KEY)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'TURNKEY_ORG_ID, TURNKEY_API_PUBLIC_KEY and TURNKEY_API_PRIVATE_KEY are required when KEY_PROVIDER=turnkey',
+      });
+    }
+    if (Boolean(env.TURNKEY_SIGNER_PUBLIC_KEY) !== Boolean(env.TURNKEY_SIGNER_PRIVATE_KEY)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Set both TURNKEY_SIGNER_PUBLIC_KEY and TURNKEY_SIGNER_PRIVATE_KEY, or neither',
+      });
     }
     if (env.MAILER === 'resend' && !env.RESEND_API_KEY) {
       ctx.addIssue({ code: 'custom', message: 'RESEND_API_KEY is required when MAILER=resend' });
@@ -179,7 +203,12 @@ export function parseEnv(env: Env): ParsedEnv {
     APPLE_APP_BUNDLE_IDENTIFIER: env.APPLE_APP_BUNDLE_IDENTIFIER,
     GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET: env.GITHUB_CLIENT_SECRET,
-    MOCK_KEY_SEED: env.MOCK_KEY_SEED,
+    TURNKEY_API_BASE_URL: env.TURNKEY_API_BASE_URL,
+    TURNKEY_ORG_ID: env.TURNKEY_ORG_ID,
+    TURNKEY_API_PUBLIC_KEY: env.TURNKEY_API_PUBLIC_KEY,
+    TURNKEY_API_PRIVATE_KEY: env.TURNKEY_API_PRIVATE_KEY,
+    TURNKEY_SIGNER_PUBLIC_KEY: env.TURNKEY_SIGNER_PUBLIC_KEY,
+    TURNKEY_SIGNER_PRIVATE_KEY: env.TURNKEY_SIGNER_PRIVATE_KEY,
     RPC_URLS: env.RPC_URLS,
     PAYMENTS: env.PAYMENTS,
     PRICE_FEED: env.PRICE_FEED,

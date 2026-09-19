@@ -9,15 +9,15 @@ import {
   type AppRow,
 } from '@pocketkey/db';
 import { MemoryMailer } from '@pocketkey/mailer';
-import { AdminApp, AppConfig, AuthResponse, type AppConfigInput } from '@pocketkey/types';
+import { AdminApp, AppConfig, type AuthResponse, type AppConfigInput } from '@pocketkey/types';
 import { env } from 'cloudflare:workers';
 import { eq } from 'drizzle-orm';
 import { expect } from 'vitest';
 import { createApp } from '../src/app.js';
-import { AUTH_COOKIES_HEADER } from '../src/auth/cookie-bridge.js';
 import { parseEnv } from '../src/env.js';
 import { invalidateApp } from '../src/lib/apps.js';
 import { getMailer } from '../src/lib/mailer.js';
+import { Device } from './device.js';
 
 export const app = createApp();
 export const EMBED_ORIGIN = 'http://localhost:5174';
@@ -97,35 +97,16 @@ export function otpFrom(email: string): string {
   return code;
 }
 
-/** Full email OTP login through the public routes. */
+/**
+ * Full email OTP login through the public routes, as the iframe does it (session
+ * key, OTP encrypted to the key provider, signed sign-up or login).
+ */
 export async function loginWithEmail(
   email: string,
-  options: { device?: string; publicId?: string; origin?: string } = {},
-): Promise<{ body: AuthResponse; authCookies: string }> {
-  const device = options.device ?? randomDevice();
-  const extra = {
-    'X-Pocketkey-Device': device,
-    ...(options.origin ? { Origin: options.origin } : {}),
-  };
-  const send = await postJson(
-    '/v1/auth/email-otp/send-verification-otp',
-    { email, type: 'sign-in' },
-    extra,
-    options.publicId,
-  );
-  expect(send.status, await send.clone().text()).toBe(200);
-
-  const signIn = await postJson(
-    '/v1/auth/sign-in/email-otp',
-    { email, otp: otpFrom(email) },
-    extra,
-    options.publicId,
-  );
-  expect(signIn.status, await signIn.clone().text()).toBe(200);
-  return {
-    body: AuthResponse.parse(await signIn.json()),
-    authCookies: signIn.headers.get(AUTH_COOKIES_HEADER) ?? '',
-  };
+  options: { publicId?: string; origin?: string } = {},
+): Promise<{ body: AuthResponse; device: Device }> {
+  const device = await Device.loginWithEmail(email, options);
+  return { body: device.auth, device };
 }
 
 export function bearer(token: string, publicId?: string): Record<string, string> {

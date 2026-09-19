@@ -19,7 +19,6 @@ import { createMockPayments, MOCK_WEBHOOK_SECRET } from '@pocketkey/payments';
 import {
   ApiErrorBody,
   SendTransactionOutput,
-  SessionSigner,
   SessionSignOutput,
   SmartAccountOutput,
   SolanaFeePayerOutput,
@@ -32,7 +31,7 @@ import {
 } from '@pocketkey/types';
 import { base58, base64 } from '@scure/base';
 import { and, eq, sql } from 'drizzle-orm';
-import { recoverAddress, type Hex } from 'viem';
+import { hashMessage, keccak256, recoverAddress, stringToHex, type Hex } from 'viem';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setRpcFactory } from '../src/lib/rpc.js';
 import {
@@ -40,6 +39,7 @@ import {
   setPriceFeedForTests,
   STATIC_PRICES,
 } from '../src/lib/sponsor.js';
+import type { Device } from './device.js';
 import {
   app,
   bearer,
@@ -70,26 +70,39 @@ const GAS = {
 const MAX_COST_WEI = 400_000n * 2_000_000_000n;
 const ACTUAL_COST_WEI = 200_000_000_000_000n;
 
-const sends: { balanceAtSend: number; signature: Hex }[] = [];
+const sends: { balanceAtSend: number; signature: Hex; digest: Hex }[] = [];
 let failNextUserOp = false;
+
+/* Every prepared operation gets its own nonce, hence its own digest. */
+let nonce = 0;
+const digests = new Map<string, Hex>();
 
 const fakeBundler: EvmSponsorClientsFactory = {
   getSmartAccountAddress: async () => SMART_ACCOUNT,
-  prepareUserOperation: async ({ owner }) => ({
-    sender: SMART_ACCOUNT,
-    ...GAS,
-    send: async () => {
-      const signature = await owner.signHash(USER_OP_HASH);
-      if (failNextUserOp) {
-        failNextUserOp = false;
-        throw new Error(
-          'AA21 did not pay prefund https://api.pimlico.io/v2/8453/rpc?apikey=pim_secret',
-        );
-      }
-      sends.push({ balanceAtSend: await balanceCents(), signature });
-      return USER_OP_HASH;
-    },
-  }),
+  prepareUserOperation: async ({ calls }) => {
+    const opNonce = String(nonce++);
+    const userOpHash = keccak256(stringToHex(`${opNonce}:${calls[0]?.value ?? 0n}`));
+    const digest = hashMessage({ raw: userOpHash });
+    digests.set(opNonce, digest);
+    return {
+      sender: SMART_ACCOUNT,
+      ...GAS,
+      userOperation: { sender: SMART_ACCOUNT, nonce: opNonce, callData: '0x' },
+      userOpHash,
+      digest,
+    };
+  },
+  sendUserOperation: async ({ userOperation, signature }) => {
+    if (failNextUserOp) {
+      failNextUserOp = false;
+      throw new Error(
+        'AA21 did not pay prefund https://api.pimlico.io/v2/8453/rpc?apikey=pim_secret',
+      );
+    }
+    const digest = digests.get(userOperation.nonce ?? '') ?? '0x';
+    sends.push({ balanceAtSend: await balanceCents(), signature, digest });
+    return USER_OP_HASH;
+  },
   waitForUserOperationReceipt: async () => ({
     transactionHash: TX_HASH,
     actualGasCost: ACTUAL_COST_WEI,
@@ -138,6 +151,7 @@ async function drainBackground(): Promise<void> {
 }
 
 let login: AuthResponse;
+let device: Device;
 let evm: Wallet;
 let solana: Wallet;
 
@@ -251,20 +265,39 @@ const evmSponsored = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+/** Prepared by the API, digest signed by the iframe: body of send-transaction. */
+async function sponsoredEvmBody(overrides: Record<string, unknown> = {}) {
+  const out = await device.transactionBody(evm, evmSponsored(overrides));
+  if (!('prepared' in out) || out.prepared.kind !== 'userOperation') {
+    throw new Error('expected a user operation');
+  }
+  return { ...out, prepared: out.prepared };
+}
+
+const sendSponsoredEvm = async (overrides: Record<string, unknown> = {}) =>
+  postUser(`/v1/wallets/${evm.id}/send-transaction`, await sponsoredEvmBody(overrides));
+
+/** Sponsored Solana send stamped by the iframe. */
+const sendSponsoredSolana = async (transaction: string) =>
+  postUser(
+    `/v1/wallets/${solana.id}/send-transaction`,
+    await device.transactionBody(solana, {
+      chain: 'solana',
+      cluster: 'devnet',
+      transaction,
+      sponsored: true,
+    }),
+  );
+
 beforeAll(async () => {
   await seedDb();
   await updateSeedConfig({ gasSponsoring: SPONSORING_ON });
   setRpcFactory({ evm: () => fakeEvm, solana: () => fakeSolana });
   setEvmSponsorFactoryForTests(fakeBundler);
   setPriceFeedForTests(createStaticPriceFeed({ ...STATIC_PRICES }));
-  login = (await loginWithEmail('sponsor@test.dev')).body;
-  const byFamily = (family: string) => {
-    const wallet = login.user.wallets.find((w) => w.chainFamily === family);
-    if (!wallet) throw new Error(`missing ${family} wallet`);
-    return wallet;
-  };
-  evm = byFamily('evm');
-  solana = byFamily('solana');
+  ({ body: login, device } = await loginWithEmail('sponsor@test.dev'));
+  evm = device.wallet('evm');
+  solana = device.wallet('solana');
 });
 
 afterAll(async () => {
@@ -419,12 +452,7 @@ describe('Solana sponsoring (T4.4)', () => {
 
   it('refuses when the balance is too low, without broadcasting', async () => {
     await setBalance(0);
-    const res = await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-      chain: 'solana',
-      cluster: 'devnet',
-      transaction: sponsoredTransfer(await feePayer(), solana.address, 1n),
-      sponsored: true,
-    });
+    const res = await sendSponsoredSolana(sponsoredTransfer(await feePayer(), solana.address, 1n));
     await expectError(res, 402, 'insufficient_sponsor_balance');
     expect(sentSolana).toHaveLength(0);
     expect(await balanceCents()).toBe(0);
@@ -435,12 +463,7 @@ describe('Solana sponsoring (T4.4)', () => {
     const payer = await feePayer();
     let hash = '';
     const rows = await newLedgerRows(async () => {
-      const res = await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-        chain: 'solana',
-        cluster: 'devnet',
-        transaction: sponsoredTransfer(payer, solana.address, 1000n),
-        sponsored: true,
-      });
+      const res = await sendSponsoredSolana(sponsoredTransfer(payer, solana.address, 1000n));
       expect(res.status, await res.clone().text()).toBe(200);
       const out = SendTransactionOutput.parse(await res.json());
       expect(out.sponsored).toBe(true);
@@ -485,12 +508,7 @@ describe('Solana sponsoring (T4.4)', () => {
     ];
     for (const transaction of cases) {
       const rows = await newLedgerRows(async () => {
-        const res = await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-          chain: 'solana',
-          cluster: 'devnet',
-          transaction,
-          sponsored: true,
-        });
+        const res = await sendSponsoredSolana(transaction);
         expect(await expectError(res, 400, 'bad_request')).toEqual({ reason: 'fee_payer_misuse' });
       });
       expect(rows).toHaveLength(0);
@@ -504,12 +522,7 @@ describe('Solana sponsoring (T4.4)', () => {
     const payer = await feePayer();
     failNextSolana = true;
     const rows = await newLedgerRows(async () => {
-      const res = await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-        chain: 'solana',
-        cluster: 'devnet',
-        transaction: sponsoredTransfer(payer, solana.address, 1n),
-        sponsored: true,
-      });
+      const res = await sendSponsoredSolana(sponsoredTransfer(payer, solana.address, 1n));
       await expectError(res, 400, 'bad_request');
     });
     const cents = solanaCents();
@@ -530,13 +543,7 @@ describe('Solana sponsoring (T4.4)', () => {
       gasSponsoring: { ...SPONSORING_ON, solanaDailyCapLamports: (spent + 15_000n).toString() },
     });
     try {
-      const send = () =>
-        postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-          chain: 'solana',
-          cluster: 'devnet',
-          transaction: sponsoredTransfer(payer, solana.address, 1n),
-          sponsored: true,
-        });
+      const send = () => sendSponsoredSolana(sponsoredTransfer(payer, solana.address, 1n));
       expect((await send()).status).toBe(200);
       const details = await expectError(await send(), 429, 'rate_limited');
       expect(details).toMatchObject({ reason: 'solana_daily_cap_reached' });
@@ -545,6 +552,31 @@ describe('Solana sponsoring (T4.4)', () => {
     } finally {
       await updateSeedConfig({ gasSponsoring: SPONSORING_ON });
     }
+  });
+
+  it('refuses a user signature over another transaction, and charges nothing in the end', async () => {
+    await setBalance(500);
+    const payer = await feePayer();
+    const stamped = await device.transactionBody(solana, {
+      chain: 'solana',
+      cluster: 'devnet',
+      transaction: sponsoredTransfer(payer, solana.address, 1n),
+      sponsored: true,
+    });
+    const res = await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
+      input: {
+        chain: 'solana',
+        cluster: 'devnet',
+        transaction: sponsoredTransfer(payer, solana.address, 900_000n),
+        sponsored: true,
+      },
+      request: stamped.request,
+    });
+    expect(await expectError(res, 400, 'bad_request')).toMatchObject({
+      reason: 'unexpected_request',
+    });
+    expect(sentSolana).toHaveLength(0);
+    expect(await balanceCents()).toBe(500);
   });
 });
 
@@ -575,11 +607,8 @@ describe('EVM sponsoring (T4.5)', () => {
         400,
         'bad_request',
       );
-      await expectError(
-        await postUser(`/v1/wallets/${evm.id}/send-transaction`, evmSponsored()),
-        400,
-        'bad_request',
-      );
+      const { res: prepare } = await device.prepare(evm, evmSponsored());
+      await expectError(prepare, 400, 'bad_request');
     } finally {
       setEvmSponsorFactoryForTests(fakeBundler);
     }
@@ -587,8 +616,7 @@ describe('EVM sponsoring (T4.5)', () => {
 
   it('refuses when the balance cannot cover the maximum cost, before sending', async () => {
     await setBalance(evmMaxCents() - 1);
-    const res = await postUser(`/v1/wallets/${evm.id}/send-transaction`, evmSponsored());
-    await expectError(res, 402, 'insufficient_sponsor_balance');
+    await expectError(await sendSponsoredEvm(), 402, 'insufficient_sponsor_balance');
     expect(sends).toHaveLength(0);
     expect(await balanceCents()).toBe(evmMaxCents() - 1);
   });
@@ -600,7 +628,11 @@ describe('EVM sponsoring (T4.5)', () => {
     expect(maxCents).toBeGreaterThan(actualCents);
 
     const rows = await newLedgerRows(async () => {
-      const res = await postUser(`/v1/wallets/${evm.id}/send-transaction`, evmSponsored());
+      const body = await sponsoredEvmBody();
+      // Preparing charges nothing and sends nothing.
+      expect(await balanceCents()).toBe(1000);
+      expect(body.prepared.userOperation).toMatchObject({ sender: SMART_ACCOUNT });
+      const res = await postUser(`/v1/wallets/${evm.id}/send-transaction`, body);
       expect(res.status, await res.clone().text()).toBe(200);
       expect(SendTransactionOutput.parse(await res.json())).toEqual({
         hash: USER_OP_HASH,
@@ -608,8 +640,12 @@ describe('EVM sponsoring (T4.5)', () => {
       });
       expect(sends).toHaveLength(1);
       expect(sends[0]?.balanceAtSend).toBe(1000 - maxCents);
+      expect(sends[0]?.digest).toBe(body.prepared.digest);
       expect(
-        await recoverAddress({ hash: USER_OP_HASH, signature: sends[0]?.signature ?? '0x' }),
+        await recoverAddress({
+          hash: body.prepared.digest as Hex,
+          signature: sends[0]?.signature ?? '0x',
+        }),
       ).toBe(evm.address);
       await drainBackground();
     });
@@ -641,7 +677,7 @@ describe('EVM sponsoring (T4.5)', () => {
     await setBalance(1000);
     failNextUserOp = true;
     const rows = await newLedgerRows(async () => {
-      const res = await postUser(`/v1/wallets/${evm.id}/send-transaction`, evmSponsored());
+      const res = await sendSponsoredEvm();
       expect(res.status).toBe(400);
       const text = await res.text();
       expect(text).not.toContain('pim_secret');
@@ -654,20 +690,64 @@ describe('EVM sponsoring (T4.5)', () => {
     ]);
     expect(await balanceCents()).toBe(1000);
   });
+
+  it('submits only the prepared operation, once, with a signature over its digest', async () => {
+    await setBalance(1000);
+    const first = await sponsoredEvmBody({ value: '1' });
+    const second = await sponsoredEvmBody({ value: '2' });
+    expect(second.prepared.digest).not.toBe(first.prepared.digest);
+
+    // A signature over another operation than the ticket's.
+    const swapped = await postUser(`/v1/wallets/${evm.id}/send-transaction`, {
+      input: first.input,
+      request: second.request,
+      ticket: first.ticket,
+    });
+    expect(await expectError(swapped, 400, 'bad_request')).toMatchObject({
+      reason: 'unexpected_request',
+    });
+    expect(sends).toHaveLength(0);
+    expect(await balanceCents()).toBe(1000);
+
+    // Another input than the prepared one.
+    const otherInput = await postUser(`/v1/wallets/${evm.id}/send-transaction`, {
+      input: evmSponsored({ value: '3' }),
+      request: second.request,
+      ticket: second.ticket,
+    });
+    expect(await expectError(otherInput, 400, 'bad_request')).toMatchObject({
+      reason: 'prepared_mismatch',
+    });
+
+    // No ticket at all.
+    const noTicket = await postUser(`/v1/wallets/${evm.id}/send-transaction`, {
+      input: second.input,
+      request: second.request,
+    });
+    await expectError(noTicket, 400, 'bad_request');
+
+    const ok = await sponsoredEvmBody({ value: '4' });
+    expect((await postUser(`/v1/wallets/${evm.id}/send-transaction`, ok)).status).toBe(200);
+    await drainBackground();
+    const balance = await balanceCents();
+    const replay = await newLedgerRows(async () => {
+      const res = await postUser(`/v1/wallets/${evm.id}/send-transaction`, ok);
+      expect(await expectError(res, 400, 'bad_request')).toMatchObject({
+        reason: 'prepared_mismatch',
+      });
+    });
+    expect(replay).toHaveLength(0);
+    expect(sends).toHaveLength(1);
+    expect(await balanceCents()).toBe(balance);
+  });
 });
 
 describe('sponsored session sends', () => {
   const signWithSession = (sessionId: string, body: SessionSignRequestInput) =>
     postUser(`/v1/sessions/${sessionId}/sign`, body);
 
-  async function createSession(policy: Partial<SigningPolicy>, wallet: Wallet) {
-    const res = await postUser('/v1/sessions', {
-      walletId: wallet.id,
-      policy: { chain: wallet.chainFamily, expiresIn: '1h', ...policy },
-    });
-    expect(res.status, await res.clone().text()).toBe(201);
-    return SessionSigner.parse(await res.json());
-  }
+  const createSession = (policy: Partial<SigningPolicy>, wallet: Wallet) =>
+    device.createSession(wallet, { chain: wallet.chainFamily, expiresIn: '1h', ...policy });
 
   const spentTotal = async (id: string) =>
     (await db().query.sessionSigners.findFirst({ where: eq(sessionSigners.id, id) }))?.spentTotal;
@@ -707,6 +787,12 @@ describe('sponsored session sends', () => {
       sponsored: true,
     });
     expect(sends[0]?.balanceAtSend).toBe(1000 - evmMaxCents());
+    expect(
+      await recoverAddress({
+        hash: sends[0]?.digest ?? '0x',
+        signature: sends[0]?.signature ?? '0x',
+      }),
+    ).toBe(evm.address);
     expect(await spentTotal(session.id)).toBe('100');
     await drainBackground();
     expect(await balanceCents()).toBe(1000 - evmActualCents());
@@ -759,28 +845,19 @@ describe('sponsoring disabled', () => {
   it('refuses sponsored sends and the fee payer with 403, and charges nothing', async () => {
     await setBalance(1000);
     const payer = await feePayer();
-    const session = SessionSigner.parse(
-      await (
-        await postUser('/v1/sessions', {
-          walletId: evm.id,
-          policy: { chain: 'evm', expiresIn: '1h' },
-        })
-      ).json(),
-    );
+    const session = await device.createSession(evm, { chain: 'evm', expiresIn: '1h' });
+    const prepared = await sponsoredEvmBody();
     await updateSeedConfig({ gasSponsoring: { evm: false, solana: false } });
     try {
+      await expectError((await device.prepare(evm, evmSponsored())).res, 403, 'forbidden');
+      // Prepared while sponsoring was on, submitted after it was turned off.
       await expectError(
-        await postUser(`/v1/wallets/${evm.id}/send-transaction`, evmSponsored()),
+        await postUser(`/v1/wallets/${evm.id}/send-transaction`, prepared),
         403,
         'forbidden',
       );
       await expectError(
-        await postUser(`/v1/wallets/${solana.id}/send-transaction`, {
-          chain: 'solana',
-          cluster: 'devnet',
-          transaction: sponsoredTransfer(payer, solana.address, 1n),
-          sponsored: true,
-        }),
+        await sendSponsoredSolana(sponsoredTransfer(payer, solana.address, 1n)),
         403,
         'forbidden',
       );

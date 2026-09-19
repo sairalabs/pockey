@@ -3,8 +3,10 @@
 
 # Required. Signs Better Auth cookies and derives the access token key (HKDF).
 BETTER_AUTH_SECRET=replace-with-openssl-rand-hex-32
-# Local only: mock wallets keep their keys across `wrangler dev` restarts.
-MOCK_KEY_SEED=replace-with-openssl-rand-hex-16
+# Key provider. `mock` (default) is an in-memory Turnkey emulator: wallets are lost
+# when wrangler restarts. `turnkey` uses your Turnkey organization (keeps wallets,
+# sends real OTP emails). Production refuses `mock`.
+# KEY_PROVIDER=turnkey
 # console prints OTP codes in the wrangler log. Use resend in production.
 MAILER=console
 
@@ -22,9 +24,13 @@ MAILER=console
 # APPLE_CLIENT_SECRET=
 # APPLE_APP_BUNDLE_IDENTIFIER=
 # RPC_URLS={"8453":"https://base-mainnet.g.alchemy.com/v2/KEY","solana:devnet":"https://devnet.helius-rpc.com/?api-key=KEY"}
+# Turnkey parent organization and its API key (P-256, hex). Required with KEY_PROVIDER=turnkey.
+# TURNKEY_ORG_ID=
 # TURNKEY_API_PUBLIC_KEY=
 # TURNKEY_API_PRIVATE_KEY=
-# TURNKEY_ORG_ID=
+# Optional separate key for session signers and fee payer wallets (defaults to the API key).
+# TURNKEY_SIGNER_PUBLIC_KEY=
+# TURNKEY_SIGNER_PRIVATE_KEY=
 # Gas sponsoring. mock payments sign webhooks with a public test secret and static
 # prices are fixed (ETH 3000, SOL 150, POL 0.5 USD): production needs stripe and coingecko.
 # PAYMENTS=mock

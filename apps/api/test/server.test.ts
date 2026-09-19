@@ -12,7 +12,6 @@ import {
 import {
   ApiErrorBody,
   ServerUserList,
-  SessionSigner,
   SessionSignOutput,
   type AuthResponse,
 } from '@pocketkey/types';
@@ -21,6 +20,7 @@ import { and, eq } from 'drizzle-orm';
 import { recoverTransactionAddress, verifyMessage, type Address, type Hex } from 'viem';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { setRpcFactory } from '../src/lib/rpc.js';
+import type { Device } from './device.js';
 import {
   bearer,
   createTestApp,
@@ -67,11 +67,12 @@ async function expectError(res: Response, status: number, code: string): Promise
 }
 
 let alice: AuthResponse;
+let aliceDevice: Device;
 
 beforeAll(async () => {
   await seedDb();
   setRpcFactory({ evm: () => fakeEvm, solana: () => fakeSolana });
-  alice = (await loginWithEmail('alice@server.test')).body;
+  ({ body: alice, device: aliceDevice } = await loginWithEmail('alice@server.test'));
 });
 
 afterAll(() => {
@@ -189,18 +190,13 @@ describe('GET /v1/server/users', () => {
 
 describe('POST /v1/server/users/:id/wallets/:wid/sign', () => {
   async function aliceSession() {
-    const wallet = alice.user.wallets.find((w) => w.chainFamily === 'evm');
-    if (!wallet) throw new Error('no evm wallet');
-    const res = await request('/v1/sessions', {
-      method: 'POST',
-      headers: { ...bearer(alice.accessToken), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        walletId: wallet.id,
-        policy: { chain: 'evm', expiresIn: '1h', allowMessages: true },
-      }),
+    const wallet = aliceDevice.wallet('evm');
+    const session = await aliceDevice.createSession(wallet, {
+      chain: 'evm',
+      expiresIn: '1h',
+      allowMessages: true,
     });
-    expect(res.status, await res.clone().text()).toBe(201);
-    return { wallet, session: SessionSigner.parse(await res.json()) };
+    return { wallet, session };
   }
 
   const signPath = (userId: string, walletId: string) =>
@@ -293,6 +289,48 @@ describe('POST /v1/server/users/:id/wallets/:wid/sign', () => {
       404,
       'not_found',
     );
+  });
+
+  it('cannot sign an EVM transaction under a Solana session', async () => {
+    const wallet = aliceDevice.wallet('solana');
+    const session = await aliceDevice.createSession(wallet, { chain: 'solana', expiresIn: '1h' });
+    const res = await server(signPath(alice.user.id, wallet.id), {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: session.id,
+        request: {
+          kind: 'transaction',
+          broadcast: false,
+          input: { chain: 'evm', chainId: 84532, to: '0x4200000000000000000000000000000000000006' },
+        },
+      }),
+    });
+    await expectError(res, 403, 'policy_violation');
+  });
+
+  it('signs nothing without a session, or once the user revoked it', async () => {
+    const { wallet, session } = await aliceSession();
+    const noSession = await server(signPath(alice.user.id, wallet.id), {
+      method: 'POST',
+      body: JSON.stringify({
+        request: { kind: 'message', input: { chain: 'evm', message: 'x' } },
+      }),
+    });
+    await expectError(noSession, 400, 'validation_failed');
+
+    const revoke = await request(`/v1/sessions/${session.id}`, {
+      method: 'DELETE',
+      headers: bearer(alice.accessToken),
+    });
+    expect(revoke.status).toBe(200);
+    const revoked = await server(signPath(alice.user.id, wallet.id), {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: session.id,
+        request: { kind: 'message', input: { chain: 'evm', message: 'x' } },
+      }),
+    });
+    await expectError(revoked, 403, 'policy_violation');
   });
 });
 

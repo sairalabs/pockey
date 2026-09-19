@@ -1,4 +1,10 @@
-import { EVM_VIEM_CHAINS, toPocketkeyAccount } from '@pocketkey/chains-evm';
+import {
+  deserializeUserOperation,
+  EVM_VIEM_CHAINS,
+  serializeUserOperation,
+  toPocketkeyAccount,
+  userOperationDigest,
+} from '@pocketkey/chains-evm';
 import type { EvmChainId } from '@pocketkey/types';
 import { toKernelSmartAccount } from 'permissionless/accounts';
 import { createSmartAccountClient } from 'permissionless';
@@ -84,13 +90,18 @@ export function createPimlicoClientsFactory(
     return clients;
   };
 
-  // The owner carries a per-request signHash, so accounts are never cached.
+  // Preparing never signs: the owner signs the digest later, possibly in the iframe.
   const kernelAccount = (chainId: EvmChainId, owner: EvmOwner) =>
     toKernelSmartAccount({
       client: clientsFor(chainId).publicClient,
       version: KERNEL_VERSION,
       entryPoint: ENTRY_POINT,
-      owners: [toPocketkeyAccount({ address: owner.address, signHash: owner.signHash })],
+      owners: [
+        toPocketkeyAccount({
+          address: owner.address,
+          signHash: () => Promise.reject(new Error('Preparing a user operation never signs')),
+        }),
+      ],
     });
 
   return {
@@ -116,6 +127,12 @@ export function createPimlicoClientsFactory(
         calls: calls.map((call) => ({ to: call.to, value: call.value, data: call.data })),
       });
 
+      const serialized = serializeUserOperation({ ...userOperation, signature: '0x' });
+      const { userOpHash, digest } = userOperationDigest({
+        userOperation: deserializeUserOperation(serialized),
+        chainId: chain.id,
+        entryPointAddress: ENTRY_POINT.address,
+      });
       return {
         sender: userOperation.sender,
         callGasLimit: userOperation.callGasLimit,
@@ -124,17 +141,20 @@ export function createPimlicoClientsFactory(
         paymasterVerificationGasLimit: userOperation.paymasterVerificationGasLimit ?? 0n,
         paymasterPostOpGasLimit: userOperation.paymasterPostOpGasLimit ?? 0n,
         maxFeePerGas: userOperation.maxFeePerGas,
-        async send() {
-          const signature = await account.signUserOperation(userOperation);
-          // Sent through the account-less bundler client so viem does not prepare the
-          // operation again (a fresh paymaster signature would invalidate ours).
-          return pimlicoClient.sendUserOperation({
-            ...userOperation,
-            signature,
-            entryPointAddress: ENTRY_POINT.address,
-          });
-        },
+        userOperation: serialized,
+        userOpHash,
+        digest,
       };
+    },
+
+    async sendUserOperation({ chainId, userOperation, signature }) {
+      // Sent through the account-less bundler client so viem does not prepare the
+      // operation again (a fresh paymaster signature would invalidate the owner's).
+      return clientsFor(chainId).pimlicoClient.sendUserOperation({
+        ...deserializeUserOperation(userOperation),
+        signature,
+        entryPointAddress: ENTRY_POINT.address,
+      });
     },
 
     async waitForUserOperationReceipt({ chainId, userOpHash, timeoutMs }) {

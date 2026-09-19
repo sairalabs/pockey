@@ -10,6 +10,7 @@ import {
   SolanaCluster,
 } from './chains.js';
 import { EndUserId, WalletId } from './ids.js';
+import { StampedRequest } from './keys.js';
 
 export const Wallet = z.object({
   id: WalletId,
@@ -127,10 +128,10 @@ export type SendTransactionOutput = z.infer<typeof SendTransactionOutput>;
 
 export const ExportWalletInput = z.object({
   /**
-   * Ephemeral public key generated inside the iframe (P-256, base64 SPKI).
-   * The key provider encrypts the bundle to this key, our API only relays ciphertext.
+   * Export activity stamped in the iframe, encrypted by the key provider to an
+   * ephemeral key that never leaves the iframe. Our API only relays ciphertext.
    */
-  targetPublicKey: Base64String,
+  request: StampedRequest,
 });
 export type ExportWalletInput = z.infer<typeof ExportWalletInput>;
 
@@ -138,6 +139,34 @@ export const ExportWalletOutput = z.object({
   encryptedBundle: z.string(),
 });
 export type ExportWalletOutput = z.infer<typeof ExportWalletOutput>;
+
+/* Route bodies (non-custodial): the iframe stamps the provider request itself. */
+
+export const SignMessageBody = z.object({ input: SignMessageInput, request: StampedRequest });
+export type SignMessageBody = z.infer<typeof SignMessageBody>;
+
+export const SignTypedDataBody = z.object({ input: SignTypedDataInput, request: StampedRequest });
+export type SignTypedDataBody = z.infer<typeof SignTypedDataBody>;
+
+/** `POST /v1/wallets/:id/prepare`: nonce, gas, fees or the sponsored user operation. */
+export const PrepareTransactionInput = z.object({ input: SendTransactionInput });
+export type PrepareTransactionInput = z.infer<typeof PrepareTransactionInput>;
+
+export const SignTransactionBody = z.object({
+  input: TransactionRequest,
+  request: StampedRequest,
+  /** From `prepare`, for EVM transactions. */
+  ticket: z.string().min(16).max(128).optional(),
+});
+export type SignTransactionBody = z.infer<typeof SignTransactionBody>;
+
+export const SendTransactionBody = z.object({
+  input: SendTransactionInput,
+  request: StampedRequest,
+  /** From `prepare`, for EVM transactions and sponsored user operations. */
+  ticket: z.string().min(16).max(128).optional(),
+});
+export type SendTransactionBody = z.infer<typeof SendTransactionBody>;
 
 /* Solana address helper types re-exported for convenience */
 export { EvmAddress, SolanaAddress };

@@ -1,169 +1,228 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
-import { base58, base64 } from '@scure/base';
-import { buildSiweMessage } from '@pocketkey/chains-evm';
-import { buildSiwsMessage } from '@pocketkey/chains-solana';
-import { ApiErrorBody, AuthResponse, WalletNonceOutput } from '@pocketkey/types';
+import {
+  buildLogin,
+  evmWalletStamp,
+  generateSessionKey,
+  solanaWalletStamp,
+} from '@pocketkey/key-provider/client';
+import { ApiErrorBody } from '@pocketkey/types';
+import { base58, base64urlnopad } from '@scure/base';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { getEmulator } from '../src/lib/key-provider.js';
+import { appConfig, Device } from './device.js';
 import { createTestApp, postJson, seedDb } from './helpers.js';
-
-const DOMAIN = 'localhost:5174';
-const URI = 'http://localhost:5174';
 
 beforeAll(async () => {
   await seedDb();
 });
 
-async function nonceFor(chainFamily: 'evm' | 'solana', publicId?: string): Promise<string> {
-  const res = await postJson('/v1/auth/wallet/nonce', { chainFamily }, {}, publicId);
+const newEvm = () => privateKeyToAccount(generatePrivateKey());
+
+function newSolana() {
+  const secretKey = ed25519.utils.randomSecretKey();
+  return {
+    address: base58.encode(ed25519.getPublicKey(secretKey)),
+    sign: async (bytes: Uint8Array) => ed25519.sign(bytes, secretKey),
+  };
+}
+
+async function lookup(chainFamily: 'evm' | 'solana', address: string, publicId?: string) {
+  const res = await postJson('/v1/auth/wallet/lookup', { chainFamily, address }, {}, publicId);
   expect(res.status, await res.clone().text()).toBe(200);
-  return WalletNonceOutput.parse(await res.json()).nonce;
+  return (await res.json<{ organizationId: string | null }>()).organizationId;
 }
 
-async function siwe(account = privateKeyToAccount(generatePrivateKey()), domain = DOMAIN) {
-  const nonce = await nonceFor('evm');
-  const message = buildSiweMessage({
-    domain,
-    uri: URI,
-    address: account.address,
-    chainId: 8453,
-    nonce,
-  });
-  const signature = await account.signMessage({ message });
-  return { account, message, signature };
+async function parentOrganizationId(): Promise<string> {
+  return (await appConfig()).keyProvider.organizationId;
 }
 
-describe('SIWE login (T1.3)', () => {
-  it('signs in an EVM wallet and reuses the user on the next login', async () => {
-    const { account, message, signature } = await siwe();
-    const first = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'evm',
-      message,
-      signature,
-    });
-    expect(first.status, await first.clone().text()).toBe(200);
-    const body = AuthResponse.parse(await first.json());
-    expect(body.isNewUser).toBe(true);
-    expect(body.user.identities).toEqual([
+interface LoginRequest {
+  path: string;
+  body: string;
+  stamp: { header: string; value: string };
+}
+
+function login(chainFamily: 'evm' | 'solana', request: LoginRequest, publicId?: string) {
+  return postJson('/v1/auth/wallet/login', { chainFamily, request }, {}, publicId);
+}
+
+interface StampJson {
+  publicKey: string;
+  scheme: string;
+  signature: string;
+}
+const readStamp = (value: string) =>
+  JSON.parse(new TextDecoder().decode(base64urlnopad.decode(value))) as StampJson;
+const writeStamp = (json: StampJson) =>
+  base64urlnopad.encode(new TextEncoder().encode(JSON.stringify(json)));
+
+describe('EVM wallet login (T1.3, non-custodial)', () => {
+  it('signs up an EVM wallet, then logs in to the same user', async () => {
+    const account = newEvm();
+    expect(await lookup('evm', account.address)).toBeNull();
+
+    const first = await Device.loginWithWallet({ evm: account });
+    expect(first.response.status, await first.response.clone().text()).toBe(200);
+    expect(first.device.auth.isNewUser).toBe(true);
+    expect(first.device.auth.user.identities).toEqual([
       expect.objectContaining({
         type: 'wallet',
         identifier: `evm:${account.address.toLowerCase()}`,
       }),
     ]);
+    const organizationId = first.device.keySession.organizationId;
+    // The wallet key and the iframe key are the only root credentials.
+    expect(getEmulator().inspect(organizationId).rootUser.apiKeys).toHaveLength(2);
+    expect(getEmulator().inspect(organizationId).rootUser.apiKeys).toContain(
+      first.device.key.publicKey,
+    );
 
-    const again = await siwe(account);
-    const second = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'evm',
-      message: again.message,
-      signature: again.signature,
-    });
-    const secondBody = AuthResponse.parse(await second.json());
-    expect(secondBody.isNewUser).toBe(false);
-    expect(secondBody.user.id).toBe(body.user.id);
+    expect(await lookup('evm', account.address)).toBe(organizationId);
+    const second = await Device.loginWithWallet({ evm: account });
+    expect(second.response.status, await second.response.clone().text()).toBe(200);
+    expect(second.device.auth.isNewUser).toBe(false);
+    expect(second.device.auth.user.id).toBe(first.device.auth.user.id);
+    expect(second.device.keySession.organizationId).toBe(organizationId);
+    expect(getEmulator().inspect(organizationId).rootUser.apiKeys).toContain(
+      second.device.key.publicKey,
+    );
   });
 
-  it('refuses a replayed message', async () => {
-    const { message, signature } = await siwe();
-    expect(
-      (await postJson('/v1/auth/wallet/verify', { chainFamily: 'evm', message, signature })).status,
-    ).toBe(200);
-    const replay = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'evm',
-      message,
-      signature,
+  it('refuses a stamp whose signature comes from another key', async () => {
+    const victim = newEvm();
+    const attacker = newEvm();
+    const key = await generateSessionKey();
+    const prepared = buildLogin({
+      parentOrganizationId: await parentOrganizationId(),
+      publicKey: key.publicKey,
     });
-    expect(replay.status).toBe(401);
-  });
-
-  it('refuses a message for another domain and burns the nonce', async () => {
-    const { message, signature } = await siwe(undefined, 'evil.example');
-    const res = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'evm',
-      message,
-      signature,
-    });
+    const claimed = await evmWalletStamp(prepared.body, (message) =>
+      victim.signMessage({ message }),
+    );
+    const signed = await evmWalletStamp(prepared.body, (message) =>
+      attacker.signMessage({ message }),
+    );
+    const forged = {
+      ...claimed,
+      value: writeStamp({
+        ...readStamp(claimed.value),
+        signature: readStamp(signed.value).signature,
+      }),
+    };
+    const res = await login('evm', { ...prepared, stamp: forged });
     expect(res.status).toBe(401);
     expect(ApiErrorBody.parse(await res.json()).error.code).toBe('unauthorized');
+    expect(await lookup('evm', victim.address)).toBeNull();
   });
 
-  it('refuses a signature from another key', async () => {
-    const { message } = await siwe();
-    const signature = await privateKeyToAccount(generatePrivateKey()).signMessage({ message });
+  it('refuses a login request that targets another organization', async () => {
+    const alice = newEvm();
+    const bob = newEvm();
+    const aliceLogin = await Device.loginWithWallet({ evm: alice });
+    expect(aliceLogin.response.status).toBe(200);
+    expect((await Device.loginWithWallet({ evm: bob })).response.status).toBe(200);
+
+    // Bob signs a login addressed to Alice's sub-organization.
+    const key = await generateSessionKey();
+    const prepared = buildLogin({
+      parentOrganizationId: aliceLogin.device.keySession.organizationId,
+      publicKey: key.publicKey,
+    });
+    const stamp = await evmWalletStamp(prepared.body, (message) => bob.signMessage({ message }));
+    const res = await login('evm', { ...prepared, stamp });
+    expect(res.status).toBe(400);
     expect(
-      (await postJson('/v1/auth/wallet/verify', { chainFamily: 'evm', message, signature })).status,
-    ).toBe(401);
+      getEmulator().inspect(aliceLogin.device.keySession.organizationId).rootUser.apiKeys,
+    ).not.toContain(key.publicKey);
+
+    // A sign-up must target the parent organization.
+    const newcomer = newEvm();
+    const signup = buildLogin({
+      parentOrganizationId: aliceLogin.device.keySession.organizationId,
+      publicKey: key.publicKey,
+    });
+    const signupStamp = await evmWalletStamp(signup.body, (message) =>
+      newcomer.signMessage({ message }),
+    );
+    expect((await login('evm', { ...signup, stamp: signupStamp })).status).toBe(400);
   });
 
-  it('does not accept a nonce issued to another app', async () => {
+  it('refuses a login request signed as the other chain family', async () => {
+    const account = newEvm();
+    const key = await generateSessionKey();
+    const prepared = buildLogin({
+      parentOrganizationId: await parentOrganizationId(),
+      publicKey: key.publicKey,
+    });
+    const stamp = await evmWalletStamp(prepared.body, (message) =>
+      account.signMessage({ message }),
+    );
+    expect((await login('solana', { ...prepared, stamp })).status).toBe(401);
+  });
+
+  it('keeps wallet users per app', async () => {
     const other = await createTestApp({ loginMethods: ['wallet'] });
-    const account = privateKeyToAccount(generatePrivateKey());
-    const nonce = await nonceFor('evm', other.publicId);
-    const message = buildSiweMessage({
-      domain: DOMAIN,
-      uri: URI,
-      address: account.address,
-      chainId: 8453,
-      nonce,
-    });
-    const signature = await account.signMessage({ message });
-    const res = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'evm',
-      message,
-      signature,
-    });
-    expect(res.status).toBe(401);
+    const account = newEvm();
+    const inSeed = await Device.loginWithWallet({ evm: account });
+    expect(inSeed.response.status).toBe(200);
+    expect(await lookup('evm', account.address, other.publicId)).toBeNull();
+
+    const inOther = await Device.loginWithWallet({ evm: account }, other.publicId);
+    expect(inOther.response.status, await inOther.response.clone().text()).toBe(200);
+    expect(inOther.device.auth.isNewUser).toBe(true);
+    expect(inOther.device.auth.user.id).not.toBe(inSeed.device.auth.user.id);
   });
 
   it('is refused when the app disabled wallet login', async () => {
     const emailOnly = await createTestApp({ loginMethods: ['email'] });
+    const account = newEvm();
     const res = await postJson(
-      '/v1/auth/wallet/nonce',
-      { chainFamily: 'evm' },
+      '/v1/auth/wallet/lookup',
+      { chainFamily: 'evm', address: account.address },
       { Origin: 'https://other.example' },
       emailOnly.publicId,
     );
     expect(res.status).toBe(403);
+
+    const key = await generateSessionKey();
+    const prepared = buildLogin({
+      parentOrganizationId: await parentOrganizationId(),
+      publicKey: key.publicKey,
+    });
+    const stamp = await evmWalletStamp(prepared.body, (message) =>
+      account.signMessage({ message }),
+    );
+    expect((await login('evm', { ...prepared, stamp }, emailOnly.publicId)).status).toBe(403);
   });
 });
 
-describe('SIWS login (T1.3)', () => {
-  it('signs in a Solana wallet', async () => {
-    const secretKey = ed25519.utils.randomSecretKey();
-    const address = base58.encode(ed25519.getPublicKey(secretKey));
-    const nonce = await nonceFor('solana');
-    const message = buildSiwsMessage({
-      domain: DOMAIN,
-      address,
-      nonce,
-      uri: URI,
-      chainId: 'devnet',
-    });
-    const signature = base64.encode(ed25519.sign(new TextEncoder().encode(message), secretKey));
+describe('Solana wallet login (T1.3, non-custodial)', () => {
+  it('signs up a Solana wallet, then logs in to the same user', async () => {
+    const wallet = newSolana();
+    const first = await Device.loginWithWallet({ solana: wallet });
+    expect(first.response.status, await first.response.clone().text()).toBe(200);
+    expect(first.device.auth.isNewUser).toBe(true);
+    expect(first.device.auth.user.identities[0]?.identifier).toBe(`solana:${wallet.address}`);
 
-    const res = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'solana',
-      message,
-      signature,
-      publicKey: address,
-    });
-    expect(res.status, await res.clone().text()).toBe(200);
-    const body = AuthResponse.parse(await res.json());
-    expect(body.user.identities[0]?.identifier).toBe(`solana:${address}`);
+    expect(await lookup('solana', wallet.address)).toBe(first.device.keySession.organizationId);
+    const second = await Device.loginWithWallet({ solana: wallet });
+    expect(second.response.status, await second.response.clone().text()).toBe(200);
+    expect(second.device.auth.isNewUser).toBe(false);
+    expect(second.device.auth.user.id).toBe(first.device.auth.user.id);
   });
 
   it('refuses a public key that did not sign', async () => {
-    const secretKey = ed25519.utils.randomSecretKey();
-    const address = base58.encode(ed25519.getPublicKey(secretKey));
-    const impostor = base58.encode(ed25519.getPublicKey(ed25519.utils.randomSecretKey()));
-    const nonce = await nonceFor('solana');
-    const message = buildSiwsMessage({ domain: DOMAIN, address, nonce });
-    const signature = base64.encode(ed25519.sign(new TextEncoder().encode(message), secretKey));
-    const res = await postJson('/v1/auth/wallet/verify', {
-      chainFamily: 'solana',
-      message,
-      signature,
-      publicKey: impostor,
+    const victim = newSolana();
+    const attacker = newSolana();
+    const key = await generateSessionKey();
+    const prepared = buildLogin({
+      parentOrganizationId: await parentOrganizationId(),
+      publicKey: key.publicKey,
     });
+    const stamp = await solanaWalletStamp(prepared.body, victim.address, attacker.sign);
+    const res = await login('solana', { ...prepared, stamp });
     expect(res.status).toBe(401);
+    expect(await lookup('solana', victim.address)).toBeNull();
   });
 });

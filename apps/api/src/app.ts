@@ -3,7 +3,6 @@ import { DEVICE_ID_HEADER } from '@pocketkey/types';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
-import { AUTH_COOKIES_HEADER } from './auth/cookie-bridge.js';
 import type { AppEnv } from './context.js';
 import { parseEnv, type Env } from './env.js';
 import { ApiError, handleError } from './errors.js';
@@ -38,8 +37,9 @@ export function createApp() {
     const config = parseEnv(c.env);
     c.set('config', config);
     c.set('db', createDb(c.env.DB));
-    c.set('keyProvider', getKeyProvider(config));
-    c.set('mailer', getMailer(config));
+    const mailer = getMailer(config);
+    c.set('mailer', mailer);
+    c.set('keyProvider', getKeyProvider(config, mailer));
     await next();
   });
 
@@ -55,10 +55,9 @@ export function createApp() {
         'Authorization',
         APP_ID_HEADER,
         DEVICE_ID_HEADER,
-        AUTH_COOKIES_HEADER,
         'X-Request-Id',
       ],
-      exposeHeaders: ['X-Request-Id', AUTH_COOKIES_HEADER],
+      exposeHeaders: ['X-Request-Id'],
       maxAge: 600,
       credentials: true,
     }),

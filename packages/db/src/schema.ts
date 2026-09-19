@@ -90,12 +90,21 @@ export const endUsers = sqliteTable(
     appId: text('app_id')
       .notNull()
       .references(() => apps.id, { onDelete: 'cascade' }),
-    /** Sub-organization at the key provider. Null until the first wallet is created. */
-    keyProviderSubOrgId: text('key_provider_sub_org_id'),
     /**
-     * Better Auth user behind email, OAuth and passkey logins. Null for users
-     * who only ever signed in with an external wallet (SIWE / SIWS).
+     * Sub-organization at the key provider, created at sign-up with the end user as
+     * its only root (non-custodial since 2026-09-19). Unique: a login ceremony
+     * resolves the end user from it.
      */
+    keyProviderSubOrgId: text('key_provider_sub_org_id'),
+    /** Provider user id of the end user (root of the sub-organization). */
+    keyProviderUserId: text('key_provider_user_id'),
+    /** Provider user holding the Pocketkey signer key, created with the first session. */
+    keyProviderSignerUserId: text('key_provider_signer_user_id'),
+    /** Accounts created with the sub-organization: { evm: {walletId, address}, solana: {...} }. */
+    keyProviderAccounts: text('key_provider_accounts', { mode: 'json' }).$type<
+      Record<'evm' | 'solana', { walletId: string; address: string }>
+    >(),
+    /** Legacy: Better Auth user of logins before 2026-09-19. Unused since. */
     authUserId: text('auth_user_id'),
     createdAt: timestamp('created_at'),
     lastActiveAt: nullableTimestamp('last_active_at'),
@@ -103,6 +112,7 @@ export const endUsers = sqliteTable(
   (t) => [
     index('end_users_app_idx').on(t.appId),
     uniqueIndex('end_users_auth_user_idx').on(t.authUserId),
+    uniqueIndex('end_users_sub_org_idx').on(t.keyProviderSubOrgId),
   ],
 );
 
@@ -138,11 +148,15 @@ export const refreshTokens = sqliteTable(
 
 /**
  * Single-use, short-lived values (section 8.1 replay protection).
- * - `siwe` / `siws`: login nonces, id = the nonce itself (public by design).
+ * - `siwe` / `siws`: legacy login nonces (before 2026-09-19).
  * - `oauth_state`: maps a provider state to the app that started the flow,
- *   id = SHA-256 of the state, so the callback can find its tenant.
+ *   id = SHA-256 of the state, `payload` = PKCE verifier, provider and session key.
  * - `exchange_code`: handed from the OAuth popup to the iframe, id = SHA-256 of
- *   the code, `subject` = Better Auth user id.
+ *   the code, `payload` = the OIDC token, whose nonce commits to the iframe key.
+ * - `email_otp`: one OTP flow at the key provider, id = its otp id, `subject` = the
+ *   email, `payload` = the verification token once the code is verified.
+ * - `prepared_operation`: an operation the API prepared and the iframe signs (EVM
+ *   transaction, ERC-4337 user operation), `subject` = end user id.
  * Consumption is a conditional UPDATE on `consumed_at IS NULL`, so it is atomic.
  */
 export const authChallenges = sqliteTable(
@@ -152,8 +166,12 @@ export const authChallenges = sqliteTable(
     appId: text('app_id')
       .notNull()
       .references(() => apps.id, { onDelete: 'cascade' }),
-    purpose: text('purpose', { enum: ['siwe', 'siws', 'oauth_state', 'exchange_code'] }).notNull(),
+    purpose: text('purpose', {
+      enum: ['siwe', 'siws', 'oauth_state', 'exchange_code', 'email_otp', 'prepared_operation'],
+    }).notNull(),
     subject: text('subject'),
+    /** Purpose specific JSON (verified email of an OTP flow, prepared user operation). */
+    payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>(),
     expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
     consumedAt: nullableTimestamp('consumed_at'),
     createdAt: timestamp('created_at'),

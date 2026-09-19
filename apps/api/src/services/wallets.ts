@@ -1,35 +1,37 @@
 import {
   prepareTransaction,
+  serializeUnsignedTransaction,
   signatureToHex,
   signPersonalMessage,
-  signTransaction as signEvmTransaction,
   signTypedDataInput,
   type SignHash,
 } from '@pocketkey/chains-evm';
 import {
+  inspectTransaction,
   signMessage as signSolanaMessage,
-  signTransaction as signSolanaTransaction,
   transactionId,
+  type InspectedTransaction,
   type SignBytes,
 } from '@pocketkey/chains-solana';
 import {
-  endUsers,
   newId,
   usageEvents,
   wallets,
   type AppRow,
   type Db,
+  type EndUserRow,
   type WalletRow,
 } from '@pocketkey/db';
 import { GasSponsorError } from '@pocketkey/gas-sponsor';
-import type { KeyProvider } from '@pocketkey/key-provider';
+import type { KeyProvider, StampedRequest } from '@pocketkey/key-provider';
 import {
   AppConfig,
-  CURVE_BY_FAMILY,
   Wallet,
   type ChainFamily,
   type EvmChainId,
+  type EvmTransactionRequest,
   type ExportWalletOutput,
+  type PreparedOperation,
   type SendTransactionInput,
   type SendTransactionOutput,
   type SignMessageInput,
@@ -39,26 +41,34 @@ import {
   type TransactionRequest,
 } from '@pocketkey/types';
 import { base64 } from '@scure/base';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { hexToBytes, type Address, type Hex } from 'viem';
+import { consumeChallenge, createChallenge } from '../auth/challenges.js';
 import { ApiError } from '../errors.js';
+import { randomBytes, toBase64Url } from '../lib/crypto.js';
 import type { RpcFactory } from '../lib/rpc.js';
 import type { SponsorRuntime } from '../lib/sponsor.js';
+import { loadEndUserRow, relayFailure, requireKeySession } from './key-session.js';
 import { providerFailure } from './provider-failure.js';
 import {
   assertChainEnabled,
   assertSponsoringEnabled,
+  prepareSponsoredEvm,
   redactReason,
-  sendSponsored,
+  sendSponsoredSolana,
   sponsorFailure,
+  submitSponsoredEvm,
+  type PreparedSponsoredEvm,
 } from './sponsored-send.js';
 
 export { providerFailure };
 
 /**
- * Wallet service (T2.3). Keys never leave the key provider: this code builds
- * digests or message bytes, asks `KeyProvider.signRaw` for a signature, and
- * assembles the result with the chain adapters.
+ * Wallet service (T2.3, non-custodial since 2026-09-19). Keys never leave the key
+ * provider, and Pocketkey cannot sign with them: every signature here comes from a
+ * request the iframe stamped with the user's session key. This code checks that the
+ * request is exactly the operation of the route (same digest, same transaction),
+ * relays it, and assembles or broadcasts the result.
  */
 
 export interface WalletDeps {
@@ -69,6 +79,9 @@ export interface WalletDeps {
   /** Required by sponsored sends and smart account lookups only. */
   sponsor?: SponsorRuntime;
 }
+
+/** Prepared operations wait this long for the iframe to sign them. */
+const PREPARED_TTL_SECONDS = 2 * 60;
 
 export function toWallet(row: WalletRow): Wallet {
   return Wallet.parse({
@@ -81,38 +94,14 @@ export function toWallet(row: WalletRow): Wallet {
   });
 }
 
-async function ensureSubOrg(deps: WalletDeps, endUserId: string): Promise<string> {
-  const user = await deps.db.query.endUsers.findFirst({
-    where: and(eq(endUsers.id, endUserId), eq(endUsers.appId, deps.app.id)),
-  });
-  if (!user) throw new ApiError('not_found', 'End user not found');
-  if (user.keyProviderSubOrgId) return user.keyProviderSubOrgId;
-
-  const { subOrgId } = await deps.keyProvider
-    .createSubOrganization({
-      endUserId,
-      auth: { type: 'email', email: `${endUserId}@users.pocketkey.dev` },
-    })
-    .catch(providerFailure);
-
-  // Conditional write: if a concurrent request already attached a sub-org, keep theirs.
-  const [claimed] = await deps.db
-    .update(endUsers)
-    .set({ keyProviderSubOrgId: subOrgId })
-    .where(and(eq(endUsers.id, endUserId), isNull(endUsers.keyProviderSubOrgId)))
-    .returning({ subOrgId: endUsers.keyProviderSubOrgId });
-  if (claimed?.subOrgId) return claimed.subOrgId;
-
-  const winner = await deps.db.query.endUsers.findFirst({ where: eq(endUsers.id, endUserId) });
-  if (!winner?.keyProviderSubOrgId)
-    throw new ApiError('internal', 'Could not attach a key provider sub-organization');
-  return winner.keyProviderSubOrgId;
-}
-
 export async function listWallets(deps: WalletDeps, endUserId: string): Promise<WalletRow[]> {
   return deps.db.select().from(wallets).where(eq(wallets.endUserId, endUserId));
 }
 
+/**
+ * Both accounts exist at the provider from sign-up (one wallet, EVM and Solana);
+ * this exposes one of them as a Pocketkey wallet.
+ */
 export async function createWallet(
   deps: WalletDeps,
   endUserId: string,
@@ -127,19 +116,16 @@ export async function createWallet(
     throw new ApiError('conflict', `This user already has a ${chainFamily} wallet`);
   }
 
-  const subOrgId = await ensureSubOrg(deps, endUserId);
-  const created = await deps.keyProvider
-    .createWallet({ subOrgId, curve: CURVE_BY_FAMILY[chainFamily] })
-    .catch(providerFailure);
-
+  const user = await loadEndUserRow(deps.db, deps.app, endUserId);
+  const account = requireKeySession(user).accounts[chainFamily];
   const [row] = await deps.db
     .insert(wallets)
     .values({
       id: newId('wlt'),
       endUserId,
       chainFamily,
-      address: created.address,
-      keyProviderWalletId: created.walletId,
+      address: account.address,
+      keyProviderWalletId: account.walletId,
     })
     .onConflictDoNothing()
     .returning();
@@ -172,32 +158,81 @@ export async function createWalletsOnLogin(deps: WalletDeps, endUserId: string):
   }
 }
 
-export async function loadOwnedWallet(deps: WalletDeps, endUserId: string, walletId: string) {
+export interface OwnedWallet {
+  wallet: WalletRow;
+  user: EndUserRow;
+  subOrgId: string;
+}
+
+export async function loadOwnedWallet(
+  deps: WalletDeps,
+  endUserId: string,
+  walletId: string,
+): Promise<OwnedWallet> {
   const wallet = await deps.db.query.wallets.findFirst({
     where: and(eq(wallets.id, walletId), eq(wallets.endUserId, endUserId)),
   });
   // Someone else's wallet and a missing wallet look the same from outside.
   if (!wallet) throw new ApiError('not_found', 'Wallet not found');
-  const user = await deps.db.query.endUsers.findFirst({ where: eq(endUsers.id, endUserId) });
-  if (!user?.keyProviderSubOrgId)
-    throw new ApiError('internal', 'Wallet has no key provider sub-organization');
-  return { wallet, subOrgId: user.keyProviderSubOrgId };
+  const user = await loadEndUserRow(deps.db, deps.app, endUserId);
+  return { wallet, user, subOrgId: requireKeySession(user).organizationId };
 }
 
-function evmSigner(deps: WalletDeps, subOrgId: string, walletId: string): SignHash {
+/** A decodable Solana transaction this wallet must sign, checked before any relay. */
+export function inspectSolana(transaction: string, walletAddress: string): InspectedTransaction {
+  let inspected: InspectedTransaction;
+  try {
+    inspected = inspectTransaction(transaction);
+  } catch (error) {
+    throw new ApiError(
+      'bad_request',
+      error instanceof Error ? error.message : 'Invalid Solana transaction',
+    );
+  }
+  const signers = inspected.staticAccountKeys.slice(0, inspected.numRequiredSignatures);
+  if (!signers.includes(walletAddress)) {
+    throw new ApiError(
+      'bad_request',
+      `${walletAddress} is not a required signer of this transaction`,
+    );
+  }
+  return inspected;
+}
+
+/* Signers backed by a stamped request. The chain adapters compute the digest from
+   the route input; the provider refuses the relay unless the request signs exactly
+   that digest. */
+
+function relayedEvmSigner(deps: WalletDeps, owned: OwnedWallet, request: StampedRequest): SignHash {
   return async (hash) => {
     const { signature } = await deps.keyProvider
-      .signRaw({ subOrgId, walletId, payload: hexToBytes(hash), encoding: 'hash' })
-      .catch(providerFailure);
+      .relay(request, {
+        kind: 'signRaw',
+        subOrgId: owned.subOrgId,
+        address: owned.wallet.address,
+        encoding: 'hash',
+        payload: hexToBytes(hash),
+      })
+      .catch(relayFailure);
     return signatureToHex(signature);
   };
 }
 
-function solanaSigner(deps: WalletDeps, subOrgId: string, walletId: string): SignBytes {
+function relayedSolanaSigner(
+  deps: WalletDeps,
+  owned: OwnedWallet,
+  request: StampedRequest,
+): SignBytes {
   return async (bytes) => {
     const { signature } = await deps.keyProvider
-      .signRaw({ subOrgId, walletId, payload: bytes, encoding: 'raw' })
-      .catch(providerFailure);
+      .relay(request, {
+        kind: 'signRaw',
+        subOrgId: owned.subOrgId,
+        address: owned.wallet.address,
+        encoding: 'raw',
+        payload: bytes,
+      })
+      .catch(relayFailure);
     return signature;
   };
 }
@@ -226,17 +261,21 @@ export async function signMessage(
   endUserId: string,
   walletId: string,
   input: SignMessageInput,
+  request: StampedRequest,
 ): Promise<SignMessageOutput> {
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
-  assertFamily(wallet, input.chain);
-  const key = wallet.keyProviderWalletId;
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+  assertFamily(owned.wallet, input.chain);
 
   if (input.chain === 'evm') {
     const message =
       typeof input.message === 'string' ? input.message : { raw: input.message.raw as Hex };
-    return { signature: await signPersonalMessage(message, evmSigner(deps, subOrgId, key)) };
+    return {
+      signature: await signPersonalMessage(message, relayedEvmSigner(deps, owned, request)),
+    };
   }
-  return { signature: await signSolanaMessage(input.message, solanaSigner(deps, subOrgId, key)) };
+  return {
+    signature: await signSolanaMessage(input.message, relayedSolanaSigner(deps, owned, request)),
+  };
 }
 
 export async function signTypedData(
@@ -244,45 +283,185 @@ export async function signTypedData(
   endUserId: string,
   walletId: string,
   input: SignTypedDataInput,
+  request: StampedRequest,
 ): Promise<SignMessageOutput> {
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
-  assertFamily(wallet, 'evm');
-  return {
-    signature: await signTypedDataInput(
-      input,
-      evmSigner(deps, subOrgId, wallet.keyProviderWalletId),
-    ),
-  };
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+  assertFamily(owned.wallet, 'evm');
+  return { signature: await signTypedDataInput(input, relayedEvmSigner(deps, owned, request)) };
 }
 
-async function signTx(
+/* Two step operations: the API prepares, the iframe checks and signs, the API submits.
+   The prepared operation is kept server side under a single-use ticket, bound to the
+   user, the wallet and the exact input. */
+
+interface StoredOperation {
+  walletId: string;
+  input: string;
+  unsignedTransaction?: string;
+  sponsored?: PreparedSponsoredEvm;
+}
+
+/** Canonical JSON (sorted keys): the same input always gives the same key. */
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, item]) => item !== undefined)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([key, item]) => [key, canonical(item)]),
+    );
+  }
+  return value;
+}
+
+const inputKey = (input: TransactionRequest | SendTransactionInput) =>
+  JSON.stringify(canonical({ sponsored: false, ...input }));
+
+async function storeOperation(
+  deps: WalletDeps,
+  endUserId: string,
+  operation: StoredOperation,
+): Promise<string> {
+  const ticket = toBase64Url(randomBytes(24));
+  await createChallenge(deps.db, {
+    id: ticket,
+    appId: deps.app.id,
+    purpose: 'prepared_operation',
+    subject: endUserId,
+    payload: operation as unknown as Record<string, unknown>,
+    ttlSeconds: PREPARED_TTL_SECONDS,
+  });
+  return ticket;
+}
+
+async function takeOperation(
   deps: WalletDeps,
   endUserId: string,
   walletId: string,
-  input: TransactionRequest,
-): Promise<{ signed: string; wallet: WalletRow }> {
-  assertChainEnabled(deps.app, input);
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
-  assertFamily(wallet, input.chain);
-  const key = wallet.keyProviderWalletId;
+  ticket: string | undefined,
+  input: TransactionRequest | SendTransactionInput,
+): Promise<StoredOperation> {
+  if (!ticket) throw new ApiError('bad_request', 'Prepare this transaction first');
+  const row = await consumeChallenge(deps.db, {
+    id: ticket,
+    appId: deps.app.id,
+    purpose: 'prepared_operation',
+  });
+  const operation = row?.payload as StoredOperation | undefined;
+  if (
+    row?.subject !== endUserId ||
+    operation?.walletId !== walletId ||
+    operation.input !== inputKey(input)
+  ) {
+    throw new ApiError('bad_request', 'This prepared transaction expired or does not match', {
+      reason: 'prepared_mismatch',
+    });
+  }
+  return operation;
+}
 
-  if (input.chain === 'evm') {
-    const rpc = deps.rpc.evm(input.chainId);
-    const prepared = await prepareTransaction(input, wallet.address as Address, rpc);
-    return { signed: await signEvmTransaction(prepared, evmSigner(deps, subOrgId, key)), wallet };
+export async function prepareOperation(
+  deps: WalletDeps,
+  endUserId: string,
+  walletId: string,
+  input: SendTransactionInput,
+): Promise<PreparedOperation> {
+  assertChainEnabled(deps.app, input);
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+  assertFamily(owned.wallet, input.chain);
+  if (input.chain === 'solana') return { kind: 'none' };
+
+  if (input.sponsored) {
+    assertSponsoringEnabled(deps.app, 'evm');
+    const sponsor = requireSponsor(deps);
+    const prepared = await prepareSponsoredEvm(
+      { ...deps, sponsor },
+      { wallet: owned.wallet },
+      input,
+    );
+    const ticket = await storeOperation(deps, endUserId, {
+      walletId,
+      input: inputKey(input),
+      sponsored: prepared,
+    });
+    return {
+      kind: 'userOperation',
+      ticket,
+      chainId: input.chainId,
+      entryPointAddress: prepared.entryPointAddress,
+      userOperation: prepared.userOperation,
+      digest: prepared.digest,
+    };
   }
 
-  const signed = await signSolanaTransaction(input.transaction, {
-    publicKey: wallet.address,
-    signBytes: solanaSigner(deps, subOrgId, key),
-  }).catch((error: unknown) => {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      'bad_request',
-      error instanceof Error ? error.message : 'Invalid Solana transaction',
-    );
+  const unsignedTransaction = await prepareEvm(deps, owned.wallet, input);
+  const ticket = await storeOperation(deps, endUserId, {
+    walletId,
+    input: inputKey(input),
+    unsignedTransaction,
   });
-  return { signed, wallet };
+  return { kind: 'transaction', ticket, unsignedTransaction };
+}
+
+async function prepareEvm(
+  deps: WalletDeps,
+  wallet: WalletRow,
+  input: EvmTransactionRequest,
+): Promise<string> {
+  try {
+    const prepared = await prepareTransaction(
+      input,
+      wallet.address as Address,
+      deps.rpc.evm(input.chainId),
+    );
+    return serializeUnsignedTransaction(prepared);
+  } catch (error) {
+    throw new ApiError('bad_request', 'Could not prepare the transaction', {
+      reason: error instanceof Error ? error.message.slice(0, 300) : 'unknown',
+    });
+  }
+}
+
+/** Signs a transaction with a relayed request. EVM needs the ticket from `prepare`. */
+async function signTx(
+  deps: WalletDeps,
+  owned: OwnedWallet,
+  input: TransactionRequest,
+  request: StampedRequest,
+  ticket: string | undefined,
+  preparedInput: TransactionRequest | SendTransactionInput,
+): Promise<string> {
+  assertChainEnabled(deps.app, input);
+  assertFamily(owned.wallet, input.chain);
+
+  let unsignedTransaction: string;
+  if (input.chain === 'evm') {
+    const operation = await takeOperation(
+      deps,
+      owned.wallet.endUserId,
+      owned.wallet.id,
+      ticket,
+      preparedInput,
+    );
+    if (!operation.unsignedTransaction)
+      throw new ApiError('bad_request', 'Wrong prepared operation');
+    unsignedTransaction = operation.unsignedTransaction;
+  } else {
+    inspectSolana(input.transaction, owned.wallet.address);
+    unsignedTransaction = input.transaction;
+  }
+
+  const { signedTransaction } = await deps.keyProvider
+    .relay(request, {
+      kind: 'signTransaction',
+      subOrgId: owned.subOrgId,
+      address: owned.wallet.address,
+      chainFamily: input.chain,
+      unsignedTransaction,
+    })
+    .catch(relayFailure);
+  return signedTransaction;
 }
 
 export async function signTransaction(
@@ -290,8 +469,11 @@ export async function signTransaction(
   endUserId: string,
   walletId: string,
   input: TransactionRequest,
+  request: StampedRequest,
+  ticket?: string,
 ): Promise<SignTransactionOutput> {
-  const { signed } = await signTx(deps, endUserId, walletId, input);
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+  const signed = await signTx(deps, owned, input, request, ticket, input);
   await recordTx(deps, endUserId, { chain: input.chain, broadcast: false });
   return { signedTransaction: signed };
 }
@@ -301,34 +483,61 @@ export async function sendTransaction(
   endUserId: string,
   walletId: string,
   input: SendTransactionInput,
+  request: StampedRequest,
+  ticket?: string,
 ): Promise<SendTransactionOutput> {
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+
   if (input.sponsored) {
     // T4.4 to T4.6: prepaid sponsoring, Solana fee payer or ERC-4337 smart account.
     assertSponsoringEnabled(deps.app, input.chain);
+    assertChainEnabled(deps.app, input);
+    assertFamily(owned.wallet, input.chain);
     const sponsor = requireSponsor(deps);
-    const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
-    const key = wallet.keyProviderWalletId;
-    const { hash } = await sendSponsored(
-      { ...deps, sponsor },
-      {
-        endUserId,
-        wallet,
-        signers: {
-          signHash: evmSigner(deps, subOrgId, key),
-          signBytes: solanaSigner(deps, subOrgId, key),
+    let hash: string;
+    if (input.chain === 'solana') {
+      inspectSolana(input.transaction, owned.wallet.address);
+      ({ hash } = await sendSponsoredSolana(
+        { ...deps, sponsor },
+        {
+          endUserId,
+          wallet: owned.wallet,
+          signUserTransaction: async (transaction) =>
+            (
+              await deps.keyProvider
+                .relay(request, {
+                  kind: 'signTransaction',
+                  subOrgId: owned.subOrgId,
+                  address: owned.wallet.address,
+                  chainFamily: 'solana',
+                  unsignedTransaction: transaction,
+                })
+                .catch(relayFailure)
+            ).signedTransaction,
         },
-      },
-      input,
-    );
+        input,
+      ));
+    } else {
+      const operation = await takeOperation(deps, endUserId, walletId, ticket, input);
+      if (!operation.sponsored) throw new ApiError('bad_request', 'Wrong prepared operation');
+      const prepared = operation.sponsored;
+      ({ hash } = await submitSponsoredEvm(
+        { ...deps, sponsor },
+        { endUserId, wallet: owned.wallet },
+        input,
+        prepared,
+        relayedEvmSigner(deps, owned, request),
+      ));
+    }
     await recordTx(deps, endUserId, { chain: input.chain, broadcast: true, hash, sponsored: true });
     return { hash, sponsored: true };
   }
-  const { signed } = await signTx(deps, endUserId, walletId, input);
 
+  const signed = await signTx(deps, owned, input, request, ticket, input);
   let hash: string;
   try {
     if (input.chain === 'evm') {
-      hash = await deps.rpc.evm(input.chainId).sendRawTransaction(signed as `0x${string}`);
+      hash = await deps.rpc.evm(input.chainId).sendRawTransaction(signed as Hex);
     } else {
       await deps.rpc.solana(input.cluster).sendRawTransaction(base64.decode(signed));
       hash = transactionId(signed);
@@ -359,7 +568,7 @@ export async function smartAccountAddress(
   chainId: EvmChainId,
 ): Promise<string> {
   const factory = requireSponsor(deps).evm;
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
+  const { wallet } = await loadOwnedWallet(deps, endUserId, walletId);
   assertFamily(wallet, 'evm');
   assertChainEnabled(deps.app, { chain: 'evm', chainId });
   if (!factory) {
@@ -368,10 +577,7 @@ export async function smartAccountAddress(
   try {
     return await factory.getSmartAccountAddress({
       chainId,
-      owner: {
-        address: wallet.address as Address,
-        signHash: evmSigner(deps, subOrgId, wallet.keyProviderWalletId),
-      },
+      owner: { address: wallet.address as Address },
     });
   } catch (error) {
     if (error instanceof ApiError || error instanceof GasSponsorError) sponsorFailure(error);
@@ -381,17 +587,20 @@ export async function smartAccountAddress(
   }
 }
 
+/** Section 8.4: encrypted by the provider to a key that never leaves the iframe. */
 export async function exportWallet(
   deps: WalletDeps,
   endUserId: string,
   walletId: string,
-  targetPublicKey: string,
+  request: StampedRequest,
 ): Promise<ExportWalletOutput> {
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, walletId);
-  // Section 8.4: the bundle is encrypted to a key generated inside the iframe.
-  // This service only relays ciphertext and never sees key material.
-  const { encryptedBundle } = await deps.keyProvider
-    .exportWallet({ subOrgId, walletId: wallet.keyProviderWalletId, targetPublicKey })
-    .catch(providerFailure);
-  return { encryptedBundle };
+  const owned = await loadOwnedWallet(deps, endUserId, walletId);
+  const { exportBundle } = await deps.keyProvider
+    .relay(request, {
+      kind: 'exportAccount',
+      subOrgId: owned.subOrgId,
+      address: owned.wallet.address,
+    })
+    .catch(relayFailure);
+  return { encryptedBundle: exportBundle };
 }

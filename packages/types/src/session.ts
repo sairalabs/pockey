@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AmountString, ChainFamily, EvmAddress, EvmChainId, SolanaAddress } from './chains.js';
 import { SessionSignerId, WalletId } from './ids.js';
+import { StampedRequest } from './keys.js';
 import { SignMessageInput, SignTypedDataInput, TransactionRequest } from './wallet.js';
 
 /** Human duration accepted by the SDK: `15m`, `2h`, `7d`. Max 30 days. */
@@ -74,6 +75,15 @@ export const CreateSessionInput = z.object({
   policy: SigningPolicy,
 });
 export type CreateSessionInput = z.infer<typeof CreateSessionInput>;
+
+/** `POST /v1/sessions`: the iframe stamps the provider policy after the user consented. */
+export const CreateSessionBody = CreateSessionInput.extend({
+  policyName: z.string().regex(/^pocketkey:ses:[A-Za-z0-9_-]{8,40}$/),
+  /** Chosen by the iframe (now + expiresIn), written into the provider policy. */
+  expiresAt: z.iso.datetime(),
+  request: StampedRequest,
+});
+export type CreateSessionBody = z.infer<typeof CreateSessionBody>;
 
 export const SessionSigner = z.object({
   id: SessionSignerId,

@@ -20,6 +20,8 @@ export interface PopupHost {
 export interface PopupWindow {
   readonly closed: boolean;
   close(): void;
+  /** Navigated once the session key exists (the popup opens blank, inside the gesture). */
+  location: { href: string };
 }
 
 export function popupHost(): PopupHost | null {

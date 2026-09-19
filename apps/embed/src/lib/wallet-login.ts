@@ -1,11 +1,11 @@
 /**
- * SIWE and SIWS sign in through an injected wallet. Loaded lazily: it pulls the
- * message builders (viem's SIWE formatter and checksum) only when a wallet is used.
+ * External wallet sign in through an injected wallet. The wallet signs the key
+ * provider login request itself (it carries this iframe's session key), so the
+ * provider, not Pocketkey, verifies the wallet. One prompt, sign-up included.
+ * Loaded lazily with the rest of the wallet code.
  */
-import { buildSiweMessage } from '@pocketkey/chains-evm';
-import { buildSiwsMessage } from '@pocketkey/chains-solana';
 import type { AuthResponse } from '@pocketkey/types';
-import { base64, hex } from '@scure/base';
+import { hex } from '@scure/base';
 import { EmbedFailure } from './errors';
 import { isHexString, isRecord } from './guards';
 import type {
@@ -24,31 +24,26 @@ function invalid(message: string): EmbedFailure {
 export async function signInWithEvm(
   auth: WalletAuthClient,
   provider: Eip1193Provider,
-  context: SignInContext,
+  _context?: SignInContext,
 ): Promise<AuthResponse> {
   const accounts = await provider.request({ method: 'eth_requestAccounts' });
   const address = Array.isArray(accounts) ? (accounts as unknown[])[0] : undefined;
   if (typeof address !== 'string' || !EVM_ADDRESS.test(address)) {
     throw invalid('The wallet did not return an account.');
   }
-  const chainIdHex = await provider.request({ method: 'eth_chainId' });
-  const chainId = typeof chainIdHex === 'string' ? Number.parseInt(chainIdHex, 16) : Number.NaN;
-  if (!Number.isSafeInteger(chainId) || chainId <= 0) {
-    throw invalid('The wallet did not return a chain.');
-  }
-  const { nonce } = await auth.getWalletNonce('evm');
-  const message = buildSiweMessage({
-    domain: context.domain,
-    uri: context.uri,
-    address: address as `0x${string}`,
-    chainId,
-    nonce,
-    statement: context.statement,
+  return auth.loginWithWallet({
+    chainFamily: 'evm',
+    address,
+    async personalSign(message) {
+      const payload = `0x${hex.encode(new TextEncoder().encode(message))}`;
+      const signature = await provider.request({
+        method: 'personal_sign',
+        params: [payload, address],
+      });
+      if (!isHexString(signature)) throw invalid('The wallet returned an invalid signature.');
+      return signature;
+    },
   });
-  const payload = `0x${hex.encode(new TextEncoder().encode(message))}`;
-  const signature = await provider.request({ method: 'personal_sign', params: [payload, address] });
-  if (!isHexString(signature)) throw invalid('The wallet returned an invalid signature.');
-  return auth.loginWithSiwe({ message, signature });
 }
 
 function publicKeyOf(value: unknown): string | null {
@@ -67,22 +62,21 @@ function publicKeyOf(value: unknown): string | null {
 export async function signInWithSolana(
   auth: WalletAuthClient,
   provider: PhantomSolanaProvider,
-  context: SignInContext,
+  _context?: SignInContext,
 ): Promise<AuthResponse> {
   const connected = await provider.connect();
   const address = publicKeyOf(connected) ?? publicKeyOf(provider);
   if (!address) throw invalid('The wallet did not return an account.');
-  const { nonce } = await auth.getWalletNonce('solana');
-  const message = buildSiwsMessage({
-    domain: context.domain,
+  return auth.loginWithWallet({
+    chainFamily: 'solana',
     address,
-    nonce,
-    uri: context.uri,
-    statement: context.statement.replace(/\s+/g, ' '),
+    async signMessage(message) {
+      const signed = await provider.signMessage(message, 'utf8');
+      const signature = isRecord(signed) ? signed.signature : undefined;
+      if (!(signature instanceof Uint8Array)) {
+        throw invalid('The wallet returned an invalid signature.');
+      }
+      return signature;
+    },
   });
-  const signed = await provider.signMessage(new TextEncoder().encode(message), 'utf8');
-  const signature = isRecord(signed) ? signed.signature : undefined;
-  if (!(signature instanceof Uint8Array))
-    throw invalid('The wallet returned an invalid signature.');
-  return auth.loginWithSiws({ message, signature: base64.encode(signature), publicKey: address });
 }

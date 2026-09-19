@@ -28,3 +28,10 @@ export {
 } from './transaction.js';
 export { toPocketkeyAccount } from './account.js';
 export { buildSiweMessage, verifySiweLogin } from './siwe.js';
+export {
+  decodeKernelExecute,
+  deserializeUserOperation,
+  serializeUserOperation,
+  userOperationDigest,
+  type SerializedUserOperation,
+} from './user-operation.js';

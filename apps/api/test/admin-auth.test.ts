@@ -1,12 +1,13 @@
-import { baUser, developers } from '@pocketkey/db';
+import { baUser, developers, endUserIdentities } from '@pocketkey/db';
 import { AdminSession, ApiErrorBody, AuthProviders } from '@pocketkey/types';
-import { eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   adminRequest,
   db,
   DASHBOARD_ORIGIN,
   cookiesOf,
+  EMBED_ORIGIN,
   loginAsDeveloper,
   loginWithEmail,
   mailer,
@@ -14,6 +15,7 @@ import {
   request,
   seedDb,
   SEED,
+  withApp,
 } from './helpers.js';
 
 beforeAll(async () => {
@@ -77,18 +79,30 @@ describe('developer authentication (T5.1)', () => {
 
   it('keeps the developer pool separate from the end user pools', async () => {
     const email = 'shared.pool@test.dev';
-    await loginAsDeveloper(email);
-    await loginWithEmail(email);
+    const cookie = await loginAsDeveloper(email);
+    const { body } = await loginWithEmail(email);
 
+    // Better Auth only holds developers now; end users live in their app.
     const rows = await db().select().from(baUser).where(eq(baUser.email, email));
-    expect(rows).toHaveLength(2);
-    const developerRows = rows.filter((row) => row.appId === null);
-    expect(developerRows).toHaveLength(1);
-    expect(rows.filter((row) => row.appId === SEED.app.id)).toHaveLength(1);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.appId).toBeNull();
+    const identities = await db()
+      .select()
+      .from(endUserIdentities)
+      .where(and(eq(endUserIdentities.type, 'email'), eq(endUserIdentities.identifier, email)));
+    expect(identities.map((row) => [row.appId, row.endUserId])).toEqual([
+      [SEED.app.id, body.user.id],
+    ]);
 
-    // The developer instance only ever sees the app-less row.
-    const scoped = await db().select().from(baUser).where(isNull(baUser.appId));
-    expect(scoped.every((row) => row.appId === null)).toBe(true);
+    // Neither credential opens the other side.
+    const endUserOnAdmin = await request('/admin/session', {
+      headers: { Origin: DASHBOARD_ORIGIN, Authorization: `Bearer ${body.accessToken}` },
+    });
+    expect(endUserOnAdmin.status).toBe(401);
+    const developerOnApi = await request('/v1/me', {
+      headers: withApp({ Origin: EMBED_ORIGIN, Cookie: cookie }),
+    });
+    expect(developerOnApi.status).toBe(401);
   });
 
   it('signs out and stops accepting the cookie', async () => {

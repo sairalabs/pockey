@@ -7,11 +7,8 @@ import {
   type SignHash,
 } from '@pocketkey/chains-evm';
 import {
-  decodeTransaction,
-  inspectTransaction,
   signMessage as signSolanaMessage,
   transactionId,
-  type InspectedTransaction,
   type SignBytes,
 } from '@pocketkey/chains-solana';
 import {
@@ -24,12 +21,17 @@ import {
   type SessionSignerRow,
   type WalletRow,
 } from '@pocketkey/db';
-import { KeyProviderError, type KeyProvider } from '@pocketkey/key-provider';
+import {
+  KeyProviderError,
+  type KeyProvider,
+  type SignerScope,
+  type StampedRequest,
+} from '@pocketkey/key-provider';
 import {
   AppConfig,
   durationToSeconds,
   SessionSigner,
-  type CreateSessionInput,
+  type CreateSessionBody,
   type SessionSignOutput,
   type SessionSignRequest,
 } from '@pocketkey/types';
@@ -44,15 +46,34 @@ import {
   type PolicyCheck,
   type PolicyContext,
 } from './policy.js';
-import { assertSponsoringEnabled, sendSponsored } from './sponsored-send.js';
-import { loadOwnedWallet, providerFailure, requireSponsor, type WalletDeps } from './wallets.js';
+import { loadEndUserRow, relayFailure, requireKeySession } from './key-session.js';
+import {
+  assertSponsoringEnabled,
+  prepareSponsoredEvm,
+  sendSponsoredSolana,
+  submitSponsoredEvm,
+} from './sponsored-send.js';
+import {
+  inspectSolana,
+  loadOwnedWallet,
+  providerFailure,
+  requireSponsor,
+  type WalletDeps,
+} from './wallets.js';
 
 /**
- * Session signers (T4.2, section 7.4). A session is a key provider policy bound
- * to one wallet, mirrored in `session_signers`. Pocketkey checks every request
- * locally first, reserves `maxValueTotal` atomically, then signs through the key
- * provider with the policy id so the provider re-checks what it can.
+ * Session signers (T4.2, section 7.4), non-custodial since 2026-09-19.
+ *
+ * The end user adds the Pocketkey signer to their sub-organization (a non-root user
+ * with no power), then creates each session policy themselves: the iframe stamps
+ * the policy after the consent screen, the provider enforces it, and it expires at
+ * the provider on its own. Pocketkey mirrors it in `session_signers`, checks every
+ * request locally first, reserves `maxValueTotal` atomically, then signs with the
+ * signer key, which the provider only lets through that policy.
  */
+
+/** Tolerance between the expiry the iframe wrote in the policy and ours. */
+const EXPIRY_TOLERANCE_MS = 5 * 60_000;
 
 export type SessionDeps = WalletDeps;
 
@@ -102,15 +123,55 @@ async function subOrgOf(db: Db, endUserId: string, appId: string): Promise<strin
   return user.keyProviderSubOrgId;
 }
 
-/* Create, list, revoke */
+/* Signer setup (once per user), create, list, revoke */
+
+/** Adds the Pocketkey signer user, stamped by the iframe. Once per end user. */
+export async function setupSigner(
+  deps: SessionDeps,
+  endUserId: string,
+  request: StampedRequest,
+): Promise<string> {
+  const user = await loadEndUserRow(deps.db, deps.app, endUserId);
+  const keySession = requireKeySession(user);
+  if (user.keyProviderSignerUserId) return user.keyProviderSignerUserId;
+  const { signerUserId } = await deps.keyProvider
+    .relay(request, { kind: 'createSigner', subOrgId: keySession.organizationId })
+    .catch(relayFailure);
+  const [stored] = await deps.db
+    .update(endUsers)
+    .set({ keyProviderSignerUserId: signerUserId })
+    .where(and(eq(endUsers.id, endUserId), isNull(endUsers.keyProviderSignerUserId)))
+    .returning({ id: endUsers.id });
+  if (!stored) throw new ApiError('conflict', 'The session signer was set up by another request');
+  return signerUserId;
+}
+
+/** Lets the signer delete session policies (revocation from the API), stamped by the iframe. */
+export async function grantRevokePermission(
+  deps: SessionDeps,
+  endUserId: string,
+  request: StampedRequest,
+): Promise<void> {
+  const user = await loadEndUserRow(deps.db, deps.app, endUserId);
+  const keySession = requireKeySession(user);
+  if (!keySession.signerUserId)
+    throw new ApiError('bad_request', 'Set up the session signer first');
+  await deps.keyProvider
+    .relay(request, {
+      kind: 'grantRevoke',
+      subOrgId: keySession.organizationId,
+      signerUserId: keySession.signerUserId,
+    })
+    .catch(relayFailure);
+}
 
 export async function createSession(
   deps: SessionDeps,
   endUserId: string,
-  input: CreateSessionInput,
+  input: CreateSessionBody,
   now = new Date(),
 ): Promise<SessionSignerRow> {
-  const { wallet, subOrgId } = await loadOwnedWallet(deps, endUserId, input.walletId);
+  const { wallet, user, subOrgId } = await loadOwnedWallet(deps, endUserId, input.walletId);
   const { policy } = input;
 
   if (policy.chain !== wallet.chainFamily) {
@@ -138,11 +199,33 @@ export async function createSession(
       );
     }
   }
+  const signerUserId = requireKeySession(user).signerUserId;
+  if (!signerUserId) {
+    throw new ApiError('bad_request', 'Set up the session signer first', {
+      reason: 'signer_missing',
+    });
+  }
 
-  const expiresAt = new Date(now.getTime() + durationToSeconds(policy.expiresIn) * 1000);
+  // The iframe writes the expiry into the provider policy: it must be the one the
+  // user consented to (now + expiresIn), give or take clock skew.
+  const expiresAt = new Date(input.expiresAt);
+  const expected = now.getTime() + durationToSeconds(policy.expiresIn) * 1000;
+  if (Math.abs(expiresAt.getTime() - expected) > EXPIRY_TOLERANCE_MS) {
+    throw new ApiError('validation_failed', 'expiresAt does not match expiresIn');
+  }
+
   const { policyId } = await deps.keyProvider
-    .createPolicy({ subOrgId, walletId: wallet.keyProviderWalletId, policy, expiresAt })
-    .catch(providerFailure);
+    .relay(input.request, {
+      kind: 'createSessionPolicy',
+      subOrgId,
+      policyName: input.policyName,
+      policy,
+      walletId: wallet.keyProviderWalletId,
+      address: wallet.address,
+      signerUserId,
+      expiresAt,
+    })
+    .catch(relayFailure);
 
   try {
     const [row] = await deps.db
@@ -288,20 +371,28 @@ export interface SignWithSessionOptions {
   now?: Date;
 }
 
+function sessionScope(session: SessionSignerRow): SignerScope {
+  return {
+    kind: 'session',
+    policyId: session.keyProviderPolicyId,
+    policyCreatedAt: session.createdAt,
+  };
+}
+
 function evmSessionSigner(
   deps: SessionDeps,
   subOrgId: string,
   wallet: WalletRow,
-  sessionPolicyId: string,
+  session: SessionSignerRow,
 ): SignHash {
   return async (hash) => {
     const { signature } = await deps.keyProvider
       .signRaw({
         subOrgId,
-        walletId: wallet.keyProviderWalletId,
+        address: wallet.address,
         payload: hexToBytes(hash),
         encoding: 'hash',
-        sessionPolicyId,
+        scope: sessionScope(session),
       })
       .catch(sessionProviderFailure);
     return signatureToHex(signature);
@@ -312,16 +403,16 @@ function solanaSessionSigner(
   deps: SessionDeps,
   subOrgId: string,
   wallet: WalletRow,
-  sessionPolicyId: string,
+  session: SessionSignerRow,
 ): SignBytes {
   return async (bytes) => {
     const { signature } = await deps.keyProvider
       .signRaw({
         subOrgId,
-        walletId: wallet.keyProviderWalletId,
+        address: wallet.address,
         payload: bytes,
         encoding: 'raw',
-        sessionPolicyId,
+        scope: sessionScope(session),
       })
       .catch(sessionProviderFailure);
     return signature;
@@ -340,26 +431,6 @@ async function recordSessionSigned(
     type: 'session.signed',
     meta,
   });
-}
-
-function inspectSolana(transaction: string, walletAddress: string): InspectedTransaction {
-  let inspected: InspectedTransaction;
-  try {
-    inspected = inspectTransaction(transaction);
-  } catch (error) {
-    throw new ApiError(
-      'bad_request',
-      error instanceof Error ? error.message : 'Invalid Solana transaction',
-    );
-  }
-  const signers = inspected.staticAccountKeys.slice(0, inspected.numRequiredSignatures);
-  if (!signers.includes(walletAddress)) {
-    throw new ApiError(
-      'bad_request',
-      `${walletAddress} is not a required signer of this transaction`,
-    );
-  }
-  return inspected;
 }
 
 export async function signWithSession(
@@ -388,7 +459,6 @@ export async function signWithSession(
     wallet: { id: wallet.id, chainFamily: wallet.chainFamily, address: wallet.address },
     enabledChains: AppConfig.parse(deps.app.config).chains,
   };
-  const sessionPolicyId = session.keyProviderPolicyId;
   const meta = { sessionId: session.id, kind: request.kind, via: options.via };
 
   if (request.kind === 'message') {
@@ -398,11 +468,11 @@ export async function signWithSession(
       input.chain === 'evm'
         ? await signPersonalMessage(
             typeof input.message === 'string' ? input.message : { raw: input.message.raw as Hex },
-            evmSessionSigner(deps, subOrgId, wallet, sessionPolicyId),
+            evmSessionSigner(deps, subOrgId, wallet, session),
           )
         : await signSolanaMessage(
             input.message,
-            solanaSessionSigner(deps, subOrgId, wallet, sessionPolicyId),
+            solanaSessionSigner(deps, subOrgId, wallet, session),
           );
     await recordSessionSigned(deps, wallet.endUserId, { ...meta, chain: input.chain });
     return { signature, sponsored: false };
@@ -412,7 +482,7 @@ export async function signWithSession(
     assertAllowed(checkSessionRequest(session, request, context));
     const signature = await signTypedDataInput(
       request.input,
-      evmSessionSigner(deps, subOrgId, wallet, sessionPolicyId),
+      evmSessionSigner(deps, subOrgId, wallet, session),
     );
     await recordSessionSigned(deps, wallet.endUserId, { ...meta, chain: 'evm' });
     return { signature, sponsored: false };
@@ -462,10 +532,10 @@ export async function signWithSession(
     const { signedTransaction } = await deps.keyProvider
       .signTransaction({
         subOrgId,
-        walletId: wallet.keyProviderWalletId,
+        address: wallet.address,
         chainFamily: input.chain,
         unsignedTransaction,
-        sessionPolicyId,
+        scope: sessionScope(session),
       })
       .catch(sessionProviderFailure);
 
@@ -503,45 +573,6 @@ export async function signWithSession(
   return output;
 }
 
-/**
- * User signer for a sponsored Solana send under a session: the key provider signs the
- * whole transaction with the session policy (so it enforces programs and value), and
- * the user signature is read back from its slot. The gas sponsor verifies it against
- * the message before using it.
- */
-function solanaSessionTxSigner(
-  deps: SessionDeps,
-  subOrgId: string,
-  wallet: WalletRow,
-  sessionPolicyId: string,
-  transaction: string,
-): SignBytes {
-  return async () => {
-    const { signedTransaction } = await deps.keyProvider
-      .signTransaction({
-        subOrgId,
-        walletId: wallet.keyProviderWalletId,
-        chainFamily: 'solana',
-        unsignedTransaction: transaction,
-        sessionPolicyId,
-      })
-      .catch(sessionProviderFailure);
-    return signatureSlot(signedTransaction, wallet.address);
-  };
-}
-
-/** Signature of `signer` in a base64 transaction (`shortvec(count) || signatures || message`). */
-function signatureSlot(base64Tx: string, signer: string): Uint8Array {
-  const index = decodeTransaction(base64Tx).requiredSigners.indexOf(signer);
-  if (index < 0) throw new ApiError('internal', 'The key provider did not sign the transaction');
-  const bytes = base64.decode(base64Tx);
-  let offset = 0;
-  while (((bytes[offset] ?? 0) & 0x80) !== 0) offset++;
-  offset++;
-  const start = offset + index * 64;
-  return bytes.slice(start, start + 64);
-}
-
 async function signSponsoredWithSession(
   deps: SessionDeps,
   session: SessionSignerRow,
@@ -556,7 +587,6 @@ async function signSponsoredWithSession(
   const { wallet, subOrgId, context, meta } = scope;
   const { input } = request;
   const sponsor = requireSponsor(deps);
-  const sessionPolicyId = session.keyProviderPolicyId;
 
   // Policy first (value, contracts, chains, programs): a refused request is never charged.
   const value =
@@ -579,21 +609,39 @@ async function signSponsoredWithSession(
 
   let hash: string;
   try {
-    ({ hash } = await sendSponsored(
-      { ...deps, sponsor },
-      {
-        endUserId: wallet.endUserId,
-        wallet,
-        signers: {
-          signHash: evmSessionSigner(deps, subOrgId, wallet, sessionPolicyId),
-          signBytes:
-            input.chain === 'solana'
-              ? solanaSessionTxSigner(deps, subOrgId, wallet, sessionPolicyId, input.transaction)
-              : solanaSessionSigner(deps, subOrgId, wallet, sessionPolicyId),
+    const target = { endUserId: wallet.endUserId, wallet };
+    if (input.chain === 'solana') {
+      // The provider signs the whole transaction under the policy, so it enforces
+      // programs and value; the fee payer co-signs afterwards.
+      ({ hash } = await sendSponsoredSolana(
+        { ...deps, sponsor },
+        {
+          ...target,
+          signUserTransaction: async (transaction) =>
+            (
+              await deps.keyProvider
+                .signTransaction({
+                  subOrgId,
+                  address: wallet.address,
+                  chainFamily: 'solana',
+                  unsignedTransaction: transaction,
+                  scope: sessionScope(session),
+                })
+                .catch(sessionProviderFailure)
+            ).signedTransaction,
         },
-      },
-      input,
-    ));
+        input,
+      ));
+    } else {
+      const prepared = await prepareSponsoredEvm({ ...deps, sponsor }, target, input);
+      ({ hash } = await submitSponsoredEvm(
+        { ...deps, sponsor },
+        target,
+        input,
+        prepared,
+        evmSessionSigner(deps, subOrgId, wallet, session),
+      ));
+    }
   } catch (error) {
     if (reserved) await release(deps.db, session.id, value);
     throw error;
@@ -613,9 +661,9 @@ async function signSponsoredWithSession(
 /* Expiry (hourly cron) */
 
 /**
- * Provider policies cannot express a date: delete the policy of every expired,
- * unrevoked session and flag it revoked. A provider failure leaves the session
- * untouched so the next run retries it.
+ * Policies expire at the provider on their own (`time` expression). This flags
+ * expired sessions revoked and deletes their policy to keep sub-organizations
+ * tidy. A provider failure leaves the session untouched so the next run retries it.
  */
 export async function expireSessions(
   db: Db,

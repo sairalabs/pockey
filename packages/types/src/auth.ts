@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Base64String, ChainFamily, HexString } from './chains.js';
+import { KeySession } from './keys.js';
 import { EndUser } from './user.js';
 
 /**
@@ -28,6 +29,8 @@ export const AuthResponse = AuthTokens.extend({
   user: EndUser,
   /** True when this login created the end user. */
   isNewUser: z.boolean(),
+  /** Where the iframe session key acts at the key provider. */
+  keySession: KeySession,
 });
 export type AuthResponse = z.infer<typeof AuthResponse>;
 

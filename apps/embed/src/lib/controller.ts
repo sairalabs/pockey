@@ -10,7 +10,6 @@ import {
 } from '@pocketkey/types';
 import { appDisplayName, effectiveConfig } from './config';
 import { EmbedFailure, toEmbedError, toFailure, userRejected } from './errors';
-import { generateEphemeralKey, isMockBundle, type EphemeralKey } from './export-key';
 import { isKeyboardModality } from './modality';
 import type { RequestContext } from './messenger';
 import {
@@ -40,7 +39,6 @@ export interface ControllerDeps {
   isKeyboard?: () => boolean;
   successDelayMs?: number;
   resendSeconds?: number;
-  generateExportKey?: () => Promise<EphemeralKey>;
   now?: () => number;
 }
 
@@ -106,7 +104,6 @@ export function createController(deps: ControllerDeps): Controller {
   const successDelayMs = deps.successDelayMs ?? 600;
   const resendMs = (deps.resendSeconds ?? 30) * 1000;
   const now = deps.now ?? (() => Date.now());
-  const generateExportKey = deps.generateExportKey ?? generateEphemeralKey;
   const location = deps.location ?? { host: window.location.host, origin: window.location.origin };
 
   let config: PublicAppConfig | null = null;
@@ -444,16 +441,11 @@ export function createController(deps: ControllerDeps): Controller {
         if (task.settled || task.locked) return;
         task.locked = true;
         patch(key, 'export', (screen) => ({ ...screen, status: 'revealing', error: null }));
+        // Encrypted by the key provider to a one-time key of this iframe, decrypted
+        // here: the API only ever relays ciphertext (section 8.4).
         void (async (): Promise<string | null> => {
-          const ephemeral = await generateExportKey();
-          const { encryptedBundle } = await client.wallets.exportWallet(
-            wallet.id,
-            ephemeral.publicKey,
-          );
-          if (isMockBundle(encryptedBundle)) return null;
-          // TODO(T0.5): decrypt the Turnkey HPKE bundle with `ephemeral.privateKey`
-          // and return the key. Until then a real bundle cannot be shown.
-          throw new EmbedFailure('unsupported', 'Private key export is not available yet.');
+          const { privateKey } = await client.wallets.exportWallet(wallet.id);
+          return privateKey;
         })().then(
           (privateKey) => {
             task.locked = false;

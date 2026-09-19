@@ -1,6 +1,5 @@
 export {
   APP_ID_HEADER,
-  AUTH_COOKIES_HEADER,
   createPocketkey,
   DEFAULT_BASE_URL,
   isSessionActive,
@@ -10,7 +9,9 @@ export {
   type PocketkeyOptions,
   type RequestOptions,
   type SessionState,
+  type WalletLogin,
 } from './client.js';
+export type { KeyClient, LoginCredential, PasskeyAttestation } from './keys.js';
 export {
   isPocketkeyError,
   PocketkeyError,

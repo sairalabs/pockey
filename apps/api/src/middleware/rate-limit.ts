@@ -90,14 +90,13 @@ export const appRateLimit = createMiddleware<AppEnv>(async (c, next) => {
 });
 
 /**
- * Routes that cost an email, a key derivation or a signature verification.
- * Passkey and OAuth sign-ins are not here: they need a credential the attacker
- * does not have, and the `app` scope already caps them.
+ * Routes that cost an email, a key provider call or a signature verification.
  */
 const EXPENSIVE_AUTH_PATHS: readonly RegExp[] = [
-  /^\/v1\/auth\/email-otp\/send-verification-otp$/,
-  /^\/v1\/auth\/wallet\/nonce$/,
-  /^\/v1\/auth\/sign-in\/[^/]+$/,
+  /^\/v1\/auth\/email\/(start|verify|login)$/,
+  /^\/v1\/auth\/wallet\/(lookup|login)$/,
+  /^\/v1\/auth\/passkey\/login$/,
+  /^\/v1\/auth\/oauth\/exchange$/,
 ];
 
 export function isExpensiveAuthPath(path: string): boolean {

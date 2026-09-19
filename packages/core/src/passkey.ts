@@ -4,34 +4,15 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from '@simplewebauthn/browser';
-import { z } from 'zod';
 import { PocketkeyError } from './errors.js';
+import type { PasskeyAttestation } from './keys.js';
 
-/* Shape checks on what Better Auth hands out, typed as SimpleWebAuthn expects. */
-
-const CreationOptionsShape = z.looseObject({
-  challenge: z.string().min(1),
-  rp: z.looseObject({ name: z.string() }),
-  user: z.looseObject({ id: z.string().min(1), name: z.string() }),
-  pubKeyCredParams: z.array(z.looseObject({ alg: z.number(), type: z.literal('public-key') })),
-});
-
-const RequestOptionsShape = z.looseObject({
-  challenge: z.string().min(1),
-});
-
-export const RegistrationOptions = z.custom<PublicKeyCredentialCreationOptionsJSON>(
-  (value) => CreationOptionsShape.safeParse(value).success,
-  'Expected WebAuthn registration options',
-);
-
-export const AuthenticationOptions = z.custom<PublicKeyCredentialRequestOptionsJSON>(
-  (value) => RequestOptionsShape.safeParse(value).success,
-  'Expected WebAuthn authentication options',
-);
-
-/** Better Auth answers the stored passkey; only its id matters here. */
-export const RegisteredPasskey = z.looseObject({ id: z.string() });
+/**
+ * Passkey ceremonies, run locally (non-custodial since 2026-09-19): the key provider
+ * verifies them, not Pocketkey. Registration adds an authenticator to the user's
+ * sub-organization; login asserts over the exact login request, whose WebAuthn
+ * challenge is derived from its body.
+ */
 
 /** True in browsers exposing WebAuthn. Never throws, whatever the runtime. */
 export function isPasskeySupported(): boolean {
@@ -97,4 +78,83 @@ export async function runAuthentication(
   } catch (e) {
     throw mapWebAuthnError(e);
   }
+}
+
+const TIMEOUT_MS = 5 * 60_000;
+
+function base64url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+const TRANSPORTS: Record<string, string> = {
+  internal: 'AUTHENTICATOR_TRANSPORT_INTERNAL',
+  hybrid: 'AUTHENTICATOR_TRANSPORT_HYBRID',
+  usb: 'AUTHENTICATOR_TRANSPORT_USB',
+  nfc: 'AUTHENTICATOR_TRANSPORT_NFC',
+  ble: 'AUTHENTICATOR_TRANSPORT_BLE',
+};
+
+/**
+ * Creates a discoverable passkey bound to the embed host (`rpId`). Returns the
+ * attestation and the challenge the key provider needs to verify it.
+ */
+export async function createPasskey(input: {
+  rpId: string;
+  rpName: string;
+  userName: string;
+  run?: typeof runRegistration;
+}): Promise<{ challenge: string; attestation: PasskeyAttestation }> {
+  const challenge = base64url(crypto.getRandomValues(new Uint8Array(32)));
+  const response = await (input.run ?? runRegistration)({
+    challenge,
+    rp: { id: input.rpId, name: input.rpName },
+    user: {
+      id: base64url(crypto.getRandomValues(new Uint8Array(16))),
+      name: input.userName,
+      displayName: input.userName,
+    },
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+    attestation: 'none',
+    timeout: TIMEOUT_MS,
+  });
+  return {
+    challenge,
+    attestation: {
+      credentialId: response.id,
+      clientDataJson: response.response.clientDataJSON,
+      attestationObject: response.response.attestationObject,
+      transports: (response.response.transports ?? []).map(
+        (transport) => TRANSPORTS[transport] ?? 'AUTHENTICATOR_TRANSPORT_INTERNAL',
+      ),
+    },
+  };
+}
+
+/** Asserts with any passkey of this host over `challenge` (discoverable credentials). */
+export async function assertPasskey(input: {
+  rpId: string;
+  challenge: Uint8Array;
+  run?: typeof runAuthentication;
+}): Promise<{
+  credentialId: string;
+  clientDataJson: string;
+  authenticatorData: string;
+  signature: string;
+}> {
+  const response = await (input.run ?? runAuthentication)({
+    challenge: base64url(input.challenge),
+    rpId: input.rpId,
+    allowCredentials: [],
+    userVerification: 'preferred',
+    timeout: TIMEOUT_MS,
+  });
+  return {
+    credentialId: response.id,
+    clientDataJson: response.response.clientDataJSON,
+    authenticatorData: response.response.authenticatorData,
+    signature: response.response.signature,
+  };
 }

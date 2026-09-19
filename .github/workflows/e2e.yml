@@ -27,8 +27,7 @@ jobs:
       - name: Local secrets for wrangler dev
         working-directory: apps/api
         run: |
-          printf 'BETTER_AUTH_SECRET=%s\nMOCK_KEY_SEED=%s\n' \
-            "$(openssl rand -hex 32)" "$(openssl rand -hex 16)" > .dev.vars
+          printf 'BETTER_AUTH_SECRET=%s\n' "$(openssl rand -hex 32)" > .dev.vars
 
       - run: pnpm e2e
 

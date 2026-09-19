@@ -3,6 +3,7 @@ import { createApp } from './app.js';
 import { DAILY_CRON } from './cron.js';
 import { parseEnv, type Env } from './env.js';
 import { getKeyProvider } from './lib/key-provider.js';
+import { getMailer } from './lib/mailer.js';
 import { getPayments } from './lib/sponsor.js';
 import { meterRecentDays } from './services/billing.js';
 import { expireSessions } from './services/sessions.js';
@@ -31,7 +32,10 @@ export default {
         break;
       default:
         ctx.waitUntil(
-          Promise.all([aggregateUsage(db), expireSessions(db, getKeyProvider(config), new Date())]),
+          Promise.all([
+            aggregateUsage(db),
+            expireSessions(db, getKeyProvider(config, getMailer(config)), new Date()),
+          ]),
         );
         break;
     }

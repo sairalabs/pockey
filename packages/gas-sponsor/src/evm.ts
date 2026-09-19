@@ -1,4 +1,8 @@
-import type { SignHash } from '@pocketkey/chains-evm';
+import {
+  normalizeSignature,
+  type SerializedUserOperation,
+  type SignHash,
+} from '@pocketkey/chains-evm';
 import { EVM_CHAINS, type EvmChainId } from '@pocketkey/types';
 import { BaseError, isAddress, isHex, type Address, type Hex } from 'viem';
 import { GasSponsorError } from './errors.js';
@@ -15,13 +19,20 @@ export interface EvmCall {
   data: Hex;
 }
 
-/** The embedded wallet EOA. `signHash` is wired to the key provider by the caller. */
+/** The embedded wallet EOA that owns the Kernel account. */
 export interface EvmOwner {
   address: Address;
+}
+
+/** An owner that can sign right away (session signers). */
+export interface EvmSigningOwner extends EvmOwner {
   signHash: SignHash;
 }
 
-/** Gas fields of a prepared (sponsored, not yet signed) user operation. */
+/**
+ * A sponsored user operation, not yet signed. Serializable, so the owner can sign
+ * it in another request (the embed iframe signs `digest` after checking it).
+ */
 export interface PreparedUserOperation {
   sender: Address;
   callGasLimit: bigint;
@@ -30,8 +41,10 @@ export interface PreparedUserOperation {
   paymasterVerificationGasLimit: bigint;
   paymasterPostOpGasLimit: bigint;
   maxFeePerGas: bigint;
-  /** Signs this exact operation with the owner and submits it. Returns the user operation hash. */
-  send(): Promise<Hex>;
+  userOperation: SerializedUserOperation;
+  userOpHash: Hex;
+  /** EIP-191 hash of `userOpHash`: what the Kernel v3 owner signs. */
+  digest: Hex;
 }
 
 export interface UserOperationReceiptSummary {
@@ -48,6 +61,12 @@ export interface EvmSponsorClientsFactory {
     owner: EvmOwner;
     calls: readonly EvmCall[];
   }): Promise<PreparedUserOperation>;
+  /** Submits a prepared operation with the owner signature, as is. Returns the user operation hash. */
+  sendUserOperation(input: {
+    chainId: EvmChainId;
+    userOperation: SerializedUserOperation;
+    signature: Hex;
+  }): Promise<Hex>;
   waitForUserOperationReceipt(input: {
     chainId: EvmChainId;
     userOpHash: Hex;
@@ -59,7 +78,7 @@ export interface EvmGasSponsor {
   getSmartAccountAddress(input: { chainId: EvmChainId; owner: EvmOwner }): Promise<Address>;
   sendUserOperation(input: {
     chainId: EvmChainId;
-    owner: EvmOwner;
+    owner: EvmSigningOwner;
     calls: EvmCall[];
   }): Promise<{ userOpHash: Hex; smartAccountAddress: Address; maxGasCostWei: bigint }>;
   waitForReceipt(input: {
@@ -72,7 +91,17 @@ export interface EvmGasSponsor {
 export const DEFAULT_RECEIPT_TIMEOUT_MS = 60_000;
 
 /** Upper bound the paymaster can be charged for a prepared operation, in wei. */
-export function maxGasCostWei(op: Omit<PreparedUserOperation, 'send' | 'sender'>): bigint {
+export function maxGasCostWei(
+  op: Pick<
+    PreparedUserOperation,
+    | 'callGasLimit'
+    | 'verificationGasLimit'
+    | 'preVerificationGas'
+    | 'paymasterVerificationGasLimit'
+    | 'paymasterPostOpGasLimit'
+    | 'maxFeePerGas'
+  >,
+): bigint {
   return (
     (op.callGasLimit +
       op.verificationGasLimit +
@@ -160,7 +189,10 @@ export function createEvmGasSponsor(clients: EvmSponsorClientsFactory): EvmGasSp
         clients.prepareUserOperation({ chainId, owner, calls: normalized }),
       );
       const cost = maxGasCostWei(prepared);
-      const userOpHash = await wrap('User operation submission', () => prepared.send());
+      const signature = normalizeSignature(await owner.signHash(prepared.digest));
+      const userOpHash = await wrap('User operation submission', () =>
+        clients.sendUserOperation({ chainId, userOperation: prepared.userOperation, signature }),
+      );
       return { userOpHash, smartAccountAddress: prepared.sender, maxGasCostWei: cost };
     },
 

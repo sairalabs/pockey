@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AppId, EndUserId, IdentityId } from './ids.js';
+import { KeySession } from './keys.js';
 import { Wallet } from './wallet.js';
 
 export const IdentityType = z.enum(['email', 'google', 'apple', 'passkey', 'wallet']);
@@ -27,6 +28,7 @@ export type EndUser = z.infer<typeof EndUser>;
 /** Response of `GET /v1/me`. */
 export const MeResponse = z.object({
   user: EndUser,
+  keySession: KeySession.nullable(),
 });
 export type MeResponse = z.infer<typeof MeResponse>;
 

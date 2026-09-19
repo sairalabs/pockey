@@ -7,7 +7,7 @@ import {
   maxGasCostWei,
   redactSecrets,
   type EvmCall,
-  type EvmOwner,
+  type EvmSigningOwner,
   type EvmSponsorClientsFactory,
   type PreparedUserOperation,
 } from './evm.js';
@@ -19,7 +19,7 @@ import {
   pimlicoUrl,
 } from './pimlico.js';
 
-const OWNER: EvmOwner = {
+const OWNER: EvmSigningOwner = {
   address: '0x1111111111111111111111111111111111111111',
   signHash: async () => `0x${'00'.repeat(65)}`,
 };
@@ -36,14 +36,18 @@ const GAS = {
   maxFeePerGas: 2_000_000_000n,
 };
 
+const PREPARED: PreparedUserOperation = {
+  sender: SMART_ACCOUNT,
+  ...GAS,
+  userOperation: { sender: SMART_ACCOUNT, nonce: '0', callData: '0x' },
+  userOpHash: USER_OP_HASH,
+  digest: `0x${'ef'.repeat(32)}`,
+};
+
 function fakeFactory(overrides: Partial<EvmSponsorClientsFactory> = {}) {
   const send = vi.fn(async () => USER_OP_HASH);
   const getSmartAccountAddress = vi.fn(async () => SMART_ACCOUNT);
-  const prepareUserOperation = vi.fn(async (): Promise<PreparedUserOperation> => ({
-    sender: SMART_ACCOUNT,
-    ...GAS,
-    send,
-  }));
+  const prepareUserOperation = vi.fn(async (): Promise<PreparedUserOperation> => PREPARED);
   const waitForUserOperationReceipt = vi.fn(async () => ({
     transactionHash: TX_HASH,
     actualGasCost: 123_456_789n,
@@ -52,6 +56,7 @@ function fakeFactory(overrides: Partial<EvmSponsorClientsFactory> = {}) {
   const factory: EvmSponsorClientsFactory = {
     getSmartAccountAddress,
     prepareUserOperation,
+    sendUserOperation: send,
     waitForUserOperationReceipt,
     ...overrides,
   };
@@ -109,6 +114,12 @@ describe('createEvmGasSponsor', () => {
       ],
     });
     expect(send).toHaveBeenCalledTimes(1);
+    // The owner signs the digest, and the prepared operation is sent as is.
+    expect(send).toHaveBeenCalledWith({
+      chainId: 8453,
+      userOperation: PREPARED.userOperation,
+      signature: `0x${'00'.repeat(64)}1b`,
+    });
   });
 
   it('rejects invalid calls before touching the bundler', async () => {
@@ -201,13 +212,9 @@ describe('createEvmGasSponsor', () => {
 
   it('wraps send and receipt failures too', async () => {
     const { factory } = fakeFactory({
-      prepareUserOperation: async () => ({
-        sender: SMART_ACCOUNT,
-        ...GAS,
-        send: async () => {
-          throw new Error('replacement underpriced');
-        },
-      }),
+      sendUserOperation: async () => {
+        throw new Error('replacement underpriced');
+      },
       waitForUserOperationReceipt: async () => {
         throw new Error('Timed out while waiting for User Operation');
       },

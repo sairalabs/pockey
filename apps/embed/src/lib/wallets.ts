@@ -25,10 +25,7 @@ export interface SignInContext {
   statement: string;
 }
 
-export type WalletAuthClient = Pick<
-  PocketkeyClient['auth'],
-  'getWalletNonce' | 'loginWithSiwe' | 'loginWithSiws'
->;
+export type WalletAuthClient = Pick<PocketkeyClient['auth'], 'loginWithWallet'>;
 
 export interface WalletAdapter {
   discover(): Promise<WalletOption[]>;

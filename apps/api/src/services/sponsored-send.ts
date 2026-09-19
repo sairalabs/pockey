@@ -1,15 +1,15 @@
-import type { SignHash } from '@pocketkey/chains-evm';
-import { SolanaTransactionError, transactionId, type SignBytes } from '@pocketkey/chains-solana';
+import { normalizeSignature, type SignHash } from '@pocketkey/chains-evm';
+import { decodeTransaction, SolanaTransactionError, transactionId } from '@pocketkey/chains-solana';
 import { newId, usageEvents, wallets, type AppRow, type Db, type WalletRow } from '@pocketkey/db';
 import {
   chargedCents,
+  ENTRY_POINT,
   GasSponsorError,
   maxGasCostWei,
   nativeAssetFor,
   sponsorSolanaTransaction,
   validateSponsoredSolanaTransaction,
   type EvmSponsorClientsFactory,
-  type PreparedUserOperation,
   type PriceFeed,
 } from '@pocketkey/gas-sponsor';
 import { KeyProviderError, type KeyProvider } from '@pocketkey/key-provider';
@@ -18,7 +18,6 @@ import {
   type ChainFamily,
   type EvmTransactionRequest,
   type SolanaTransactionRequest,
-  type TransactionRequest,
 } from '@pocketkey/types';
 import { base64 } from '@scure/base';
 import { and, eq, isNull } from 'drizzle-orm';
@@ -39,6 +38,9 @@ import {
  * Sponsored sends (T4.4, T4.5), shared by `POST /v1/wallets/:id/send-transaction`
  * and session signing. The balance is charged before anything reaches the network;
  * any failure after the charge refunds it in full.
+ *
+ * The end user signs either in the iframe (a relayed request) or under a session
+ * policy (Pocketkey signer key); Pocketkey only ever signs as the app fee payer.
  */
 
 export interface SponsoredSendDeps {
@@ -47,20 +49,6 @@ export interface SponsoredSendDeps {
   rpc: RpcFactory;
   app: AppRow;
   sponsor: SponsorRuntime;
-}
-
-/** How the end user signs: interactively, or under a session policy. */
-export interface SponsoredUserSigners {
-  /** EVM: signs the user operation hash as the smart account owner. */
-  signHash: SignHash;
-  /** Solana: signs the transaction message bytes. */
-  signBytes: SignBytes;
-}
-
-export interface SponsoredSendTarget {
-  endUserId: string;
-  wallet: WalletRow;
-  signers: SponsoredUserSigners;
 }
 
 /**
@@ -152,32 +140,45 @@ async function recordSponsored(
   });
 }
 
-export async function sendSponsored(
-  deps: SponsoredSendDeps,
-  target: SponsoredSendTarget,
-  input: TransactionRequest,
-): Promise<{ hash: string }> {
-  assertSponsoringEnabled(deps.app, input.chain);
-  assertChainEnabled(deps.app, input);
-  if (target.wallet.chainFamily !== input.chain) {
+function assertWalletFamily(wallet: WalletRow, chain: ChainFamily): void {
+  if (wallet.chainFamily !== chain) {
     throw new ApiError(
       'bad_request',
-      `This is a ${target.wallet.chainFamily} wallet, the request targets ${input.chain}`,
+      `This is a ${wallet.chainFamily} wallet, the request targets ${chain}`,
     );
   }
-  return input.chain === 'solana'
-    ? sendSponsoredSolana(deps, target, input)
-    : sendSponsoredEvm(deps, target, input);
 }
 
-/* Solana: the app fee payer co-signs */
+/** Signature of `signer` in a base64 transaction (`shortvec(count) || signatures || message`). */
+export function signatureSlot(base64Tx: string, signer: string): Uint8Array {
+  const index = decodeTransaction(base64Tx).requiredSigners.indexOf(signer);
+  if (index < 0) throw new ApiError('internal', 'The key provider did not sign the transaction');
+  const bytes = base64.decode(base64Tx);
+  let offset = 0;
+  while (((bytes[offset] ?? 0) & 0x80) !== 0) offset++;
+  offset++;
+  const start = offset + index * 64;
+  return bytes.slice(start, start + 64);
+}
 
-async function sendSponsoredSolana(
+/* Solana: the user signs the whole transaction, then the app fee payer co-signs */
+
+export interface SponsoredSolanaTarget {
+  endUserId: string;
+  wallet: WalletRow;
+  /** Returns the transaction signed by the user (relayed request or session signer). */
+  signUserTransaction: (transaction: string) => Promise<string>;
+}
+
+export async function sendSponsoredSolana(
   deps: SponsoredSendDeps,
-  target: SponsoredSendTarget,
+  target: SponsoredSolanaTarget,
   input: SolanaTransactionRequest,
 ): Promise<{ hash: string }> {
   const { db, app } = deps;
+  assertSponsoringEnabled(app, 'solana');
+  assertChainEnabled(app, input);
+  assertWalletFamily(target.wallet, 'solana');
   const feePayer = await ensureSolanaFeePayer(deps, app);
 
   let feeLamports: bigint;
@@ -219,18 +220,22 @@ async function sendSponsoredSolana(
   try {
     let signedTransaction: string;
     try {
+      const userSigned = await target.signUserTransaction(input.transaction);
+      const userSignature = signatureSlot(userSigned, target.wallet.address);
       ({ signedTransaction } = await sponsorSolanaTransaction({
         transaction: input.transaction,
-        user: { address: target.wallet.address, signBytes: target.signers.signBytes },
+        // The gas sponsor checks this signature against the message before using it.
+        user: { address: target.wallet.address, signBytes: async () => userSignature },
         feePayer: {
           address: feePayer.address,
           signBytes: async (bytes) => {
             const { signature } = await deps.keyProvider
               .signRaw({
                 subOrgId: feePayer.keyProviderSubOrgId,
-                walletId: feePayer.keyProviderWalletId,
+                address: feePayer.address,
                 payload: bytes,
                 encoding: 'raw',
+                scope: { kind: 'system' },
               })
               .catch(providerFailure);
             return signature;
@@ -263,38 +268,74 @@ async function sendSponsoredSolana(
   return { hash };
 }
 
-/* EVM: ERC-4337 user operation from the Kernel smart account */
+/* EVM: ERC-4337 user operation from the Kernel smart account, in two steps */
 
-async function sendSponsoredEvm(
-  deps: SponsoredSendDeps,
-  target: SponsoredSendTarget,
-  input: EvmTransactionRequest,
-): Promise<{ hash: string }> {
-  const { db, app } = deps;
+/** A prepared, unsigned sponsored operation. JSON only: it waits in the database. */
+export interface PreparedSponsoredEvm {
+  chainId: EvmTransactionRequest['chainId'];
+  entryPointAddress: string;
+  sender: string;
+  userOperation: Record<string, string>;
+  userOpHash: string;
+  digest: string;
+  /** Upper bound of the paymaster cost, wei, decimal. */
+  maxGasCostWei: string;
+}
+
+function requireEvmFactory(deps: SponsoredSendDeps): EvmSponsorClientsFactory {
   const factory = deps.sponsor.evm;
   if (!factory) {
     throw new ApiError('bad_request', 'EVM gas sponsoring is not configured on this server');
   }
-  const { chainId } = input;
-  const owner = { address: target.wallet.address as Address, signHash: target.signers.signHash };
+  return factory;
+}
 
-  // Gas overrides and nonce of the request do not apply: the bundler and the
-  // paymaster set them on the user operation.
-  let prepared: PreparedUserOperation;
+export async function prepareSponsoredEvm(
+  deps: SponsoredSendDeps,
+  target: { wallet: WalletRow },
+  input: EvmTransactionRequest,
+): Promise<PreparedSponsoredEvm> {
+  assertSponsoringEnabled(deps.app, 'evm');
+  assertChainEnabled(deps.app, input);
+  assertWalletFamily(target.wallet, 'evm');
+  const factory = requireEvmFactory(deps);
   try {
-    prepared = await factory.prepareUserOperation({
-      chainId,
-      owner,
+    // Gas overrides and nonce of the request do not apply: the bundler and the
+    // paymaster set them on the user operation.
+    const prepared = await factory.prepareUserOperation({
+      chainId: input.chainId,
+      owner: { address: target.wallet.address as Address },
       calls: [{ to: input.to as Address, value: BigInt(input.value), data: input.data as Hex }],
     });
+    return {
+      chainId: input.chainId,
+      entryPointAddress: ENTRY_POINT.address,
+      sender: prepared.sender,
+      userOperation: prepared.userOperation,
+      userOpHash: prepared.userOpHash,
+      digest: prepared.digest,
+      maxGasCostWei: maxGasCostWei(prepared).toString(),
+    };
   } catch (error) {
     if (error instanceof ApiError || error instanceof GasSponsorError) sponsorFailure(error);
     throw new ApiError('bad_request', 'Could not prepare the sponsored user operation', {
       reason: redactReason(error),
     });
   }
+}
 
-  const maxCost = maxGasCostWei(prepared);
+/** Charges the maximum cost, gets the owner signature, submits, settles in the background. */
+export async function submitSponsoredEvm(
+  deps: SponsoredSendDeps,
+  target: { endUserId: string; wallet: WalletRow },
+  input: EvmTransactionRequest,
+  prepared: PreparedSponsoredEvm,
+  signDigest: SignHash,
+): Promise<{ hash: string }> {
+  const { db, app } = deps;
+  const factory = requireEvmFactory(deps);
+  const { chainId } = input;
+  const maxCost = BigInt(prepared.maxGasCostWei);
   const asset = nativeAssetFor({ family: 'evm', chainId });
   const usdPerUnit = await priceOf(deps.sponsor.prices, asset);
   const cents = chargedCents({ amount: maxCost, decimals: 18, usdPerUnit });
@@ -313,8 +354,12 @@ async function sendSponsoredEvm(
 
   let userOpHash: Hex;
   try {
-    // Signs this exact prepared operation (no second paymaster round trip) and submits it.
-    userOpHash = await prepared.send();
+    const signature = normalizeSignature(await signDigest(prepared.digest as Hex));
+    userOpHash = await factory.sendUserOperation({
+      chainId,
+      userOperation: prepared.userOperation,
+      signature,
+    });
   } catch (error) {
     await refundQuietly(db, app, handle, handle.cents, 'send_failed');
     if (error instanceof ApiError || error instanceof GasSponsorError) sponsorFailure(error);
@@ -338,11 +383,7 @@ async function sendSponsoredEvm(
   });
 
   deps.sponsor.waitUntil(
-    settleEvmCharge({ db, app, factory }, handle, {
-      chainId,
-      userOpHash,
-      usdPerUnit,
-    }),
+    settleEvmCharge({ db, app, factory }, handle, { chainId, userOpHash, usdPerUnit }),
   );
   return { hash: userOpHash };
 }

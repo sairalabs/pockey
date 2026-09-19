@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DEFAULT_ACCENT } from './color.js';
 import { EvmChainId, SolanaCluster } from './chains.js';
 import { AppId, DeveloperId, PublicAppId } from './ids.js';
+import { KeyProviderFacts } from './keys.js';
 
 export const LoginMethod = z.enum(['email', 'google', 'apple', 'passkey', 'wallet']);
 export type LoginMethod = z.infer<typeof LoginMethod>;
@@ -96,6 +97,8 @@ export const PublicAppConfig = z.object({
   embeddedWallets: z.object({ createOnLogin: CreateOnLogin }),
   /** Origins allowed to embed the iframe. Public by nature, the embed checks its parent against it. */
   allowedOrigins: z.array(z.string()),
+  /** Public facts the iframe needs to build key provider requests. */
+  keyProvider: KeyProviderFacts,
 });
 export type PublicAppConfig = z.infer<typeof PublicAppConfig>;
 

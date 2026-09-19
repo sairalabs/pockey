@@ -22,6 +22,11 @@ const serverConfig = PublicAppConfig.parse({
   appearance: { theme: 'dark', accent: '#0052ff' },
   embeddedWallets: { createOnLogin: 'all' },
   allowedOrigins: [HOST],
+  keyProvider: {
+    kind: 'emulator',
+    organizationId: 'org-parent',
+    signerPublicKey: '02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  },
 });
 
 const user = EndUser.parse({
