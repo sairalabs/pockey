@@ -32,12 +32,18 @@ Code map:
 - EVM and Solana transaction signing, Solana raw messages, export decrypted against Turnkey's production enclave key;
 - about one second of propagation after creating a wallet, user or policy (retried for 5 seconds).
 
+Email OTP, checked on 2026-10-04 with a real inbox (`otp-live.test.ts`, two steps, one code per run):
+
+- `INIT_OTP_V3` sends the code, `VERIFY_OTP_V2` accepts the bundle encrypted in the iframe to Turnkey's enclave, so our API never sees the code;
+- sign-up with the `signupV2` client signature, then the session key alone signs for the new user;
+- logging back into the same account with a fresh session key (`OTP_LOGIN_V2`, approved by that key's own signature), which then reads the wallet and creates a session policy the Pocketkey signer uses alone;
+- cost: one signature per signed payload. Creating a sub-organization, sending and verifying a code and logging in are not billed as signatures.
+
 ## Left to check by hand
 
-1. **Email OTP end to end with a real inbox**: sign up then log in once with `KEY_PROVIDER=turnkey`. Covers `INIT_OTP_V3`, `VERIFY_OTP_V2`, the sign-up client signature (`signupV2` usage) and `OTP_LOGIN_V2`, whose message formats come from `@turnkey/core` and are exercised only against the emulator so far.
-2. **Google sign-in** with real OAuth keys: Turnkey must accept our ID token (nonce = SHA-256 of the session public key) at sub-organization creation and in `OAUTH_LOGIN`.
-3. **Apple sign-in**: same, plus the Apple client secret (a signed JWT) in `APPLE_CLIENT_SECRET`.
-4. **The OTP email template**: app name and logo come from the app appearance. Sending from our own domain needs a verified domain at Turnkey.
+1. **Google sign-in** with real OAuth keys: Turnkey must accept our ID token (nonce = SHA-256 of the session public key) at sub-organization creation and in `OAUTH_LOGIN`.
+2. **Apple sign-in**: same, plus the Apple client secret (a signed JWT) in `APPLE_CLIENT_SECRET`.
+3. **The OTP email template**: app name and logo come from the app appearance. Sending from our own domain needs a verified domain at Turnkey.
 
 ## Questions for Turnkey
 
