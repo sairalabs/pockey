@@ -8,7 +8,7 @@ importers:
 
   .:
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:packages/config
       prettier:
@@ -29,28 +29,28 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.9.1
         version: 0.9.1(hono@4.13.8)(zod@4.6.5)
-      '@pocketkey/chains-evm':
+      '@pockey/chains-evm':
         specifier: workspace:*
         version: link:../../packages/chains-evm
-      '@pocketkey/chains-solana':
+      '@pockey/chains-solana':
         specifier: workspace:*
         version: link:../../packages/chains-solana
-      '@pocketkey/db':
+      '@pockey/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@pocketkey/gas-sponsor':
+      '@pockey/gas-sponsor':
         specifier: workspace:*
         version: link:../../packages/gas-sponsor
-      '@pocketkey/key-provider':
+      '@pockey/key-provider':
         specifier: workspace:*
         version: link:../../packages/key-provider
-      '@pocketkey/mailer':
+      '@pockey/mailer':
         specifier: workspace:*
         version: link:../../packages/mailer
-      '@pocketkey/payments':
+      '@pockey/payments':
         specifier: workspace:*
         version: link:../../packages/payments
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../../packages/types
       better-auth:
@@ -78,10 +78,10 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@pocketkey/core':
+      '@pockey/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@scure/base':
@@ -111,7 +111,7 @@ importers:
       '@base-ui-components/react':
         specifier: 1.0.0-rc.0
         version: 1.0.0-rc.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../../packages/types
       clsx:
@@ -139,7 +139,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@tailwindcss/postcss':
@@ -175,19 +175,19 @@ importers:
 
   apps/embed:
     dependencies:
-      '@pocketkey/chains-evm':
+      '@pockey/chains-evm':
         specifier: workspace:*
         version: link:../../packages/chains-evm
-      '@pocketkey/chains-solana':
+      '@pockey/chains-solana':
         specifier: workspace:*
         version: link:../../packages/chains-solana
-      '@pocketkey/core':
+      '@pockey/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@pocketkey/key-provider':
+      '@pockey/key-provider':
         specifier: workspace:*
         version: link:../../packages/key-provider
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../../packages/types
       '@scure/base':
@@ -212,7 +212,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@tailwindcss/vite':
@@ -257,10 +257,10 @@ importers:
 
   apps/playground:
     dependencies:
-      '@pocketkey/react':
+      '@pockey/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../../packages/types
       next:
@@ -276,7 +276,7 @@ importers:
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@tailwindcss/postcss':
@@ -312,7 +312,7 @@ importers:
 
   packages/chains-evm:
     dependencies:
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       viem:
@@ -322,7 +322,7 @@ importers:
       '@noble/curves':
         specifier: ^2.4.0
         version: 2.4.0
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -343,14 +343,14 @@ importers:
       '@noble/curves':
         specifier: ^2.4.0
         version: 2.4.0
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       '@scure/base':
         specifier: ^2.0.0
         version: 2.4.0
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       '@solana/web3.js':
@@ -392,7 +392,7 @@ importers:
 
   packages/core:
     dependencies:
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       '@simplewebauthn/browser':
@@ -402,7 +402,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -423,7 +423,7 @@ importers:
       '@paralleldrive/cuid2':
         specifier: ^3.3.0
         version: 3.3.0
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       drizzle-orm:
@@ -433,7 +433,7 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^5.20260915.1
         version: 5.20260915.1
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       drizzle-kit:
@@ -454,13 +454,13 @@ importers:
       '@noble/curves':
         specifier: ^2.4.0
         version: 2.4.0
-      '@pocketkey/chains-evm':
+      '@pockey/chains-evm':
         specifier: workspace:*
         version: link:../chains-evm
-      '@pocketkey/chains-solana':
+      '@pockey/chains-solana':
         specifier: workspace:*
         version: link:../chains-solana
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       '@scure/base':
@@ -473,7 +473,7 @@ importers:
         specifier: ^2.56.5
         version: 2.56.5(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.6.5)
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       '@solana/web3.js':
@@ -497,13 +497,13 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
-      '@pocketkey/chains-evm':
+      '@pockey/chains-evm':
         specifier: workspace:*
         version: link:../chains-evm
-      '@pocketkey/chains-solana':
+      '@pockey/chains-solana':
         specifier: workspace:*
         version: link:../chains-solana
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       '@scure/base':
@@ -519,7 +519,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -534,7 +534,7 @@ importers:
 
   packages/mailer:
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -549,11 +549,11 @@ importers:
 
   packages/payments:
     dependencies:
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:
@@ -568,7 +568,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@pocketkey/types':
+      '@pockey/types':
         specifier: workspace:*
         version: link:../types
       '@solana/wallet-standard-features':
@@ -584,7 +584,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       '@testing-library/react':
@@ -627,7 +627,7 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@pocketkey/config':
+      '@pockey/config':
         specifier: workspace:*
         version: link:../config
       eslint:

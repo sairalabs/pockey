@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp } from '@pocketkey/types';
+import type { AdminApp } from '@pockey/types';
 import { ArrowUpRight, LayoutGrid, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';

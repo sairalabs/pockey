@@ -1,6 +1,6 @@
-import type { AppRow, Db, DeveloperRow } from '@pocketkey/db';
-import type { KeyProvider } from '@pocketkey/key-provider';
-import type { Mailer } from '@pocketkey/mailer';
+import type { AppRow, Db, DeveloperRow } from '@pockey/db';
+import type { KeyProvider } from '@pockey/key-provider';
+import type { Mailer } from '@pockey/mailer';
 import type { Env, ParsedEnv } from './env.js';
 
 /** Variables set by middleware and available as `c.get(...)` / `c.var`. */

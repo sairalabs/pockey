@@ -1,9 +1,9 @@
-import { newId, refreshTokens, type AppRow, type Db } from '@pocketkey/db';
+import { newId, refreshTokens, type AppRow, type Db } from '@pockey/db';
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_TTL_SECONDS,
   type AuthTokens,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { and, eq, isNull } from 'drizzle-orm';
 import { sign, verify } from 'hono/jwt';
 import { z } from 'zod';
@@ -12,14 +12,14 @@ import { ApiError } from '../errors.js';
 import { deriveKeyHex, randomBytes, sha256Hex, toBase64Url } from '../lib/crypto.js';
 
 /**
- * Pocketkey sessions (T1.4, section 7.2).
+ * Pockey sessions (T1.4, section 7.2).
  * - Access: HS256 JWT, 15 minutes. Key derived from BETTER_AUTH_SECRET with HKDF,
  *   so no extra Wrangler secret is introduced.
  * - Refresh: opaque `pk_rt_<43 base64url>`, 30 days, SHA-256 in D1, one family per login.
  *   Using a rotated token again revokes the family (the token was stolen or replayed).
  */
 
-const ISSUER = 'pocketkey';
+const ISSUER = 'pockey';
 
 export const AccessClaims = z.object({
   iss: z.literal(ISSUER),
@@ -38,7 +38,7 @@ const keyCache = new Map<string, Promise<string>>();
 function accessKey(config: ParsedEnv): Promise<string> {
   let key = keyCache.get(config.BETTER_AUTH_SECRET);
   if (!key) {
-    key = deriveKeyHex(config.BETTER_AUTH_SECRET, 'pocketkey/access-token/v1');
+    key = deriveKeyHex(config.BETTER_AUTH_SECRET, 'pockey/access-token/v1');
     keyCache.set(config.BETTER_AUTH_SECRET, key);
   }
   return key;

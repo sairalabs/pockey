@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/gas-sponsor",
+  "name": "@pockey/gas-sponsor",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,15 +15,15 @@
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",
-    "@pocketkey/chains-evm": "workspace:*",
-    "@pocketkey/chains-solana": "workspace:*",
-    "@pocketkey/types": "workspace:*",
+    "@pockey/chains-evm": "workspace:*",
+    "@pockey/chains-solana": "workspace:*",
+    "@pockey/types": "workspace:*",
     "@scure/base": "^2.0.0",
     "permissionless": "^0.4.1",
     "viem": "^2.56.5"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "@solana/web3.js": "^1.99.0",
     "eslint": "^9.39.0",
     "typescript": "5.9.3",

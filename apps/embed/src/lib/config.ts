@@ -1,4 +1,4 @@
-import type { Appearance, LoginMethod, PublicAppConfig } from '@pocketkey/types';
+import type { Appearance, LoginMethod, PublicAppConfig } from '@pockey/types';
 import { isRecord } from './guards';
 
 /**
@@ -13,7 +13,7 @@ export function narrowLoginMethods(
   if (!host) return [...server];
   const narrowed = server.filter((method) => host.includes(method));
   if (narrowed.length === 0) {
-    console.warn('[pocketkey] none of the host login methods are enabled for this app');
+    console.warn('[pockey] none of the host login methods are enabled for this app');
     return [...server];
   }
   return narrowed;

@@ -1,12 +1,12 @@
-import type { KeyClient } from '@pocketkey/core';
+import type { KeyClient } from '@pockey/core';
 import {
   createTurnkeyKeyClient,
   memoryKeyStore,
   type KeyStore,
   type StoredKeys,
-} from '@pocketkey/key-provider/client';
-import { decryptExport, encryptOtp } from '@pocketkey/key-provider/client/crypto';
-import type { PublicAppConfig } from '@pocketkey/types';
+} from '@pockey/key-provider/client';
+import { decryptExport, encryptOtp } from '@pockey/key-provider/client/crypto';
+import type { PublicAppConfig } from '@pockey/types';
 
 /**
  * The user's key session, held by this iframe (non-custodial since 2026-09-19).
@@ -16,7 +16,7 @@ import type { PublicAppConfig } from '@pocketkey/types';
  * codes are encrypted to Turnkey's enclave here, and exported keys decrypted here.
  */
 
-const DB_NAME = 'pocketkey-keys';
+const DB_NAME = 'pockey-keys';
 const STORE = 'keys';
 
 function openDb(): Promise<IDBDatabase> {
@@ -85,7 +85,7 @@ export function indexedDbKeyStore(appId: string): KeyStore {
  * always pins Turnkey's production key, whatever the API claims.
  */
 export const EMULATOR_ALLOWED =
-  import.meta.env.DEV || import.meta.env.VITE_POCKETKEY_ALLOW_EMULATOR === 'true';
+  import.meta.env.DEV || import.meta.env.VITE_POCKEY_ALLOW_EMULATOR === 'true';
 
 export function createEmbedKeyClient(
   appId: string,

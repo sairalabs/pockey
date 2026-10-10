@@ -23,7 +23,7 @@ export const STRIPE_SUBSCRIPTIONS_URL = 'https://api.stripe.com/v1/subscriptions
 export const STRIPE_METER_EVENTS_URL = 'https://api.stripe.com/v1/billing/meter_events';
 export const STRIPE_BILLING_PORTAL_SESSIONS_URL =
   'https://api.stripe.com/v1/billing_portal/sessions';
-export const TOP_UP_PRODUCT_NAME = 'Pocketkey gas sponsoring credit';
+export const TOP_UP_PRODUCT_NAME = 'Pockey gas sponsoring credit';
 
 const encoder = new TextEncoder();
 
@@ -79,7 +79,7 @@ interface StripeResponse {
  * id or meter identifier ever reaches a Stripe header in clear text.
  */
 export function stripeIdempotencyKey(scope: string, value: string): string {
-  return `pocketkey-${scope}-${toHex(sha256(encoder.encode(`${scope}:${value}`)))}`;
+  return `pockey-${scope}-${toHex(sha256(encoder.encode(`${scope}:${value}`)))}`;
 }
 
 /** The status is returned as is: the 404 and deleted cases drive the create fallbacks. */

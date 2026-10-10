@@ -1,9 +1,9 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
-import type { EvmRpc } from '@pocketkey/chains-evm';
-import type { SolanaRpc } from '@pocketkey/chains-solana';
-import { usageEvents } from '@pocketkey/db';
-import { buildSignRaw, buildSignTransaction } from '@pocketkey/key-provider/client';
-import { decryptExport } from '@pocketkey/key-provider/client/crypto';
+import type { EvmRpc } from '@pockey/chains-evm';
+import type { SolanaRpc } from '@pockey/chains-solana';
+import { usageEvents } from '@pockey/db';
+import { buildSignRaw, buildSignTransaction } from '@pockey/key-provider/client';
+import { decryptExport } from '@pockey/key-provider/client/crypto';
 import {
   ApiErrorBody,
   ExportWalletOutput,
@@ -13,7 +13,7 @@ import {
   Wallet,
   WalletList,
   type AuthResponse,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base58, base64 } from '@scure/base';
 import { and, eq } from 'drizzle-orm';
 import {
@@ -187,14 +187,14 @@ describe('EVM signing (T2.1 + T2.3)', () => {
   it('signs a personal message that viem verifies against the wallet address', async () => {
     const res = await post(
       `/v1/wallets/${evm.id}/sign-message`,
-      await device.signMessageBody(evm, { chain: 'evm', message: 'gm pocketkey' }),
+      await device.signMessageBody(evm, { chain: 'evm', message: 'gm pockey' }),
     );
     expect(res.status, await res.clone().text()).toBe(200);
     const { signature } = SignMessageOutput.parse(await res.json());
     expect(
       await verifyMessage({
         address: evm.address as Address,
-        message: 'gm pocketkey',
+        message: 'gm pockey',
         signature: signature as Hex,
       }),
     ).toBe(true);
@@ -216,7 +216,7 @@ describe('EVM signing (T2.1 + T2.3)', () => {
   it('signs EIP-712 typed data', async () => {
     const typed = {
       domain: {
-        name: 'Pocketkey',
+        name: 'Pockey',
         version: '1',
         chainId: 8453,
         verifyingContract: WETH,
@@ -668,7 +668,7 @@ describe('ownership and export', () => {
 
   it('requires a signed-in user', async () => {
     const res = await request('/v1/wallets', {
-      headers: { 'X-Pocketkey-App-Id': 'pk_app_seed00000000000000000001' },
+      headers: { 'X-Pockey-App-Id': 'pk_app_seed00000000000000000001' },
     });
     expect(res.status).toBe(401);
   });

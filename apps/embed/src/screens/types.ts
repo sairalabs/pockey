@@ -1,4 +1,4 @@
-import type { LoginMethod } from '@pocketkey/types';
+import type { LoginMethod } from '@pockey/types';
 import type { ScreenActions, ScreenName, ScreenOf } from '../lib/state';
 
 export interface AppInfo {

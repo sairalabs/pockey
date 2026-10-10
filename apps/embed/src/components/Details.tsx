@@ -1,4 +1,4 @@
-import type { Wallet } from '@pocketkey/types';
+import type { Wallet } from '@pockey/types';
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 import { formatAddress } from '../lib/format';

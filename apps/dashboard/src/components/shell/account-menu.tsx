@@ -1,6 +1,6 @@
 'use client';
 
-import type { Developer } from '@pocketkey/types';
+import type { Developer } from '@pockey/types';
 import { Check, Copy, LogOut, UserCog } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

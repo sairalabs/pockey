@@ -22,10 +22,10 @@ import type {
   StandardEventsNames,
   StandardEventsOnMethod,
 } from '@wallet-standard/features';
-import type { SolanaCluster } from '@pocketkey/types';
-import type { PocketkeyClient } from './client.js';
+import type { SolanaCluster } from '@pockey/types';
+import type { PockeyClient } from './client.js';
 import { base58ToBytes, base64ToBytes, bytesToBase64 } from './encoding.js';
-import { PocketkeyEmbedError } from './errors.js';
+import { PockeyEmbedError } from './errors.js';
 
 /** Wallet Standard chain ids, see @solana/wallet-standard-chains. */
 export const SOLANA_CHAIN_BY_CLUSTER = {
@@ -41,7 +41,7 @@ const CLUSTER_BY_CHAIN: Partial<Record<string, SolanaCluster>> = {
 const ICON_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="#d2042d"/><circle cx="40" cy="48" r="16" fill="none" stroke="#fff" stroke-width="8"/><path d="M56 48h24M70 48v12" stroke="#fff" stroke-width="8" stroke-linecap="round"/></svg>';
 
-export const POCKETKEY_WALLET_ICON: `data:image/svg+xml;base64,${string}` = `data:image/svg+xml;base64,${btoa(ICON_SVG)}`;
+export const POCKEY_WALLET_ICON: `data:image/svg+xml;base64,${string}` = `data:image/svg+xml;base64,${btoa(ICON_SVG)}`;
 
 const ACCOUNT_FEATURES = [
   'solana:signMessage',
@@ -49,20 +49,20 @@ const ACCOUNT_FEATURES = [
   'solana:signAndSendTransaction',
 ] as const;
 
-type PocketkeyWalletFeatures = StandardConnectFeature &
+type PockeyWalletFeatures = StandardConnectFeature &
   StandardDisconnectFeature &
   StandardEventsFeature &
   SolanaSignMessageFeature &
   SolanaSignTransactionFeature &
   SolanaSignAndSendTransactionFeature;
 
-export interface PocketkeySolanaWallet extends Wallet {
-  readonly features: PocketkeyWalletFeatures;
+export interface PockeySolanaWallet extends Wallet {
+  readonly features: PockeyWalletFeatures;
   /** Stops listening to the client. Call after unregistering. */
   dispose(): void;
 }
 
-export function createSolanaWallet(client: PocketkeyClient): PocketkeySolanaWallet {
+export function createSolanaWallet(client: PockeyClient): PockeySolanaWallet {
   const listeners: { [E in StandardEventsNames]?: Set<StandardEventsListeners[E]> } = {};
   let disconnected = false;
   let cachedAccount: { key: string; account: WalletAccount } | null = null;
@@ -109,10 +109,10 @@ export function createSolanaWallet(client: PocketkeyClient): PocketkeySolanaWall
   const requireAccount = (account: WalletAccount): string => {
     const current = client.getWallet('solana');
     if (!current || disconnected) {
-      throw new PocketkeyEmbedError('not_authenticated', 'The Pocketkey wallet is not connected.');
+      throw new PockeyEmbedError('not_authenticated', 'The Pockey wallet is not connected.');
     }
     if (account.address !== current.address) {
-      throw new PocketkeyEmbedError('wallet_not_found', `Unknown account ${account.address}.`);
+      throw new PockeyEmbedError('wallet_not_found', `Unknown account ${account.address}.`);
     }
     return current.address;
   };
@@ -120,7 +120,7 @@ export function createSolanaWallet(client: PocketkeyClient): PocketkeySolanaWall
   const clusterFor = (chain: IdentifierString | undefined): SolanaCluster | undefined => {
     if (chain === undefined) return undefined;
     const cluster = CLUSTER_BY_CHAIN[chain];
-    if (!cluster) throw new PocketkeyEmbedError('unsupported', `Unsupported chain ${chain}.`);
+    if (!cluster) throw new PockeyEmbedError('unsupported', `Unsupported chain ${chain}.`);
     return cluster;
   };
 
@@ -198,7 +198,7 @@ export function createSolanaWallet(client: PocketkeyClient): PocketkeySolanaWall
     return outputs;
   };
 
-  const features: PocketkeyWalletFeatures = {
+  const features: PockeyWalletFeatures = {
     'standard:connect': { version: '1.0.0', connect },
     'standard:disconnect': { version: '1.0.0', disconnect },
     'standard:events': { version: '1.0.0', on },
@@ -217,8 +217,8 @@ export function createSolanaWallet(client: PocketkeyClient): PocketkeySolanaWall
 
   return {
     version: '1.0.0',
-    name: 'Pocketkey',
-    icon: POCKETKEY_WALLET_ICON,
+    name: 'Pockey',
+    icon: POCKEY_WALLET_ICON,
     get chains() {
       return chains();
     },

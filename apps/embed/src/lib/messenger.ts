@@ -6,7 +6,7 @@ import {
   type EmbedMessage,
   type EndUser,
   type PublicAppConfig,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { toEmbedError } from './errors';
 import { isRecord } from './guards';
 
@@ -60,7 +60,7 @@ export function createMessenger(deps: MessengerDeps): Messenger {
       deps.parent.postMessage(message, targetOrigin);
     } catch (error) {
       // A malformed origin throws a SyntaxError; nothing to deliver then.
-      console.error('[pocketkey] postMessage failed', error);
+      console.error('[pockey] postMessage failed', error);
     }
   };
 
@@ -90,7 +90,7 @@ export function createMessenger(deps: MessengerDeps): Messenger {
       if (typeof requestId === 'string' && requestId.length > 0 && requestId.length <= 64) {
         respond(event.origin, requestId, {
           ok: false,
-          error: { code: 'invalid_message', message: 'Malformed Pocketkey request.' },
+          error: { code: 'invalid_message', message: 'Malformed Pockey request.' },
         });
       }
       return;

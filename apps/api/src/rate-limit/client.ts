@@ -21,7 +21,7 @@ export interface RateLimiterNamespace {
 }
 
 /** Any absolute URL works: the request never leaves the object. */
-const RATE_LIMITER_URL = 'https://rate-limiter.pocketkey.internal/consume';
+const RATE_LIMITER_URL = 'https://rate-limiter.pockey.internal/consume';
 
 export function createDurableRateLimiter(namespace: RateLimiterNamespace): RateLimiterClient {
   return {

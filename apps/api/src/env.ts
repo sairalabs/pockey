@@ -28,7 +28,7 @@ export interface Env {
   /** Dashboard sign-in with GitHub (T5.1). Without both, only email OTP is offered. */
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
-  /* Turnkey (KEY_PROVIDER=turnkey). The API key is Pocketkey's parent credential. */
+  /* Turnkey (KEY_PROVIDER=turnkey). The API key is Pockey's parent credential. */
   TURNKEY_API_BASE_URL?: string;
   TURNKEY_ORG_ID?: string;
   TURNKEY_API_PUBLIC_KEY?: string;
@@ -67,7 +67,7 @@ export const EnvSchema = z
     EMBED_ORIGIN: z.url().default('http://localhost:5174'),
     DASHBOARD_ORIGIN: z.url().default('http://localhost:3800'),
     MAILER: z.enum(['console', 'memory', 'resend']).default('console'),
-    MAIL_FROM: z.string().default('Pocketkey <auth@pocketkey.dev>'),
+    MAIL_FROM: z.string().default('Pockey <auth@pockey.xyz>'),
     BETTER_AUTH_SECRET: z
       .string({ error: 'BETTER_AUTH_SECRET is required (wrangler secret or .dev.vars)' })
       .min(32, 'BETTER_AUTH_SECRET must be at least 32 characters'),

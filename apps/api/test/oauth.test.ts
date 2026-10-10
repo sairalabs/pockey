@@ -1,6 +1,6 @@
-import { authChallenges } from '@pocketkey/db';
-import { generateSessionKey, oidcNonce } from '@pocketkey/key-provider/client';
-import { AuthResponse } from '@pocketkey/types';
+import { authChallenges } from '@pockey/db';
+import { generateSessionKey, oidcNonce } from '@pockey/key-provider/client';
+import { AuthResponse } from '@pockey/types';
 import { base64urlnopad } from '@scure/base';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';

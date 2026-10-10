@@ -6,7 +6,7 @@ import {
   type SignMessageInput,
   type SigningPolicy,
   type SolanaCluster,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
 export function truncateMiddle(value: string, head: number, tail: number): string {
   if (value.length <= head + tail + 3) return value;

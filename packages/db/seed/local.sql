@@ -1,7 +1,7 @@
 -- Local fixture, mirrors packages/db/src/seed.ts (keep both in sync).
--- Apply with: pnpm --filter @pocketkey/api db:seed
+-- Apply with: pnpm --filter @pockey/api db:seed
 INSERT OR IGNORE INTO developers (id, email, name)
-VALUES ('dev_seed00000000000000000001', 'dev@pocketkey.local', 'Local Developer');
+VALUES ('dev_seed00000000000000000001', 'dev@pockey.local', 'Local Developer');
 
 INSERT INTO apps (id, public_id, developer_id, name, slug, allowed_origins, config)
 VALUES (

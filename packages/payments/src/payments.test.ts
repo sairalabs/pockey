@@ -86,8 +86,8 @@ describe('createTopUpCheckout (Stripe)', () => {
     const input = {
       appId: 'app_1',
       amountCents: 2500,
-      successUrl: 'https://dash.pocketkey.dev/apps/app_1/sponsoring?ok=1',
-      cancelUrl: 'https://dash.pocketkey.dev/apps/app_1/sponsoring',
+      successUrl: 'https://dash.pockey.xyz/apps/app_1/sponsoring?ok=1',
+      cancelUrl: 'https://dash.pockey.xyz/apps/app_1/sponsoring',
     };
 
     await expect(
@@ -123,7 +123,7 @@ describe('createTopUpCheckout (Stripe)', () => {
       mode: 'payment',
       'line_items[0][price_data][currency]': 'usd',
       'line_items[0][price_data][unit_amount]': '2500',
-      'line_items[0][price_data][product_data][name]': 'Pocketkey gas sponsoring credit',
+      'line_items[0][price_data][product_data][name]': 'Pockey gas sponsoring credit',
       'line_items[0][quantity]': '1',
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
@@ -316,7 +316,7 @@ describe('parseWebhook (Stripe)', () => {
     ).toBe('invalid_payload');
   });
 
-  it('ignores unknown events and paid sessions without Pocketkey metadata', async () => {
+  it('ignores unknown events and paid sessions without Pockey metadata', async () => {
     const unknown = JSON.stringify({ id: 'evt_9', type: 'invoice.paid', data: { object: {} } });
     await expect(
       stripe().parseWebhook({ payload: unknown, signatureHeader: await signed(unknown), now: NOW }),

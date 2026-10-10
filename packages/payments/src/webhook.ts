@@ -165,7 +165,7 @@ function toPaymentEvent(event: unknown): PaymentEvent {
   if (session.payment_status !== 'paid') return { type: 'ignored', eventId, providerType };
 
   const metadata = isRecord(session.metadata) ? session.metadata : {};
-  // Sessions created outside Pocketkey top-ups (other products on the same account).
+  // Sessions created outside Pockey top-ups (other products on the same account).
   if (metadata.appId === undefined) return { type: 'ignored', eventId, providerType };
 
   const appId = metadata.appId;

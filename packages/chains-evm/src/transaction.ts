@@ -11,7 +11,7 @@ import {
   type Hex,
   type TransactionSerializableEIP1559,
 } from 'viem';
-import type { EvmChainId, EvmTransactionRequest } from '@pocketkey/types';
+import type { EvmChainId, EvmTransactionRequest } from '@pockey/types';
 import { EVM_VIEM_CHAINS } from './chains.js';
 import { normalizeSignature, type SignHash } from './signing.js';
 

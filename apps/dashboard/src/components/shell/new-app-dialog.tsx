@@ -1,6 +1,6 @@
 'use client';
 
-import { CreateAppInput, type AdminApp } from '@pocketkey/types';
+import { CreateAppInput, type AdminApp } from '@pockey/types';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPocketkey, type PocketkeyClient } from './client.js';
-import { isPocketkeyError } from './errors.js';
+import { createPockey, type PockeyClient } from './client.js';
+import { isPockeyError } from './errors.js';
 import { assertPasskey, createPasskey } from './passkey.js';
 import { memoryStorage } from './storage.js';
 import {
@@ -37,7 +37,7 @@ const assertion = {
 
 let api: FakeApi;
 let keys: FakeKeys;
-let pk: PocketkeyClient;
+let pk: PockeyClient;
 
 function stubBrowser() {
   vi.stubGlobal('PublicKeyCredential', function PublicKeyCredential() {
@@ -56,7 +56,7 @@ beforeEach(() => {
   api = fakeApi();
   keys = fakeKeys();
   api.on('GET', `/v1/apps/${APP_ID}/config`, () => json(appConfig()));
-  pk = createPocketkey({
+  pk = createPockey({
     appId: APP_ID,
     baseUrl: BASE_URL,
     storage: memoryStorage(),
@@ -76,7 +76,7 @@ describe('passkey login', () => {
   it('reports unsupported in Node without throwing', async () => {
     expect(pk.auth.passkey.isSupported()).toBe(false);
     const login = await pk.auth.passkey.login().catch((e: unknown) => e);
-    expect(isPocketkeyError(login) && login.code).toBe('unsupported');
+    expect(isPockeyError(login) && login.code).toBe('unsupported');
     expect(api.calls).toHaveLength(0);
   });
 
@@ -112,14 +112,14 @@ describe('passkey login', () => {
     webauthn.startAuthentication.mockRejectedValue(denied);
 
     const error = await pk.auth.passkey.login().catch((e: unknown) => e);
-    expect(isPocketkeyError(error) && error.code).toBe('user_rejected');
+    expect(isPockeyError(error) && error.code).toBe('user_rejected');
     expect(api.count('POST', '/v1/auth/passkey/login')).toBe(0);
     expect(keys.methods()).not.toContain('activate');
   });
 
   it('needs a relying party id outside a page', async () => {
     stubBrowser();
-    const noRp = createPocketkey({
+    const noRp = createPockey({
       appId: APP_ID,
       baseUrl: BASE_URL,
       storage: memoryStorage(),
@@ -127,7 +127,7 @@ describe('passkey login', () => {
       keys: keys.keys,
     });
     const error = await noRp.auth.passkey.login().catch((e: unknown) => e);
-    expect(isPocketkeyError(error) && error.code).toBe('unsupported');
+    expect(isPockeyError(error) && error.code).toBe('unsupported');
     expect(webauthn.startAuthentication).not.toHaveBeenCalled();
   });
 });
@@ -183,7 +183,7 @@ describe('passkey registration', () => {
   it('defaults the name to the app name and refuses when logged out', async () => {
     stubBrowser();
     const loggedOut = await pk.auth.passkey.register().catch((e: unknown) => e);
-    expect(isPocketkeyError(loggedOut) && loggedOut.code).toBe('not_authenticated');
+    expect(isPockeyError(loggedOut) && loggedOut.code).toBe('not_authenticated');
 
     await signIn();
     api.on('POST', '/v1/auth/passkey/register', () => json(endUser()));
@@ -205,7 +205,7 @@ describe('passkey registration', () => {
     denied.name = 'NotAllowedError';
     webauthn.startRegistration.mockRejectedValue(denied);
     const error = await pk.auth.passkey.register().catch((e: unknown) => e);
-    expect(isPocketkeyError(error) && error.code).toBe('user_rejected');
+    expect(isPockeyError(error) && error.code).toBe('user_rejected');
     expect(keys.methods()).not.toContain('addPasskey');
     expect(api.count('POST', '/v1/auth/passkey/register')).toBe(0);
   });

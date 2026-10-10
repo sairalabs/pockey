@@ -92,7 +92,7 @@ describe('SendTransactionInput', () => {
 describe('embed protocol', () => {
   it('parses a tagged request and rejects the wrong version or tag', () => {
     const ok = HostRequest.safeParse({
-      source: 'pocketkey',
+      source: 'pockey',
       pk: 1,
       requestId: 'r1',
       type: 'signMessage',
@@ -101,7 +101,7 @@ describe('embed protocol', () => {
     });
     expect(ok.success).toBe(true);
     expect(
-      HostRequest.safeParse({ source: 'pocketkey', pk: 2, requestId: 'r1', type: 'logout' })
+      HostRequest.safeParse({ source: 'pockey', pk: 2, requestId: 'r1', type: 'logout' })
         .success,
     ).toBe(false);
     expect(

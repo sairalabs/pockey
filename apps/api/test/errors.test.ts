@@ -1,4 +1,4 @@
-import { ApiErrorBody } from '@pocketkey/types';
+import { ApiErrorBody } from '@pockey/types';
 import { env } from 'cloudflare:workers';
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';

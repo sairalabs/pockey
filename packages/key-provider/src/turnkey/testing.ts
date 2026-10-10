@@ -2,7 +2,7 @@ import { hexToBytes } from '@noble/hashes/utils.js';
 import { hpkeEncrypt, type EnclaveBundle } from './hpke.js';
 
 /**
- * Test helpers (`@pocketkey/key-provider/testing`), usable in the Workers pool.
+ * Test helpers (`@pockey/key-provider/testing`), usable in the Workers pool.
  * They skip the enclave signature check the iframe performs: tests only.
  */
 

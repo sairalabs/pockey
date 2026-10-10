@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { PocketkeyError, type PocketkeyErrorCode } from './errors.js';
+import { PockeyError, type PockeyErrorCode } from './errors.js';
 
 export const OAUTH_POPUP_TIMEOUT_MS = 5 * 60_000;
 const POLL_INTERVAL_MS = 500;
 
 /** What `/v1/auth/oauth/:appId/complete` posts to `window.opener`. */
 const OAuthMessage = z.union([
-  z.object({ type: z.literal('pocketkey:oauth'), code: z.string().min(16).max(128) }),
-  z.object({ type: z.literal('pocketkey:oauth'), error: z.string().min(1).max(64) }),
+  z.object({ type: z.literal('pockey:oauth'), code: z.string().min(16).max(128) }),
+  z.object({ type: z.literal('pockey:oauth'), error: z.string().min(1).max(64) }),
 ]);
 
 /** The slice of `Window` the popup flow needs, so tests can fake it. */
@@ -58,13 +58,13 @@ function popupFeatures(): string {
 /** Opens the popup synchronously. Returns null when the browser blocked it. */
 export function openPopup(host: PopupHost, url: string): PopupWindow | null {
   try {
-    return host.open(url, 'pocketkey-oauth', popupFeatures());
+    return host.open(url, 'pockey-oauth', popupFeatures());
   } catch {
     return null;
   }
 }
 
-function providerErrorCode(error: string): PocketkeyErrorCode {
+function providerErrorCode(error: string): PockeyErrorCode {
   if (error === 'access_denied') return 'user_rejected';
   if (error === 'unknown_app') return 'app_id_invalid';
   return 'unauthorized';
@@ -100,7 +100,7 @@ export function waitForOAuthCode(
       }
       const error = parsed.data.error;
       reject(
-        new PocketkeyError(providerErrorCode(error), `OAuth sign-in failed: ${error}`, {
+        new PockeyError(providerErrorCode(error), `OAuth sign-in failed: ${error}`, {
           details: { providerError: error },
         }),
       );
@@ -118,7 +118,7 @@ export function waitForOAuthCode(
       closedPolls += 1;
       if (closedPolls < 2) return;
       cleanup();
-      reject(new PocketkeyError('user_rejected', 'The sign-in popup was closed'));
+      reject(new PockeyError('user_rejected', 'The sign-in popup was closed'));
     }, POLL_INTERVAL_MS);
 
     const timer = setTimeout(() => {
@@ -129,7 +129,7 @@ export function waitForOAuthCode(
         // Cross-origin close can throw in old browsers.
       }
       reject(
-        new PocketkeyError('user_rejected', 'The sign-in popup timed out', {
+        new PockeyError('user_rejected', 'The sign-in popup timed out', {
           details: { reason: 'timeout' },
         }),
       );

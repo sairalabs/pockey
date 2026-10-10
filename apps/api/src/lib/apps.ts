@@ -1,4 +1,4 @@
-import { apps, type AppRow, type Db } from '@pocketkey/db';
+import { apps, type AppRow, type Db } from '@pockey/db';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
  */
 
 export const APP_CACHE_TTL_SECONDS = 60;
-const CACHE_ORIGIN = 'https://cache.pocketkey.internal';
+const CACHE_ORIGIN = 'https://cache.pockey.internal';
 
 const cacheKey = (publicId: string) => new Request(`${CACHE_ORIGIN}/apps/${publicId}`);
 

@@ -28,10 +28,10 @@ function logEntry(page: Page, label: string, ok: boolean) {
     .first();
 }
 
-const embed = (page: Page) => page.frameLocator('iframe[title="Pocketkey"]');
+const embed = (page: Page) => page.frameLocator('iframe[title="Pockey"]');
 
 test('email login, embedded wallets, signature, rejection, reload and logout', async ({ page }) => {
-  const email = `e2e-${Date.now()}@pocketkey.local`;
+  const email = `e2e-${Date.now()}@pockey.local`;
 
   await page.goto('/');
   await expect(page.getByTestId('status')).toHaveText('Signed out');
@@ -45,7 +45,7 @@ test('email login, embedded wallets, signature, rejection, reload and logout', a
   await page.keyboard.type(code);
 
   await expect(page.getByTestId('status')).toHaveText('Signed in');
-  await expect(page.locator('iframe[title="Pocketkey"]')).toHaveCSS('visibility', 'hidden');
+  await expect(page.locator('iframe[title="Pockey"]')).toHaveCSS('visibility', 'hidden');
   await expect(page.getByTestId('user-identity')).toContainText(email);
 
   const evmAddress = (await page.getByTestId('evm-address').textContent()) ?? '';
@@ -55,7 +55,7 @@ test('email login, embedded wallets, signature, rejection, reload and logout', a
   // Sign a message: the embed asks for confirmation, the host gets a valid signature.
   await page.getByTestId('sign-evm').click();
   await expect(embed(page).getByTestId('pk-confirm-approve')).toBeVisible();
-  await expect(embed(page).getByText('gm from the Pocketkey playground')).toBeVisible();
+  await expect(embed(page).getByText('gm from the Pockey playground')).toBeVisible();
   await embed(page).getByTestId('pk-confirm-approve').click();
 
   const signed = logEntry(page, 'signMessage evm', true);
@@ -66,7 +66,7 @@ test('email login, embedded wallets, signature, rejection, reload and logout', a
   expect(
     await verifyMessage({
       address: evmAddress as Hex,
-      message: 'gm from the Pocketkey playground',
+      message: 'gm from the Pockey playground',
       signature,
     }),
   ).toBe(true);
@@ -89,7 +89,7 @@ test('email login, embedded wallets, signature, rejection, reload and logout', a
 test('the EIP-1193 provider answers eth_chainId for the first configured chain', async ({
   page,
 }) => {
-  const email = `e2e-1193-${Date.now()}@pocketkey.local`;
+  const email = `e2e-1193-${Date.now()}@pockey.local`;
   await page.goto('/');
   await page.getByTestId('login').click();
   await embed(page).getByTestId('pk-email-input').fill(email);

@@ -5,16 +5,16 @@ import type {
   HostRequestType,
   PublicAppConfig,
   Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { StrictMode, type ReactNode } from 'react';
 import { vi } from 'vitest';
-import type { PocketkeyConfig } from '../config.js';
-import { usePocketkey, useSign, useWallet } from '../hooks.js';
-import { PocketkeyProvider } from '../provider.js';
+import type { PockeyConfig } from '../config.js';
+import { usePockey, useSign, useWallet } from '../hooks.js';
+import { PockeyProvider } from '../provider.js';
 
 /** Served by the happy-dom virtual server configured in vitest.config.ts. */
-export const EMBED_URL = 'https://embed.pocketkey.test';
-export const EMBED_ORIGIN = 'https://embed.pocketkey.test';
+export const EMBED_URL = 'https://embed.pockey.test';
+export const EMBED_ORIGIN = 'https://embed.pockey.test';
 export const APP_ID = `pk_app_${'a'.repeat(24)}`;
 
 export const EVM_ADDRESS = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
@@ -135,7 +135,7 @@ export class FakeEmbed {
   ): void {
     window.dispatchEvent(
       new MessageEvent('message', {
-        data: { source: 'pocketkey', pk: 1, ...data },
+        data: { source: 'pockey', pk: 1, ...data },
         origin: options.origin ?? EMBED_ORIGIN,
         source: options.source === undefined ? this.window : options.source,
       }),
@@ -164,7 +164,7 @@ export async function flush(): Promise<void> {
 }
 
 export interface HookValues {
-  pocketkey: ReturnType<typeof usePocketkey>;
+  pockey: ReturnType<typeof usePockey>;
   wallet: ReturnType<typeof useWallet>;
   sign: ReturnType<typeof useSign>;
 }
@@ -176,19 +176,19 @@ export interface Harness {
   hooks: () => HookValues;
   /** Every hook value rendered, oldest first. */
   history: HookValues[];
-  rerender: (config?: PocketkeyConfig) => void;
+  rerender: (config?: PockeyConfig) => void;
 }
 
 function Probe({ history }: { history: HookValues[] }) {
-  const pocketkey = usePocketkey();
+  const pockey = usePockey();
   const wallet = useWallet();
   const sign = useSign();
-  history.push({ pocketkey, wallet, sign });
+  history.push({ pockey, wallet, sign });
   return null;
 }
 
 export interface HarnessOptions {
-  config?: PocketkeyConfig;
+  config?: PockeyConfig;
   strict?: boolean;
   initUser?: EndUser | null;
   serverConfig?: PublicAppConfig;
@@ -198,14 +198,14 @@ export interface HarnessOptions {
   children?: ReactNode;
 }
 
-export async function renderPocketkey(options: HarnessOptions = {}): Promise<Harness> {
+export async function renderPockey(options: HarnessOptions = {}): Promise<Harness> {
   const history: HookValues[] = [];
-  const tree = (config: PocketkeyConfig | undefined) => {
+  const tree = (config: PockeyConfig | undefined) => {
     const provider = (
-      <PocketkeyProvider appId={APP_ID} embedUrl={EMBED_URL} {...(config ? { config } : {})}>
+      <PockeyProvider appId={APP_ID} embedUrl={EMBED_URL} {...(config ? { config } : {})}>
         <Probe history={history} />
         {options.children}
-      </PocketkeyProvider>
+      </PockeyProvider>
     );
     return options.strict ? <StrictMode>{provider}</StrictMode> : provider;
   };

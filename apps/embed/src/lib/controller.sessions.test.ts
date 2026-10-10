@@ -1,11 +1,11 @@
-import { PocketkeyError } from '@pocketkey/core';
+import { PockeyError } from '@pockey/core';
 import {
   EndUser,
   HostRequest,
   PublicAppConfig,
   SessionSigner,
   type SigningPolicy,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { describe, expect, it, vi } from 'vitest';
 import { createController, type EmbedClient } from './controller';
 import { toEmbedError } from './errors';
@@ -100,7 +100,7 @@ function setup(options: { signedIn: boolean }) {
     now: () => NOW,
   });
   const handle = (raw: Record<string, unknown>) => {
-    const message = { source: 'pocketkey', pk: 1, requestId: 'r', ...raw };
+    const message = { source: 'pockey', pk: 1, requestId: 'r', ...raw };
     return controller.handle(HostRequest.parse(message), { origin: HOST, raw: message });
   };
   return { store, controller, handle, sessions, signMessage };
@@ -162,7 +162,7 @@ describe('createSession', () => {
   it('shows an API error inline and succeeds on try again', async () => {
     const { handle, store, controller, sessions } = setup({ signedIn: true });
     sessions.create.mockRejectedValueOnce(
-      new PocketkeyError('key_provider_error', 'The key provider is unavailable.'),
+      new PockeyError('key_provider_error', 'The key provider is unavailable.'),
     );
     const pending = handle(createRequest());
     await flush();
@@ -274,7 +274,7 @@ describe('session requests without UI', () => {
   it('signWithSession relays a policy refusal with its reason', async () => {
     const { handle, store, sessions } = setup({ signedIn: true });
     sessions.sign.mockRejectedValueOnce(
-      new PocketkeyError('policy_violation', 'Above the per transaction limit.', {
+      new PockeyError('policy_violation', 'Above the per transaction limit.', {
         status: 403,
         details: { reason: 'value_per_tx_exceeded' },
       }),

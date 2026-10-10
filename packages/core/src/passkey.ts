@@ -4,12 +4,12 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from '@simplewebauthn/browser';
-import { PocketkeyError } from './errors.js';
+import { PockeyError } from './errors.js';
 import type { PasskeyAttestation } from './keys.js';
 
 /**
  * Passkey ceremonies, run locally (non-custodial since 2026-09-19): the key provider
- * verifies them, not Pocketkey. Registration adds an authenticator to the user's
+ * verifies them, not Pockey. Registration adds an authenticator to the user's
  * sub-organization; login asserts over the exact login request, whose WebAuthn
  * challenge is derived from its body.
  */
@@ -34,22 +34,22 @@ function errorName(e: unknown): string | undefined {
   return e.name;
 }
 
-export function mapWebAuthnError(e: unknown): PocketkeyError {
+export function mapWebAuthnError(e: unknown): PockeyError {
   const name = errorName(e);
   const message = e instanceof Error ? e.message : 'Passkey ceremony failed';
   const options = { cause: e, details: { name } };
   switch (name) {
     case 'NotAllowedError':
     case 'AbortError':
-      return new PocketkeyError('user_rejected', message, options);
+      return new PockeyError('user_rejected', message, options);
     case 'InvalidStateError':
-      return new PocketkeyError('conflict', message, options);
+      return new PockeyError('conflict', message, options);
     case 'SecurityError':
-      return new PocketkeyError('forbidden', message, options);
+      return new PockeyError('forbidden', message, options);
     case 'NotSupportedError':
-      return new PocketkeyError('unsupported', message, options);
+      return new PockeyError('unsupported', message, options);
     default:
-      return new PocketkeyError('internal', message, options);
+      return new PockeyError('internal', message, options);
   }
 }
 

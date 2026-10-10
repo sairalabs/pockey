@@ -1,14 +1,14 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
-import type { EvmRpc } from '@pocketkey/chains-evm';
-import { SYSTEM_PROGRAM_ID, type SolanaRpc } from '@pocketkey/chains-solana';
-import { sessionSigners, usageEvents } from '@pocketkey/db';
-import { KeyProviderError, type KeyProvider } from '@pocketkey/key-provider';
+import type { EvmRpc } from '@pockey/chains-evm';
+import { SYSTEM_PROGRAM_ID, type SolanaRpc } from '@pockey/chains-solana';
+import { sessionSigners, usageEvents } from '@pockey/db';
+import { KeyProviderError, type KeyProvider } from '@pockey/key-provider';
 import {
   buildCreateSigner,
   buildGrantRevoke,
   buildSessionPolicy,
   generateSessionKey,
-} from '@pocketkey/key-provider/client';
+} from '@pockey/key-provider/client';
 import {
   ApiErrorBody,
   SessionList,
@@ -18,7 +18,7 @@ import {
   type SessionSignRequestInput,
   type SigningPolicy,
   type Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base58, base64 } from '@scure/base';
 import { and, eq } from 'drizzle-orm';
 import {
@@ -202,7 +202,7 @@ beforeEach(() => {
 });
 
 describe('session signer setup', () => {
-  it('adds the Pocketkey signer once and grants it revocation only', async () => {
+  it('adds the Pockey signer once and grants it revocation only', async () => {
     const owner = await freshUser('setup');
     expect(owner.keySession.signerUserId).toBeNull();
     const before = policiesOf(owner);
@@ -228,7 +228,7 @@ describe('session signer setup', () => {
     expect(getEmulator().inspect(owner.keySession.organizationId).users).toBe(2);
   });
 
-  it('refuses a signer that is not the Pocketkey signer key, or a wider grant', async () => {
+  it('refuses a signer that is not the Pockey signer key, or a wider grant', async () => {
     const owner = await freshUser('rogue-signer');
     const rogue = await postJson(
       '/v1/sessions/signer',
@@ -347,7 +347,7 @@ describe('session CRUD (T4.2)', () => {
       'unexpected_request',
     );
     await expectReason(
-      await send('POST', '/v1/sessions', { ...legit, policyName: 'pocketkey:ses:another0000' }),
+      await send('POST', '/v1/sessions', { ...legit, policyName: 'pockey:ses:another0000' }),
       400,
       'unexpected_request',
     );
@@ -373,7 +373,7 @@ describe('session CRUD (T4.2)', () => {
     const owner = await freshUser('no-signer');
     const wallet = owner.wallet('evm');
     const expiresAt = new Date(Date.now() + 3600_000);
-    const policyName = 'pocketkey:ses:nosigner0000';
+    const policyName = 'pockey:ses:nosigner0000';
     const body = {
       walletId: wallet.id,
       policy: policyFor(wallet),
@@ -605,7 +605,7 @@ describe('what the key provider enforces on its own', () => {
     );
   });
 
-  it('refuses after the expiry written in the policy, whatever Pocketkey thinks', async () => {
+  it('refuses after the expiry written in the policy, whatever Pockey thinks', async () => {
     const owner = await freshUser('native-expiry');
     const wallet = owner.wallet('evm');
     const policy = policyFor(wallet, { expiresIn: '1m', allowMessages: true });
@@ -631,7 +631,7 @@ describe('what the key provider enforces on its own', () => {
     );
   });
 
-  it('signs nothing for Pocketkey without a session policy', { timeout: 20_000 }, async () => {
+  it('signs nothing for Pockey without a session policy', { timeout: 20_000 }, async () => {
     const owner = await freshUser('no-session');
     const wallet = owner.wallet('evm');
     const signRaw = (scope: Parameters<KeyProvider['signRaw']>[0]['scope']) =>
@@ -644,7 +644,7 @@ describe('what the key provider enforces on its own', () => {
       });
     const past = { kind: 'session', policyId: 'none', policyCreatedAt: new Date(0) } as const;
 
-    // Before the user added the signer, Pocketkey's key is unknown in the sub-organization.
+    // Before the user added the signer, Pockey's key is unknown in the sub-organization.
     expect((await providerError(signRaw(past))).code).not.toBe('unknown');
 
     // With the signer but no policy, it has no power, even as a "system" signer.

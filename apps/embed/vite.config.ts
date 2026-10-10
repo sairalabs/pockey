@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-// Served from embed.pocketkey.dev in production, http://localhost:5174 locally
+// Served from embed.pockey.xyz in production, http://localhost:5174 locally
 // (the API's EMBED_ORIGIN default). The API URL is injected at build time.
 export default defineConfig({
   plugins: [react(), tailwindcss()],

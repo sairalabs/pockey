@@ -1,4 +1,4 @@
-import { apiKeys, sponsorBalances } from '@pocketkey/db';
+import { apiKeys, sponsorBalances } from '@pockey/db';
 import {
   AdminApp,
   AdminAppList,
@@ -7,7 +7,7 @@ import {
   CreateApiKeyOutput,
   PublicAppConfig,
   ServerUserList,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -29,7 +29,7 @@ beforeAll(async () => {
 
 function publicConfig(publicId: string): Promise<Response> {
   return request(`/v1/apps/${publicId}/config`, {
-    headers: { 'X-Pocketkey-App-Id': publicId },
+    headers: { 'X-Pockey-App-Id': publicId },
   });
 }
 
@@ -111,7 +111,7 @@ describe('apps CRUD (T5.1)', () => {
     const primed = await publicConfig(created.app.publicId);
     expect(primed.status).toBe(200);
     const cached = await publicConfig(created.app.publicId);
-    expect(cached.headers.get('X-Pocketkey-App-Cache')).toBe('HIT');
+    expect(cached.headers.get('X-Pockey-App-Cache')).toBe('HIT');
 
     const res = await adminRequest(`/admin/apps/${created.app.id}/config`, owner, {
       method: 'PUT',
@@ -130,7 +130,7 @@ describe('apps CRUD (T5.1)', () => {
 
     const after = await publicConfig(created.app.publicId);
     const fresh = PublicAppConfig.parse(await after.json());
-    expect(after.headers.get('X-Pocketkey-App-Cache')).toBe('MISS');
+    expect(after.headers.get('X-Pockey-App-Cache')).toBe('MISS');
     expect(fresh.loginMethods).toEqual(['email']);
     expect(fresh.appearance.accent).toBe('#00ff00');
     expect(fresh.embeddedWallets.createOnLogin).toBe('evm');
@@ -170,7 +170,7 @@ describe('API keys (T5.1)', () => {
     expect(key.revokedAt).toBeNull();
 
     const serverHeaders = {
-      'X-Pocketkey-App-Id': created.app.publicId,
+      'X-Pockey-App-Id': created.app.publicId,
       Authorization: `Bearer ${secret}`,
     };
     const users = await request('/v1/server/users', { headers: serverHeaders });

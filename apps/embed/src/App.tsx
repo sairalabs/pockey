@@ -21,7 +21,7 @@ class ScreenBoundary extends Component<
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error('[pocketkey] screen crashed', error, info.componentStack);
+    console.error('[pockey] screen crashed', error, info.componentStack);
   }
 
   override render(): ReactNode {

@@ -1,5 +1,5 @@
 import { base64 } from '@scure/base';
-import type { SolanaCluster } from '@pocketkey/types';
+import type { SolanaCluster } from '@pockey/types';
 import { SolanaTransactionError } from './errors.js';
 
 /** Minimal RPC surface used by the API. Mockable in tests. */

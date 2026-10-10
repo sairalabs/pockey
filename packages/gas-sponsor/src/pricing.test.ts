@@ -1,4 +1,4 @@
-import { SPONSOR_MARGIN } from '@pocketkey/types';
+import { SPONSOR_MARGIN } from '@pockey/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GasSponsorError } from './errors.js';
 import {

@@ -1,10 +1,10 @@
 /**
  * External wallet sign in through an injected wallet. The wallet signs the key
  * provider login request itself (it carries this iframe's session key), so the
- * provider, not Pocketkey, verifies the wallet. One prompt, sign-up included.
+ * provider, not Pockey, verifies the wallet. One prompt, sign-up included.
  * Loaded lazily with the rest of the wallet code.
  */
-import type { AuthResponse } from '@pocketkey/types';
+import type { AuthResponse } from '@pockey/types';
 import { hex } from '@scure/base';
 import { EmbedFailure } from './errors';
 import { isHexString, isRecord } from './guards';

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Developer } from '@pocketkey/types';
+import type { Developer } from '@pockey/types';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

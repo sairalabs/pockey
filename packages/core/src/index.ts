@@ -1,23 +1,23 @@
 export {
   APP_ID_HEADER,
-  createPocketkey,
+  createPockey,
   DEFAULT_BASE_URL,
   isSessionActive,
   type AuthListener,
   type OAuthProvider,
-  type PocketkeyClient,
-  type PocketkeyOptions,
+  type PockeyClient,
+  type PockeyOptions,
   type RequestOptions,
   type SessionState,
   type WalletLogin,
 } from './client.js';
 export type { KeyClient, LoginCredential, PasskeyAttestation } from './keys.js';
 export {
-  isPocketkeyError,
-  PocketkeyError,
+  isPockeyError,
+  PockeyError,
   policyViolationReason,
-  type PocketkeyErrorCode,
-  type PocketkeyErrorOptions,
+  type PockeyErrorCode,
+  type PockeyErrorOptions,
   type SessionPolicyRefusal,
 } from './errors.js';
 export { localStorageStorage, memoryStorage, type TokenStorage } from './storage.js';

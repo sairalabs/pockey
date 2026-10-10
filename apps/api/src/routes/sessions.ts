@@ -8,7 +8,7 @@ import {
   SignerPermissionInput,
   SignerSetupInput,
   SignerSetupOutput,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../context.js';
@@ -51,7 +51,7 @@ export const RevokeSessionOutput = z.object({ ok: z.literal(true) });
 export const sessionRoutes = new Hono<AppEnv>()
   .use(requireApp, requireUser)
 
-  /** Adds the Pocketkey signer to the user's sub-organization (stamped in the iframe). */
+  /** Adds the Pockey signer to the user's sub-organization (stamped in the iframe). */
   .post('/signer', validate('json', SignerSetupInput), async (c) => {
     const signerUserId = await setupSigner(
       deps(c),

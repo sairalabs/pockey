@@ -5,7 +5,7 @@ import { API_URL } from '@/lib/api.server';
  * Same origin proxy for the admin API (T5.1).
  *
  * The browser only ever talks to the dashboard: this handler forwards method,
- * query, body and cookies to `${POCKETKEY_API_URL}/admin/...` and hands the
+ * query, body and cookies to `${POCKEY_API_URL}/admin/...` and hands the
  * answer back with its `Set-Cookie` headers. The developer session cookie is
  * therefore a first party cookie of the dashboard origin, which removes both
  * the CORS preflight and the third party cookie problem.
@@ -48,7 +48,7 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
       {
         error: {
           code: 'internal',
-          message: `The Pocketkey API at ${API_URL} is unreachable`,
+          message: `The Pockey API at ${API_URL} is unreachable`,
         },
       },
       { status: 502 },

@@ -1,6 +1,6 @@
-import { endUsers, type AppRow, type Db, type EndUserRow } from '@pocketkey/db';
-import { KeyProviderError, type CreateSubOrganizationOutput } from '@pocketkey/key-provider';
-import { KeySession } from '@pocketkey/types';
+import { endUsers, type AppRow, type Db, type EndUserRow } from '@pockey/db';
+import { KeyProviderError, type CreateSubOrganizationOutput } from '@pockey/key-provider';
+import { KeySession } from '@pockey/types';
 import { and, eq, isNull } from 'drizzle-orm';
 import { ApiError } from '../errors.js';
 import { providerFailure } from './provider-failure.js';
@@ -8,7 +8,7 @@ import { providerFailure } from './provider-failure.js';
 /**
  * Link between an end user and their sub-organization at the key provider
  * (non-custodial, DECISIONS.md 2026-09-19). The sub-organization is created at
- * sign-up with the end user as its only root; Pocketkey keeps its ids.
+ * sign-up with the end user as its only root; Pockey keeps its ids.
  */
 
 export async function loadEndUserRow(db: Db, app: AppRow, endUserId: string): Promise<EndUserRow> {

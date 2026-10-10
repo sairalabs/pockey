@@ -1,5 +1,5 @@
-import type { AuthResponse } from '@pocketkey/types';
-import type { PocketkeyClient } from '@pocketkey/core';
+import type { AuthResponse } from '@pockey/types';
+import type { PockeyClient } from '@pockey/core';
 import { EmbedFailure, userRejected } from './errors';
 import { isRecord } from './guards';
 import type { WalletOption } from './state';
@@ -25,7 +25,7 @@ export interface SignInContext {
   statement: string;
 }
 
-export type WalletAuthClient = Pick<PocketkeyClient['auth'], 'loginWithWallet'>;
+export type WalletAuthClient = Pick<PockeyClient['auth'], 'loginWithWallet'>;
 
 export interface WalletAdapter {
   discover(): Promise<WalletOption[]>;

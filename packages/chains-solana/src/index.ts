@@ -1,5 +1,5 @@
 /**
- * @pocketkey/chains-solana
+ * @pockey/chains-solana
  *
  * Solana adapter with a dependency-free wire codec (legacy and v0 transactions).
  * Private keys never exist here: every signature is produced by a `SignBytes`

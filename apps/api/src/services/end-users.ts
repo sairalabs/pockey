@@ -6,15 +6,15 @@ import {
   wallets,
   type AppRow,
   type Db,
-} from '@pocketkey/db';
-import { EndUser, EndUserId, type ChainFamily, type IdentityType } from '@pocketkey/types';
+} from '@pockey/db';
+import { EndUser, EndUserId, type ChainFamily, type IdentityType } from '@pockey/types';
 import { and, count, desc, eq, lt, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError } from '../errors.js';
 import { toBase64Url } from '../lib/crypto.js';
 
 /**
- * Maps verified identities to Pocketkey end users (section 4.2). One end user per
+ * Maps verified identities to Pockey end users (section 4.2). One end user per
  * app per person. The key provider verifies every login ceremony; this module only
  * decides which end user a verified identity belongs to.
  */

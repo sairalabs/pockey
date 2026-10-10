@@ -1,4 +1,4 @@
-import type { UsagePoint } from '@pocketkey/types';
+import type { UsagePoint } from '@pockey/types';
 import type { ChartPoint } from '@/components/charts/usage-chart';
 import { formatBucket, formatEth, formatInt } from '@/lib/format';
 

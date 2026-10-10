@@ -1,10 +1,10 @@
-import type { InspectedTransaction } from '@pocketkey/chains-solana';
+import type { InspectedTransaction } from '@pockey/chains-solana';
 import {
   SessionSignRequest,
   type PolicyViolation,
   type SessionSignRequestInput,
   type SigningPolicy,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import {
   checkSessionRequest,

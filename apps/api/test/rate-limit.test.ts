@@ -134,7 +134,7 @@ describe('rate limiting (T5.5)', () => {
     await fill('serverKey', SEED.apiKey.id);
     const res = await request('/v1/server/users', {
       headers: {
-        'X-Pocketkey-App-Id': SEED.app.publicId,
+        'X-Pockey-App-Id': SEED.app.publicId,
         Authorization: `Bearer ${SEED.apiKey.secret}`,
       },
     });
@@ -187,7 +187,7 @@ describe('the RateLimiter durable object', () => {
     const stub = namespace.get(namespace.idFromName('probe'));
     const ask = () =>
       stub.fetch(
-        new Request('https://rate-limiter.pocketkey.internal/consume', {
+        new Request('https://rate-limiter.pockey.internal/consume', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key: 'probe', limit: 1, windowSeconds: 60 }),

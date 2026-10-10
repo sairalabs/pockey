@@ -1,4 +1,4 @@
-import type { KeyProvider } from '@pocketkey/key-provider';
+import type { KeyProvider } from '@pockey/key-provider';
 import {
   createApiKeyStamper,
   createHttpTransport,
@@ -7,14 +7,14 @@ import {
   TurnkeyClient,
   TurnkeyKeyProvider,
   type TurnkeyEmulator,
-} from '@pocketkey/key-provider/turnkey';
-import type { Mailer } from '@pocketkey/mailer';
+} from '@pockey/key-provider/turnkey';
+import type { Mailer } from '@pockey/mailer';
 import type { ParsedEnv } from '../env.js';
 
 /**
  * One key provider per isolate.
  *
- * - `turnkey`: the real API with Pocketkey's parent credential, plus an optional
+ * - `turnkey`: the real API with Pockey's parent credential, plus an optional
  *   separate signer key for session signers and system wallets.
  * - `mock`: the in-memory Turnkey emulator, same wire format. OTP codes go through
  *   the mailer (console in local development, memory in tests), where the Better

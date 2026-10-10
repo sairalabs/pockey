@@ -1,5 +1,5 @@
-import { authSchema, type Db } from '@pocketkey/db';
-import { otpEmail, type Mailer } from '@pocketkey/mailer';
+import { authSchema, type Db } from '@pockey/db';
+import { otpEmail, type Mailer } from '@pockey/mailer';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { emailOTP } from 'better-auth/plugins';
@@ -24,9 +24,9 @@ export const DEVELOPER_OTP_ATTEMPTS = 5;
 /** A dashboard session is the real session, not a bridge, so it lasts a week. */
 export const DEVELOPER_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 export const DEVELOPER_AUTH_BASE_PATH = '/admin/auth';
-export const DEVELOPER_APP_NAME = 'Pocketkey';
+export const DEVELOPER_APP_NAME = 'Pockey';
 /** Distinct from the end user prefix, so a popup cookie never shadows a dashboard one. */
-export const DEVELOPER_COOKIE_PREFIX = 'pocketkey_dev';
+export const DEVELOPER_COOKIE_PREFIX = 'pockey_dev';
 
 /* Adapter scoping */
 

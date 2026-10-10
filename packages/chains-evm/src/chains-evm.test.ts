@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { bytesToHex, hexToBytes, recoverTransactionAddress, type Address, type Hex } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { generateSiweNonce } from 'viem/siwe';
-import type { EvmTransactionRequest, SignTypedDataInput } from '@pocketkey/types';
+import type { EvmTransactionRequest, SignTypedDataInput } from '@pockey/types';
 import {
   EVM_VIEM_CHAINS,
   buildSiweMessage,
@@ -16,7 +16,7 @@ import {
   signTransaction,
   signTypedDataInput,
   signatureToHex,
-  toPocketkeyAccount,
+  toPockeyAccount,
   transactionSigningHash,
   verifySiweLogin,
   type EvmRpc,
@@ -105,7 +105,7 @@ describe('signatureToHex / normalizeSignature', () => {
 
 describe('messages', () => {
   it('signs a UTF-8 personal message identically to a viem account', async () => {
-    const message = 'Hello Pocketkey';
+    const message = 'Hello Pockey';
     const hash = hashPersonalMessage(message);
     expect(hash).toMatch(/^0x[0-9a-f]{64}$/);
     expect(await signPersonalMessage(message, signHash)).toBe(
@@ -167,8 +167,8 @@ describe('transactions', () => {
   });
 });
 
-describe('toPocketkeyAccount', () => {
-  const pk = toPocketkeyAccount({ address: account.address, signHash });
+describe('toPockeyAccount', () => {
+  const pk = toPockeyAccount({ address: account.address, signHash });
 
   it('is a local account with the given address', () => {
     expect(pk.type).toBe('local');

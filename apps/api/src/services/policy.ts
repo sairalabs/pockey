@@ -3,7 +3,7 @@ import {
   programIds,
   systemTransferLamportsFrom,
   type InspectedTransaction,
-} from '@pocketkey/chains-solana';
+} from '@pockey/chains-solana';
 import type {
   ChainFamily,
   EvmChainId,
@@ -11,10 +11,10 @@ import type {
   SessionSignRequest,
   SigningPolicy,
   SolanaCluster,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
 /**
- * Local policy check for session signers (T4.2, section 7.4). Pocketkey fails
+ * Local policy check for session signers (T4.2, section 7.4). Pockey fails
  * fast here, the key provider re-checks what it can (chain, contract, per
  * transaction value, programs, expiry). `maxValueTotal`, revocation and the
  * typed data rule only exist here (DECISIONS.md, phase 4). Pure, no I/O.

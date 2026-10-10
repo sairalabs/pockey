@@ -1,4 +1,4 @@
-import type { PocketkeyClient } from '@pocketkey/core';
+import type { PockeyClient } from '@pockey/core';
 import {
   durationToSeconds,
   type EmbedError,
@@ -7,7 +7,7 @@ import {
   type HostResponseDataMap,
   type PublicAppConfig,
   type Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { appDisplayName, effectiveConfig } from './config';
 import { EmbedFailure, toEmbedError, toFailure, userRejected } from './errors';
 import { isKeyboardModality } from './modality';
@@ -26,7 +26,7 @@ import {
 import type { WalletAdapter } from './wallets';
 
 export type EmbedClient = Pick<
-  PocketkeyClient,
+  PockeyClient,
   'ready' | 'getConfig' | 'auth' | 'wallets' | 'sessions'
 >;
 
@@ -357,7 +357,7 @@ export function createController(deps: ControllerDeps): Controller {
       .login(client.auth, walletId, {
         domain: location.host,
         uri: location.origin,
-        statement: `Sign in to ${appDisplayName(cfg)} with Pocketkey`,
+        statement: `Sign in to ${appDisplayName(cfg)} with Pockey`,
       })
       .then(
         (response) => {

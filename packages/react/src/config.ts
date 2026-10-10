@@ -4,14 +4,14 @@ import type {
   LoginMethod,
   PublicAppConfig,
   SolanaCluster,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
-export const DEFAULT_EMBED_URL = 'https://embed.pocketkey.dev';
+export const DEFAULT_EMBED_URL = 'https://embed.pockey.xyz';
 
 /** A chain id or any chain object with a numeric `id` (as exported by common EVM libraries). */
 export type ChainLike = number | { id: number };
 
-export interface PocketkeyConfig {
+export interface PockeyConfig {
   loginMethods?: LoginMethod[];
   chains?: { evm?: ChainLike[]; solana?: SolanaCluster[] };
   appearance?: Partial<Appearance>;
@@ -39,7 +39,7 @@ const chainId = (chain: ChainLike): number => (typeof chain === 'number' ? chain
 
 /** Host config wins, then the server config returned by `init`, then the defaults. */
 export function resolveEvmChains(
-  config: PocketkeyConfig | undefined,
+  config: PockeyConfig | undefined,
   server: PublicAppConfig | null,
 ): number[] {
   const host = config?.chains?.evm?.map(chainId);
@@ -49,7 +49,7 @@ export function resolveEvmChains(
 }
 
 export function resolveSolanaClusters(
-  config: PocketkeyConfig | undefined,
+  config: PockeyConfig | undefined,
   server: PublicAppConfig | null,
 ): SolanaCluster[] {
   const host = config?.chains?.solana;

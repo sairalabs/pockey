@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEmbedBridge, type EmbedBridge } from './bridge.js';
-import { PocketkeyEmbedError } from './errors.js';
+import { PockeyEmbedError } from './errors.js';
 import {
   EMBED_ORIGIN,
   EMBED_URL,
@@ -24,11 +24,11 @@ function setup(options: { readyTimeoutMs?: number } = {}) {
   return { bridge, embed };
 }
 
-async function rejection(promise: Promise<unknown>): Promise<PocketkeyEmbedError> {
+async function rejection(promise: Promise<unknown>): Promise<PockeyEmbedError> {
   try {
     await promise;
   } catch (error) {
-    if (error instanceof PocketkeyEmbedError) return error;
+    if (error instanceof PockeyEmbedError) return error;
     throw error;
   }
   throw new Error('Expected the promise to reject');
@@ -51,7 +51,7 @@ describe('createEmbedBridge', () => {
     const { iframe } = bridge;
     expect(document.querySelectorAll('iframe')).toHaveLength(1);
     expect(iframe.src).toBe(`${EMBED_URL}/?appId=pk_app_x`);
-    expect(iframe.title).toBe('Pocketkey');
+    expect(iframe.title).toBe('Pockey');
     expect(iframe.getAttribute('allow')).toBe(
       'publickey-credentials-get *; publickey-credentials-create *; clipboard-write',
     );
@@ -75,7 +75,7 @@ describe('createEmbedBridge', () => {
     embed.ready();
     expect(embed.received.map((request) => request.type)).toEqual(['init', 'login']);
     expect(embed.received[0]).toMatchObject({
-      source: 'pocketkey',
+      source: 'pockey',
       pk: 1,
       type: 'init',
       appearance: { theme: 'dark' },

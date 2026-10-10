@@ -74,7 +74,7 @@ export function readLoginRequest(request: StampedRequest): {
   }
 }
 
-/** Longest session key lifetime Pocketkey registers (matches the refresh token). */
+/** Longest session key lifetime Pockey registers (matches the refresh token). */
 export const MAX_SESSION_SECONDS = 30 * 24 * 3600;
 
 export const WALLET_SCHEME = {
@@ -372,7 +372,7 @@ export class TurnkeyKeyProvider implements KeyProvider {
       ACTIVITY.createSubOrganization,
       this.parentOrgId,
       {
-        subOrganizationName: `pocketkey-${input.endUserId}`,
+        subOrganizationName: `pockey-${input.endUserId}`,
         rootQuorumThreshold: 1,
         rootUsers: [root],
         wallet: { walletName: 'default', accounts: [WALLET_ACCOUNT.evm, WALLET_ACCOUNT.solana] },
@@ -518,10 +518,10 @@ export class TurnkeyKeyProvider implements KeyProvider {
         this.expect(body, ACTIVITY.createUsers, expected.subOrgId);
         const expectedUsers = [
           {
-            userName: 'pocketkey-signer',
+            userName: 'pockey-signer',
             apiKeys: [
               {
-                apiKeyName: 'pocketkey',
+                apiKeyName: 'pockey',
                 publicKey: this.signer.publicKey,
                 curveType: 'API_KEY_CURVE_P256',
               },
@@ -610,7 +610,7 @@ export class TurnkeyKeyProvider implements KeyProvider {
     return result as RelayResults[K];
   }
 
-  /* Pocketkey signer credential */
+  /* Pockey signer credential */
 
   async signRaw(input: SignRawInput): Promise<SignRawOutput> {
     const response = await this.client.activity(
@@ -667,14 +667,14 @@ export class TurnkeyKeyProvider implements KeyProvider {
       ACTIVITY.createSubOrganization,
       this.parentOrgId,
       {
-        subOrganizationName: `pocketkey-system-${input.name}`,
+        subOrganizationName: `pockey-system-${input.name}`,
         rootQuorumThreshold: 1,
         rootUsers: [
           {
-            userName: 'pocketkey-system',
+            userName: 'pockey-system',
             apiKeys: [
               {
-                apiKeyName: 'pocketkey',
+                apiKeyName: 'pockey',
                 publicKey: this.signer.publicKey,
                 curveType: 'API_KEY_CURVE_P256',
               },

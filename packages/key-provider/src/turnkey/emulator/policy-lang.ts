@@ -1,5 +1,5 @@
 /**
- * Evaluator for the subset of the Turnkey policy language Pocketkey emits
+ * Evaluator for the subset of the Turnkey policy language Pockey emits
  * (`policy.ts`): `&&`, `||`, `!`, comparisons, `in [..]`, `.all(x, ..)`,
  * `.any(x, ..)`, `.contains(..)`, `.count()`, `Timestamp('..')`, string, integer
  * and boolean literals, dotted field access. Emulator only: the real policy engine

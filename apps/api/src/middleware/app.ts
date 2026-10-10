@@ -1,10 +1,10 @@
-import { PublicAppId } from '@pocketkey/types';
+import { PublicAppId } from '@pockey/types';
 import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
 import { loadAppByPublicId } from '../lib/apps.js';
 
-export const APP_ID_HEADER = 'X-Pocketkey-App-Id';
+export const APP_ID_HEADER = 'X-Pockey-App-Id';
 
 /**
  * Every `/v1/*` route (section 7.2). Resolves the public app id to its row and
@@ -28,7 +28,7 @@ export const requireApp = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   c.set('app', app);
-  c.header('X-Pocketkey-App-Cache', cache);
+  c.header('X-Pockey-App-Cache', cache);
   await next();
 });
 

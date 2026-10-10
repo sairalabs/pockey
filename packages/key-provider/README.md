@@ -1,4 +1,4 @@
-# @pocketkey/key-provider
+# @pockey/key-provider
 
 The `KeyProvider` port (section 7.3 of the spec) and its implementations.
 

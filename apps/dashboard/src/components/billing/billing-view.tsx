@@ -1,6 +1,6 @@
 'use client';
 
-import type { BillingSummary } from '@pocketkey/types';
+import type { BillingSummary } from '@pockey/types';
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/shell/page-header';

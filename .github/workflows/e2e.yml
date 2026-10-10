@@ -22,7 +22,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Install Chromium
-        run: pnpm --filter @pocketkey/playground exec playwright install --with-deps chromium
+        run: pnpm --filter @pockey/playground exec playwright install --with-deps chromium
 
       - name: Local secrets for wrangler dev
         working-directory: apps/api

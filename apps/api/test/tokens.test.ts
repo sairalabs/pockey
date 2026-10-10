@@ -1,5 +1,5 @@
-import { apps } from '@pocketkey/db';
-import { ApiErrorBody, AuthTokens } from '@pocketkey/types';
+import { apps } from '@pockey/db';
+import { ApiErrorBody, AuthTokens } from '@pockey/types';
 import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { issueTokens } from '../src/auth/tokens.js';
@@ -77,7 +77,7 @@ describe('sessions (T1.4)', () => {
     expect((await request('/v1/me', { headers: bearer(forged) })).status).toBe(401);
 
     const missing = await request('/v1/me', {
-      headers: { 'X-Pocketkey-App-Id': SEED.app.publicId },
+      headers: { 'X-Pockey-App-Id': SEED.app.publicId },
     });
     expect(missing.status).toBe(401);
     expect(await errorCode(missing)).toBe('unauthorized');

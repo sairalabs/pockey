@@ -1,4 +1,4 @@
-import { AppConfig, SolanaCluster, SolanaFeePayerOutput } from '@pocketkey/types';
+import { AppConfig, SolanaCluster, SolanaFeePayerOutput } from '@pockey/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../context.js';

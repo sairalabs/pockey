@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/payments",
+  "name": "@pockey/payments",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,10 +14,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pocketkey/types": "workspace:*"
+    "@pockey/types": "workspace:*"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "eslint": "^9.39.0",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"

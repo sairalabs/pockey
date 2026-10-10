@@ -1,4 +1,4 @@
-import type { ChainFamily, SigningPolicy } from '@pocketkey/types';
+import type { ChainFamily, SigningPolicy } from '@pockey/types';
 
 /**
  * Section 7.3. The port every key management vendor must implement. The domain
@@ -6,7 +6,7 @@ import type { ChainFamily, SigningPolicy } from '@pocketkey/types';
  *
  * Non-custodial since 2026-09-19 (DECISIONS.md). Three kinds of authority exist:
  *
- * 1. Pocketkey's parent credential creates sub-organizations and runs login
+ * 1. Pockey's parent credential creates sub-organizations and runs login
  *    ceremonies. It can never sign with, export or take over an end user's keys:
  *    each login is bound to a proof the end user produced (OTP ciphertext and client
  *    signature, OIDC token whose nonce commits to the iframe key, passkey or wallet
@@ -14,8 +14,8 @@ import type { ChainFamily, SigningPolicy } from '@pocketkey/types';
  * 2. The end user's credential (a P-256 session key inside the iframe, a passkey or
  *    an external wallet) stamps every request touching their keys. The API relays
  *    such a request as is (`relay`) after checking it matches what the route expects.
- * 3. Pocketkey's signer credential only acts through policies the end user created
- *    (session signers), and as the sole owner of Pocketkey system wallets (fee payers).
+ * 3. Pockey's signer credential only acts through policies the end user created
+ *    (session signers), and as the sole owner of Pockey system wallets (fee payers).
  *
  * Do not change this interface without flagging it explicitly (CLAUDE.md).
  */
@@ -68,7 +68,7 @@ export interface SessionKeyParams {
 }
 
 export interface CreateSubOrganizationInput {
-  /** Pocketkey end user id, used for naming only. */
+  /** Pockey end user id, used for naming only. */
   endUserId: string;
   root:
     | {
@@ -215,7 +215,7 @@ export interface KeyProviderInfo {
   kind: 'turnkey' | 'emulator';
   /** Parent organization id, target of login ceremonies. */
   organizationId: string;
-  /** Compressed P-256 public key of the Pocketkey signer credential. */
+  /** Compressed P-256 public key of the Pockey signer credential. */
   signerPublicKey: string;
   /**
    * Emulator only: the key its fake enclave signs bundles with. Production iframe
@@ -264,7 +264,7 @@ export interface KeyProvider {
     expectation: Extract<RelayExpectation, { kind: K }>,
   ): Promise<RelayResults[K]>;
 
-  /* Pocketkey signer credential */
+  /* Pockey signer credential */
   signRaw(input: SignRawInput): Promise<SignRawOutput>;
   signTransaction(input: SignTransactionInput): Promise<SignTransactionOutput>;
   deletePolicy(input: { subOrgId: string; policyId: string }): Promise<void>;

@@ -1,9 +1,9 @@
 import { decryptExportBundle, encryptOtpCodeToBundle } from '@turnkey/crypto';
-import type { ChainFamily } from '@pocketkey/types';
+import type { ChainFamily } from '@pockey/types';
 import type { ExportKey } from './client.js';
 
 /**
- * Enclave crypto for the embed iframe (`@pocketkey/key-provider/client/crypto`),
+ * Enclave crypto for the embed iframe (`@pockey/key-provider/client/crypto`),
  * delegated to Turnkey's own `@turnkey/crypto`: both functions verify that the
  * bundle is signed by Turnkey's production enclave key before using it.
  */

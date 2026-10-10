@@ -9,8 +9,8 @@ import {
   sponsorBalances,
   type ApiKeyRow,
   type Db,
-} from '@pocketkey/db';
-import { PaymentsError } from '@pocketkey/payments';
+} from '@pockey/db';
+import { PaymentsError } from '@pockey/payments';
 import {
   AdminAppConfigInput,
   AdminAppList,
@@ -32,7 +32,7 @@ import {
   TopUpCheckoutOutput,
   UpdateAppInput,
   UsageRange,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';

@@ -1,4 +1,4 @@
-import { AppId, PublicAppId, SecretApiKey } from '@pocketkey/types';
+import { AppId, PublicAppId, SecretApiKey } from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import { apiKeyPrefix, sha256Hex } from './hash.js';
 import { newId, newPublicAppId, newSecretApiKey } from './ids.js';

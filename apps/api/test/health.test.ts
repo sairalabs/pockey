@@ -1,4 +1,4 @@
-import { ApiErrorBody } from '@pocketkey/types';
+import { ApiErrorBody } from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import { HealthResponse } from '../src/routes/health.js';
 import { request } from './helpers.js';

@@ -4,11 +4,11 @@ import { IconButton } from '@/components/ui/icon-button';
 
 const links = [
   { label: 'Home', href: '/apps' },
-  { label: 'Docs', href: 'https://docs.pocketkey.dev' },
-  { label: 'Terms', href: 'https://pocketkey.dev/terms' },
-  { label: 'Privacy', href: 'https://pocketkey.dev/privacy' },
+  { label: 'Docs', href: 'https://docs.pockey.xyz' },
+  { label: 'Terms', href: 'https://pockey.xyz/terms' },
+  { label: 'Privacy', href: 'https://pockey.xyz/privacy' },
   { label: 'Preferences', href: '/billing' },
-  { label: 'Help', href: 'https://pocketkey.dev/help' },
+  { label: 'Help', href: 'https://pockey.xyz/help' },
 ] as const;
 
 export function Footer() {
@@ -16,7 +16,7 @@ export function Footer() {
     <footer className="mt-auto border-t border-border">
       <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-6">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span className="text-sm font-semibold tracking-tight text-fg">Pocketkey</span>
+          <span className="text-sm font-semibold tracking-tight text-fg">Pockey</span>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {links.map((link) => (
               <Link

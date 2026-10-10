@@ -1,11 +1,11 @@
-import { apps, developers, usageEvents, type Db, type DeveloperRow } from '@pocketkey/db';
-import type { EnsureCustomerInput, Payments } from '@pocketkey/payments';
+import { apps, developers, usageEvents, type Db, type DeveloperRow } from '@pockey/db';
+import type { EnsureCustomerInput, Payments } from '@pockey/payments';
 import { and, countDistinct, eq, gte, isNotNull, lt } from 'drizzle-orm';
 import type { ParsedEnv } from '../env.js';
 
 /**
  * Usage based billing of section 11 (T5.4). The Stripe calls themselves live in
- * `@pocketkey/payments`; this is the part that knows about developers, apps and
+ * `@pockey/payments`; this is the part that knows about developers, apps and
  * `usage_events`.
  *
  * Nothing here is on the request path of the SDK: `ensureBilling` runs when a
@@ -43,7 +43,7 @@ export function billingConfigured(config: ParsedEnv): boolean {
  * configured on this server (the caller then answers 400).
  *
  * The customer id is persisted on `developers.stripe_customer_id`. The
- * subscription id is not stored: `@pocketkey/payments` creates it under an
+ * subscription id is not stored: `@pockey/payments` creates it under an
  * idempotency key derived from the customer id, so asking again returns the
  * same subscription instead of a second one.
  */

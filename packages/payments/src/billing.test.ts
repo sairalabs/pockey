@@ -1,4 +1,4 @@
-import { FREE_MONTHLY_ACTIVE_WALLETS, PRICE_CENTS_PER_ACTIVE_WALLET } from '@pocketkey/types';
+import { FREE_MONTHLY_ACTIVE_WALLETS, PRICE_CENTS_PER_ACTIVE_WALLET } from '@pockey/types';
 import { describe, expect, it, vi } from 'vitest';
 import { estimateMonthlyCents } from './billing.js';
 import { PaymentsError } from './errors.js';
@@ -16,7 +16,7 @@ import {
 const SECRET_KEY = 'sk_test_do_not_leak';
 const WEBHOOK_SECRET = 'whsec_test_secret';
 const PRICE_ID = 'price_active_wallets';
-const METER_NAME = 'pocketkey_active_wallets';
+const METER_NAME = 'pockey_active_wallets';
 const NOW = Date.UTC(2026, 8, 17, 12, 0, 0);
 const NOW_SECONDS = Math.floor(NOW / 1000);
 const encoder = new TextEncoder();
@@ -535,7 +535,7 @@ describe('createBillingPortalSession', () => {
     await expect(
       payments.createBillingPortalSession({
         customerId: 'cus_123',
-        returnUrl: 'https://dash.pocketkey.dev/billing',
+        returnUrl: 'https://dash.pockey.xyz/billing',
       }),
     ).resolves.toEqual({ url });
 
@@ -544,7 +544,7 @@ describe('createBillingPortalSession', () => {
     expect(request?.method).toBe('POST');
     expect(request?.form).toEqual({
       customer: 'cus_123',
-      return_url: 'https://dash.pocketkey.dev/billing',
+      return_url: 'https://dash.pockey.xyz/billing',
     });
   });
 
@@ -569,7 +569,7 @@ describe('createBillingPortalSession', () => {
       await codeOf(
         payments.createBillingPortalSession({
           customerId: 'cus_123',
-          returnUrl: 'https://dash.pocketkey.dev/billing',
+          returnUrl: 'https://dash.pockey.xyz/billing',
         }),
       ),
     ).toBe('provider_error');

@@ -1,4 +1,4 @@
-import { createDb } from '@pocketkey/db';
+import { createDb } from '@pockey/db';
 import { createApp } from './app.js';
 import { DAILY_CRON } from './cron.js';
 import { parseEnv, type Env } from './env.js';

@@ -1,6 +1,6 @@
 # Turnkey integration (T0.5)
 
-Pocketkey runs on Turnkey, non-custodial (decision of 2026-09-19, see `DECISIONS.md`). This file says how it works, what was verified against the real Turnkey API, and what is left to check by hand.
+Pockey runs on Turnkey, non-custodial (decision of 2026-09-19, see `DECISIONS.md`). This file says how it works, what was verified against the real Turnkey API, and what is left to check by hand.
 
 ## How it works
 
@@ -8,9 +8,9 @@ Three credentials, three kinds of power:
 
 | Credential                                                  | Who holds it                    | What it can do                                                                                                                               |
 | ----------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parent API key (`TURNKEY_API_*`)                            | Pocketkey API (Wrangler secret) | Create sub-organizations, run login ceremonies (OTP, OAuth). Nothing inside a user sub-organization.                                         |
-| Session key (P-256, non-extractable)                        | The embed iframe, IndexedDB     | Everything the user can do: sign, export, add a passkey, create session policies. Expires with the Pocketkey session (30 days).              |
-| Signer key (`TURNKEY_SIGNER_*`, defaults to the parent key) | Pocketkey API                   | Only what a user policy allows (session signers), and deleting those policies. Sole owner of the per-app Solana fee payer sub-organizations. |
+| Parent API key (`TURNKEY_API_*`)                            | Pockey API (Wrangler secret) | Create sub-organizations, run login ceremonies (OTP, OAuth). Nothing inside a user sub-organization.                                         |
+| Session key (P-256, non-extractable)                        | The embed iframe, IndexedDB     | Everything the user can do: sign, export, add a passkey, create session policies. Expires with the Pockey session (30 days).              |
+| Signer key (`TURNKEY_SIGNER_*`, defaults to the parent key) | Pockey API                   | Only what a user policy allows (session signers), and deleting those policies. Sole owner of the per-app Solana fee payer sub-organizations. |
 
 Every request touching a user key is stamped in the iframe and relayed by the API, which checks it matches the route (`packages/key-provider/src/turnkey/provider.ts`, `relay`) and cannot change it.
 
@@ -36,7 +36,7 @@ Email OTP, checked on 2026-10-04 with a real inbox (`otp-live.test.ts`, two step
 
 - `INIT_OTP_V3` sends the code, `VERIFY_OTP_V2` accepts the bundle encrypted in the iframe to Turnkey's enclave, so our API never sees the code;
 - sign-up with the `signupV2` client signature, then the session key alone signs for the new user;
-- logging back into the same account with a fresh session key (`OTP_LOGIN_V2`, approved by that key's own signature), which then reads the wallet and creates a session policy the Pocketkey signer uses alone;
+- logging back into the same account with a fresh session key (`OTP_LOGIN_V2`, approved by that key's own signature), which then reads the wallet and creates a session policy the Pockey signer uses alone;
 - cost: one signature per signed payload. Creating a sub-organization, sending and verifying a code and logging in are not billed as signatures.
 
 ## Left to check by hand

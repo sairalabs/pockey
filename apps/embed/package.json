@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/embed",
+  "name": "@pockey/embed",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,11 +12,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pocketkey/chains-evm": "workspace:*",
-    "@pocketkey/chains-solana": "workspace:*",
-    "@pocketkey/core": "workspace:*",
-    "@pocketkey/key-provider": "workspace:*",
-    "@pocketkey/types": "workspace:*",
+    "@pockey/chains-evm": "workspace:*",
+    "@pockey/chains-solana": "workspace:*",
+    "@pockey/core": "workspace:*",
+    "@pockey/key-provider": "workspace:*",
+    "@pockey/types": "workspace:*",
     "@scure/base": "^2.0.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.46.0",
@@ -26,7 +26,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@types/react": "19.3.0",

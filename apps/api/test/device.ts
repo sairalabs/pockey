@@ -1,5 +1,5 @@
-import { signPersonalMessage, signTypedDataInput } from '@pocketkey/chains-evm';
-import { signMessage as signSolanaMessage } from '@pocketkey/chains-solana';
+import { signPersonalMessage, signTypedDataInput } from '@pockey/chains-evm';
+import { signMessage as signSolanaMessage } from '@pockey/chains-solana';
 import {
   buildCreateSigner,
   buildExportAccount,
@@ -19,8 +19,8 @@ import {
   stampRequest,
   type SessionKeyPair,
   type Stamper,
-} from '@pocketkey/key-provider/client';
-import { encryptOtpForTests } from '@pocketkey/key-provider/testing';
+} from '@pockey/key-provider/client';
+import { encryptOtpForTests } from '@pockey/key-provider/testing';
 import {
   AuthResponse,
   EmailOtpStartOutput,
@@ -38,7 +38,7 @@ import {
   type SigningPolicy,
   type StampedRequest,
   type Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base64 } from '@scure/base';
 import { hexToBytes, type Hex, type LocalAccount } from 'viem';
 import { expect } from 'vitest';
@@ -190,7 +190,7 @@ export class Device {
     },
     publicId: string = SEED.app.publicId,
   ): Promise<{ device: Device | null; response: Response }> {
-    const { webauthnChallenge, webauthnStamp } = await import('@pocketkey/key-provider/client');
+    const { webauthnChallenge, webauthnStamp } = await import('@pockey/key-provider/client');
     const config = await appConfig(publicId);
     const key = await generateSessionKey();
     const prepared = buildLogin({
@@ -368,7 +368,7 @@ export class Device {
     const account = this.keySession.accounts[wallet.chainFamily];
     const expiresIn = (policy as { expiresIn?: string }).expiresIn ?? '1h';
     const expiresAt = overrides.expiresAt ?? new Date(Date.now() + safeSeconds(expiresIn) * 1000);
-    const policyName = `pocketkey:ses:${crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`;
+    const policyName = `pockey:ses:${crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`;
     const request = await this.stamp(
       buildSessionPolicy({
         organizationId: this.keySession.organizationId,

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePocketkey, useSign, useWallet } from '@pocketkey/react';
+import { usePockey, useSign, useWallet } from '@pockey/react';
 import { useCallback, useState, type ReactNode } from 'react';
 
 interface LogEntry {
@@ -87,10 +87,10 @@ function Row({ label, value, testId }: { label: string; value: string; testId?: 
 }
 
 export default function Playground() {
-  const { ready, authenticated, user, login, logout, registerPasskey } = usePocketkey();
+  const { ready, authenticated, user, login, logout, registerPasskey } = usePockey();
   const { wallets, evm, solana, createWallet, exportWallet } = useWallet();
   const { signMessage, signTypedData, sendTransaction } = useSign();
-  const [message, setMessage] = useState('gm from the Pocketkey playground');
+  const [message, setMessage] = useState('gm from the Pockey playground');
   const [log, setLog] = useState<LogEntry[]>([]);
 
   const run = useCallback(async (label: string, action: () => Promise<unknown>) => {
@@ -128,9 +128,9 @@ export default function Playground() {
     <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Pocketkey playground</h1>
+          <h1 className="text-2xl font-semibold">Pockey playground</h1>
           <p className="text-sm text-fg-2">
-            Every hook of @pocketkey/react against the local API and embed.
+            Every hook of @pockey/react against the local API and embed.
           </p>
         </div>
         <span
@@ -256,7 +256,7 @@ export default function Playground() {
                 void run('signTypedData', () =>
                   signTypedData({
                     chain: 'evm',
-                    domain: { name: 'Pocketkey Playground', version: '1', chainId: 84532 },
+                    domain: { name: 'Pockey Playground', version: '1', chainId: 84532 },
                     types: { Greeting: [{ name: 'text', type: 'string' }] },
                     primaryType: 'Greeting',
                     message: { text: message },

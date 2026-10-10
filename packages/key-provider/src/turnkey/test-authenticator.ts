@@ -36,8 +36,8 @@ export class TestAuthenticator {
   private counter = 0;
 
   constructor(
-    private readonly rpId = 'embed.pocketkey.test',
-    private readonly origin = 'https://embed.pocketkey.test',
+    private readonly rpId = 'embed.pockey.test',
+    private readonly origin = 'https://embed.pockey.test',
   ) {}
 
   get credentialId(): string {

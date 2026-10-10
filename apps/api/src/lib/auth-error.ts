@@ -1,8 +1,8 @@
-import type { ApiErrorCode } from '@pocketkey/types';
+import type { ApiErrorCode } from '@pockey/types';
 import { errorBody } from '../errors.js';
 
 /**
- * Better Auth answers `{ code, message }`; every Pocketkey response uses the
+ * Better Auth answers `{ code, message }`; every Pockey response uses the
  * documented `{ error: { code, message, details?, requestId } }` shape instead.
  * Shared by the end user proxy (`/v1/auth/*`) and the developer one (`/admin/auth/*`).
  * Redirects and successes pass through untouched, cookies included.

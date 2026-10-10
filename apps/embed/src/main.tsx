@@ -1,4 +1,4 @@
-import { EMBED_APP_ID_PARAM } from '@pocketkey/types';
+import { EMBED_APP_ID_PARAM } from '@pockey/types';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startEmbed } from './embed';
@@ -13,7 +13,7 @@ function Notice() {
       data-theme="light"
     >
       <p className="text-center text-[15px] text-fg-2">
-        This page is meant to be embedded by the Pocketkey SDK.
+        This page is meant to be embedded by the Pockey SDK.
       </p>
     </div>
   );

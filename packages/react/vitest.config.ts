@@ -13,7 +13,7 @@ export default defineConfig({
           fetch: {
             virtualServers: [
               {
-                url: 'https://embed.pocketkey.test',
+                url: 'https://embed.pockey.test',
                 directory: fileURLToPath(new URL('./test/embed', import.meta.url)),
               },
             ],

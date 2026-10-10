@@ -1,4 +1,4 @@
-import { newId, usageEvents, usageMonthly } from '@pocketkey/db';
+import { newId, usageEvents, usageMonthly } from '@pockey/db';
 import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import worker from '../src/index.js';

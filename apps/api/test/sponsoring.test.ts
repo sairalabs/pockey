@@ -1,6 +1,6 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
-import type { EvmRpc } from '@pocketkey/chains-evm';
-import { SYSTEM_PROGRAM_ID, type SolanaRpc } from '@pocketkey/chains-solana';
+import type { EvmRpc } from '@pockey/chains-evm';
+import { SYSTEM_PROGRAM_ID, type SolanaRpc } from '@pockey/chains-solana';
 import {
   appSystemWallets,
   paymentEvents,
@@ -9,13 +9,13 @@ import {
   sponsorLedger,
   usageEvents,
   wallets,
-} from '@pocketkey/db';
+} from '@pockey/db';
 import {
   chargedCents,
   createStaticPriceFeed,
   type EvmSponsorClientsFactory,
-} from '@pocketkey/gas-sponsor';
-import { createMockPayments, MOCK_WEBHOOK_SECRET } from '@pocketkey/payments';
+} from '@pockey/gas-sponsor';
+import { createMockPayments, MOCK_WEBHOOK_SECRET } from '@pockey/payments';
 import {
   ApiErrorBody,
   SendTransactionOutput,
@@ -28,7 +28,7 @@ import {
   type SessionSignRequestInput,
   type SigningPolicy,
   type Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base58, base64 } from '@scure/base';
 import { and, eq, sql } from 'drizzle-orm';
 import { hashMessage, keccak256, recoverAddress, stringToHex, type Hex } from 'viem';
@@ -165,7 +165,7 @@ const postUser = (path: string, body: unknown, token = login.accessToken) =>
 const getUser = (path: string, token = login.accessToken) => call(path, { headers: bearer(token) });
 
 const secretHeaders = {
-  'X-Pocketkey-App-Id': SEED.app.publicId,
+  'X-Pockey-App-Id': SEED.app.publicId,
   Authorization: `Bearer ${SEED.apiKey.secret}`,
   'Content-Type': 'application/json',
 };

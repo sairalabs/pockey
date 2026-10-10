@@ -1,5 +1,5 @@
-import type { EvmRpc } from '@pocketkey/chains-evm';
-import type { SolanaRpc } from '@pocketkey/chains-solana';
+import type { EvmRpc } from '@pockey/chains-evm';
+import type { SolanaRpc } from '@pockey/chains-solana';
 import {
   apiKeyPrefix,
   apiKeys,
@@ -8,13 +8,13 @@ import {
   newSecretApiKey,
   sha256Hex,
   usageEvents,
-} from '@pocketkey/db';
+} from '@pockey/db';
 import {
   ApiErrorBody,
   ServerUserList,
   SessionSignOutput,
   type AuthResponse,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base58 } from '@scure/base';
 import { and, eq } from 'drizzle-orm';
 import { recoverTransactionAddress, verifyMessage, type Address, type Hex } from 'viem';
@@ -50,7 +50,7 @@ const secretHeaders = (
   secret: string = SEED.apiKey.secret,
   publicId: string = SEED.app.publicId,
 ): Record<string, string> => ({
-  'X-Pocketkey-App-Id': publicId,
+  'X-Pockey-App-Id': publicId,
   Authorization: `Bearer ${secret}`,
   'Content-Type': 'application/json',
 });

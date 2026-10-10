@@ -30,7 +30,7 @@ export type ChainsConfig = z.infer<typeof ChainsConfig>;
 
 /**
  * Full app configuration as stored in the `apps.config` JSON column and
- * as accepted by `<PocketkeyProvider config={...}>` on the client.
+ * as accepted by `<PockeyProvider config={...}>` on the client.
  * Client-side values are merged over the server config, never the reverse.
  */
 export const AppConfig = z.object({

@@ -2,8 +2,8 @@ import {
   normalizeSignature,
   type SerializedUserOperation,
   type SignHash,
-} from '@pocketkey/chains-evm';
-import { EVM_CHAINS, type EvmChainId } from '@pocketkey/types';
+} from '@pockey/chains-evm';
+import { EVM_CHAINS, type EvmChainId } from '@pockey/types';
 import { BaseError, isAddress, isHex, type Address, type Hex } from 'viem';
 import { GasSponsorError } from './errors.js';
 

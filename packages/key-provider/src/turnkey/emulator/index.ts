@@ -4,14 +4,14 @@ import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { keccak_256 } from '@noble/hashes/sha3.js';
 import { bytesToHex, hexToBytes, randomBytes } from '@noble/hashes/utils.js';
-import { parseEvmTransaction } from '@pocketkey/chains-evm';
+import { parseEvmTransaction } from '@pockey/chains-evm';
 import {
   inspectTransaction,
   programIds,
   signTransaction as signSolanaTransaction,
   SYSTEM_PROGRAM_ID,
   type InspectedTransaction,
-} from '@pocketkey/chains-solana';
+} from '@pockey/chains-solana';
 import { base58, base64, base64urlnopad } from '@scure/base';
 import { parseTransaction, serializeTransaction, type Hex } from 'viem';
 import { TurnkeyRequestError, type TurnkeyTransport } from '../http.js';
@@ -94,7 +94,7 @@ interface IssuedToken {
 
 export interface TurnkeyEmulatorOptions {
   parentOrgId?: string;
-  /** Compressed P-256 public key of the parent API key (Pocketkey's credential). */
+  /** Compressed P-256 public key of the parent API key (Pockey's credential). */
   parentPublicKey: string;
   /** Receives every OTP code, in place of Turnkey's email. */
   onOtp?: (email: string, code: string, appName: string) => void;
@@ -641,7 +641,7 @@ export function createTurnkeyEmulator(options: TurnkeyEmulatorOptions): TurnkeyE
           expiresAt: now() + Number(params.expirationSeconds ?? 300) * 1000,
         });
         lastOtps.set(email, code);
-        options.onOtp?.(email, code, str(params.appName, 'Pocketkey'));
+        options.onOtp?.(email, code, str(params.appName, 'Pockey'));
         return {
           initOtpResultV2: {
             otpId,

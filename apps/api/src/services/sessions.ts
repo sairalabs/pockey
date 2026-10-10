@@ -5,12 +5,12 @@ import {
   signPersonalMessage,
   signTypedDataInput,
   type SignHash,
-} from '@pocketkey/chains-evm';
+} from '@pockey/chains-evm';
 import {
   signMessage as signSolanaMessage,
   transactionId,
   type SignBytes,
-} from '@pocketkey/chains-solana';
+} from '@pockey/chains-solana';
 import {
   endUsers,
   newId,
@@ -20,13 +20,13 @@ import {
   type Db,
   type SessionSignerRow,
   type WalletRow,
-} from '@pocketkey/db';
+} from '@pockey/db';
 import {
   KeyProviderError,
   type KeyProvider,
   type SignerScope,
   type StampedRequest,
-} from '@pocketkey/key-provider';
+} from '@pockey/key-provider';
 import {
   AppConfig,
   durationToSeconds,
@@ -34,7 +34,7 @@ import {
   type CreateSessionBody,
   type SessionSignOutput,
   type SessionSignRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base64 } from '@scure/base';
 import { and, desc, eq, isNull, lte } from 'drizzle-orm';
 import { hexToBytes, type Address, type Hex } from 'viem';
@@ -64,10 +64,10 @@ import {
 /**
  * Session signers (T4.2, section 7.4), non-custodial since 2026-09-19.
  *
- * The end user adds the Pocketkey signer to their sub-organization (a non-root user
+ * The end user adds the Pockey signer to their sub-organization (a non-root user
  * with no power), then creates each session policy themselves: the iframe stamps
  * the policy after the consent screen, the provider enforces it, and it expires at
- * the provider on its own. Pocketkey mirrors it in `session_signers`, checks every
+ * the provider on its own. Pockey mirrors it in `session_signers`, checks every
  * request locally first, reserves `maxValueTotal` atomically, then signs with the
  * signer key, which the provider only lets through that policy.
  */
@@ -125,7 +125,7 @@ async function subOrgOf(db: Db, endUserId: string, appId: string): Promise<strin
 
 /* Signer setup (once per user), create, list, revoke */
 
-/** Adds the Pocketkey signer user, stamped by the iframe. Once per end user. */
+/** Adds the Pockey signer user, stamped by the iframe. Once per end user. */
 export async function setupSigner(
   deps: SessionDeps,
   endUserId: string,

@@ -9,7 +9,7 @@ import {
   normalizeHexColor,
   type SolanaCluster,
   textOnColor,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { Check, Pipette } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';

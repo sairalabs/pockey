@@ -8,14 +8,14 @@ import type {
   SignTypedDataInput,
   StampedRequest,
   TransactionRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
 /**
  * The end user's key session, owned by the embed iframe (non-custodial since
  * 2026-09-19). The client never sees a key: it asks the `KeyClient` for requests
  * stamped by the session key and relays them to the API, which relays them to the
  * key provider. The embed implements this with Turnkey
- * (`@pocketkey/key-provider/client`), keys in IndexedDB.
+ * (`@pockey/key-provider/client`), keys in IndexedDB.
  */
 
 export type LoginCredential =

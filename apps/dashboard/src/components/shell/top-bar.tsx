@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, Developer } from '@pocketkey/types';
+import type { AdminApp, Developer } from '@pockey/types';
 import { Inbox, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';

@@ -3,13 +3,13 @@ import {
   POLICY_VIOLATIONS,
   type ApiErrorCode,
   type PolicyViolation,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
 /**
  * Stable error codes surfaced by the SDK: every documented API code plus the
  * failures that happen on the client side.
  */
-export type PocketkeyErrorCode =
+export type PockeyErrorCode =
   | ApiErrorCode
   /** `fetch` rejected: offline, DNS, CORS preflight refused. The session is kept. */
   | 'network_error'
@@ -24,24 +24,24 @@ export type PocketkeyErrorCode =
   /** The API answered with a body that does not match the documented schema. */
   | 'invalid_response';
 
-export interface PocketkeyErrorOptions {
+export interface PockeyErrorOptions {
   status?: number | undefined;
   requestId?: string | undefined;
   details?: unknown;
   cause?: unknown;
 }
 
-export class PocketkeyError extends Error {
-  readonly code: PocketkeyErrorCode;
+export class PockeyError extends Error {
+  readonly code: PockeyErrorCode;
   /** HTTP status when the error comes from a response. */
   readonly status: number | undefined;
   /** API request id, quote it in support tickets. */
   readonly requestId: string | undefined;
   readonly details: unknown;
 
-  constructor(code: PocketkeyErrorCode, message: string, options: PocketkeyErrorOptions = {}) {
+  constructor(code: PockeyErrorCode, message: string, options: PockeyErrorOptions = {}) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
-    this.name = 'PocketkeyError';
+    this.name = 'PockeyError';
     this.code = code;
     this.status = options.status;
     this.requestId = options.requestId;
@@ -49,8 +49,8 @@ export class PocketkeyError extends Error {
   }
 }
 
-export function isPocketkeyError(e: unknown): e is PocketkeyError {
-  return e instanceof PocketkeyError;
+export function isPockeyError(e: unknown): e is PockeyError {
+  return e instanceof PockeyError;
 }
 
 /** Why a session policy refused a request: a stable policy reason, or the key provider denied it. */
@@ -67,7 +67,7 @@ function isRefusal(value: unknown): value is SessionPolicyRefusal {
  * (including a reason this SDK version does not know yet).
  */
 export function policyViolationReason(error: unknown): SessionPolicyRefusal | null {
-  if (!isPocketkeyError(error) || error.code !== 'policy_violation') return null;
+  if (!isPockeyError(error) || error.code !== 'policy_violation') return null;
   const details = error.details;
   if (typeof details !== 'object' || details === null || !('reason' in details)) return null;
   return isRefusal(details.reason) ? details.reason : null;
@@ -83,8 +83,8 @@ function codeFromStatus(status: number): ApiErrorCode {
   return 'bad_request';
 }
 
-/** Turns a non-2xx response into a `PocketkeyError`, tolerating non JSON bodies (proxies, CDNs). */
-export async function errorFromResponse(response: Response): Promise<PocketkeyError> {
+/** Turns a non-2xx response into a `PockeyError`, tolerating non JSON bodies (proxies, CDNs). */
+export async function errorFromResponse(response: Response): Promise<PockeyError> {
   const headerRequestId = response.headers.get('X-Request-Id') ?? undefined;
   let data: unknown;
   try {
@@ -95,13 +95,13 @@ export async function errorFromResponse(response: Response): Promise<PocketkeyEr
   const parsed = ApiErrorBody.safeParse(data);
   if (parsed.success) {
     const { code, message, details, requestId } = parsed.data.error;
-    return new PocketkeyError(code, message, {
+    return new PockeyError(code, message, {
       status: response.status,
       requestId: requestId ?? headerRequestId,
       details,
     });
   }
-  return new PocketkeyError(
+  return new PockeyError(
     codeFromStatus(response.status),
     `Request failed with status ${response.status}`,
     { status: response.status, requestId: headerRequestId },

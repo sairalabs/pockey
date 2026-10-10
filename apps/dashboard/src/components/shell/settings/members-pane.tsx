@@ -1,6 +1,6 @@
 'use client';
 
-import type { Developer } from '@pocketkey/types';
+import type { Developer } from '@pockey/types';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/format';

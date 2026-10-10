@@ -1,5 +1,5 @@
-import { apiKeys, sha256Hex } from '@pocketkey/db';
-import { SecretApiKey } from '@pocketkey/types';
+import { apiKeys, sha256Hex } from '@pockey/db';
+import { SecretApiKey } from '@pockey/types';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { createMiddleware } from 'hono/factory';
 import type { AppEnv } from '../context.js';
@@ -11,7 +11,7 @@ const LAST_USED_RESOLUTION_MS = 60_000;
 
 /**
  * `/v1/server/*` routes (section 7.2). Requires `requireApp` first: the secret
- * key must belong to the app named in `X-Pocketkey-App-Id`. Keys are stored as
+ * key must belong to the app named in `X-Pockey-App-Id`. Keys are stored as
  * SHA-256 only. Sets `apiKeyId`.
  */
 export const requireApiKey = createMiddleware<AppEnv>(async (c, next) => {

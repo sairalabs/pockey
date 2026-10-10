@@ -89,13 +89,13 @@ real `/admin/*` API. The design above is unchanged, only its data source is.
 ### Data layer
 
 - `src/app/api/admin/[...path]/route.ts` is a same origin proxy. It forwards
-  method, query, body and cookies to `${POCKETKEY_API_URL}/admin/...` (default
+  method, query, body and cookies to `${POCKEY_API_URL}/admin/...` (default
   `http://localhost:8787`) and hands back `Set-Cookie`, `Location` and the
   status. The browser therefore only ever talks to the dashboard origin: no CORS
-  preflight, no third party cookie, and the `pocketkey_dev` session cookie is a
+  preflight, no third party cookie, and the `pockey_dev` session cookie is a
   first party cookie of the dashboard.
 - `src/lib/api.ts` is the browser client: it calls the proxy, parses every
-  answer with the Zod schemas of `@pocketkey/types`, and throws a typed
+  answer with the Zod schemas of `@pockey/types`, and throws a typed
   `ApiError` carrying `code`, `message`, `details` and `requestId`.
 - `src/lib/api.server.ts` is the same thing for server components: it reads the
   cookies of the incoming request with `cookies()` and calls the API directly.

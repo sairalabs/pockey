@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { PocketkeyClient } from './client.js';
+import type { PockeyClient } from './client.js';
 import { PUBLIC_RPC_URLS } from './config.js';
 import { hexToDecimalString, isHex, toHexQuantity } from './encoding.js';
-import { PocketkeyEmbedError, ProviderRpcError } from './errors.js';
+import { PockeyEmbedError, ProviderRpcError } from './errors.js';
 
 export interface EIP1193RequestArguments {
   method: string;
@@ -15,8 +15,8 @@ export interface EIP1193Provider {
   removeListener(event: string, listener: (...args: unknown[]) => void): void;
 }
 
-export interface PocketkeyEIP1193Provider extends EIP1193Provider {
-  readonly isPocketkey: true;
+export interface PockeyEIP1193Provider extends EIP1193Provider {
+  readonly isPockey: true;
 }
 
 /** Protocol error codes to EIP-1193 / EIP-1474 codes. */
@@ -43,7 +43,7 @@ const UNSUPPORTED_METHODS = new Set([
 
 export function toProviderRpcError(error: unknown): ProviderRpcError {
   if (error instanceof ProviderRpcError) return error;
-  if (error instanceof PocketkeyEmbedError) {
+  if (error instanceof PockeyEmbedError) {
     return new ProviderRpcError(RPC_CODE_BY_EMBED_CODE[error.code] ?? -32603, error.message, {
       code: error.code,
     });
@@ -98,7 +98,7 @@ function parseChainIdLoose(value: unknown): number | undefined {
   return undefined;
 }
 
-export function createEvmProvider(client: PocketkeyClient): PocketkeyEIP1193Provider {
+export function createEvmProvider(client: PockeyClient): PockeyEIP1193Provider {
   const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
   let rpcId = 0;
 
@@ -224,7 +224,7 @@ export function createEvmProvider(client: PocketkeyClient): PocketkeyEIP1193Prov
         const parsed = SwitchChainParams.safeParse(params);
         if (!parsed.success) throw invalidParams('Expected [{ chainId, ... }].');
         if (client.getEvmChains().includes(toNumber(parsed.data[0].chainId))) return null;
-        throw new ProviderRpcError(4200, 'Adding chains is not supported by Pocketkey.');
+        throw new ProviderRpcError(4200, 'Adding chains is not supported by Pockey.');
       }
 
       case 'personal_sign': {
@@ -311,7 +311,7 @@ export function createEvmProvider(client: PocketkeyClient): PocketkeyEIP1193Prov
 
       default: {
         if (UNSUPPORTED_METHODS.has(args.method) || args.method.startsWith('wallet_')) {
-          throw new ProviderRpcError(4200, `Method ${args.method} is not supported by Pocketkey.`);
+          throw new ProviderRpcError(4200, `Method ${args.method} is not supported by Pockey.`);
         }
         return forwardToRpc(args);
       }
@@ -319,7 +319,7 @@ export function createEvmProvider(client: PocketkeyClient): PocketkeyEIP1193Prov
   };
 
   return {
-    isPocketkey: true,
+    isPockey: true,
     async request(args) {
       try {
         return await handle(args);

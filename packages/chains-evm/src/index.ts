@@ -1,5 +1,5 @@
 /**
- * @pocketkey/chains-evm
+ * @pockey/chains-evm
  *
  * EVM adapter built on viem. Private keys never exist here: every signature is
  * produced by a `SignHash` callback supplied by the caller.
@@ -26,7 +26,7 @@ export {
   type EvmRpc,
   type PreparedEvmTransaction,
 } from './transaction.js';
-export { toPocketkeyAccount } from './account.js';
+export { toPockeyAccount } from './account.js';
 export { buildSiweMessage, verifySiweLogin } from './siwe.js';
 export {
   decodeKernelExecute,

@@ -1,9 +1,9 @@
-import { COMPUTE_BUDGET_PROGRAM_ID } from '@pocketkey/chains-solana';
-import type { SigningPolicy } from '@pocketkey/types';
+import { COMPUTE_BUDGET_PROGRAM_ID } from '@pockey/chains-solana';
+import type { SigningPolicy } from '@pockey/types';
 import { ACTIVITY } from './wire.js';
 
 /**
- * Maps a Pocketkey `SigningPolicy` to a Turnkey policy (T4.1, section 7.4).
+ * Maps a Pockey `SigningPolicy` to a Turnkey policy (T4.1, section 7.4).
  * Pure: the iframe builds the policy it stamps with this function, and the API
  * rebuilds it to check that the relayed body is exactly what the user consented to.
  *
@@ -16,7 +16,7 @@ import { ACTIVITY } from './wire.js';
  * exact account address as well as the wallet: a Solana session with no program
  * allowlist must never let an EVM transaction through.
  *
- * Still enforced by Pocketkey only: `maxValueTotal` (policies are stateless).
+ * Still enforced by Pockey only: `maxValueTotal` (policies are stateless).
  */
 
 export const TURNKEY_ACTIVITY = {
@@ -40,7 +40,7 @@ export interface TurnkeyPolicyTarget {
   walletId: string;
   /** Account address inside that wallet, exactly as Turnkey returned it. */
   address: string;
-  /** Turnkey user holding the Pocketkey signer key in this sub-organization. */
+  /** Turnkey user holding the Pockey signer key in this sub-organization. */
   sessionUserId: string;
   policyName: string;
   /** Turnkey refuses every signature at or after this instant. */
@@ -86,7 +86,7 @@ export function toTurnkeyPolicy(policy: SigningPolicy, target: TurnkeyPolicyTarg
       txConditions.push(`solana.tx.program_keys.all(p, p in ${list(programs.map(quote))})`);
     }
     if (policy.maxValuePerTx !== undefined) {
-      // Per transfer, not per transaction: Pocketkey pre-checks the per transaction sum.
+      // Per transfer, not per transaction: Pockey pre-checks the per transaction sum.
       txConditions.push(
         `solana.tx.transfers.all(t, t.amount <= ${BigInt(policy.maxValuePerTx).toString()})`,
       );
@@ -106,8 +106,8 @@ export function toTurnkeyPolicy(policy: SigningPolicy, target: TurnkeyPolicyTarg
     `wallet.id == ${quote(target.walletId)} && ` +
     `wallet_account.address == ${quote(target.address)} && (${allowed.join(' || ')})`;
 
-  const pocketkeyOnly =
-    policy.maxValueTotal !== undefined ? ' Enforced by Pocketkey only: maxValueTotal.' : '';
+  const pockeyOnly =
+    policy.maxValueTotal !== undefined ? ' Enforced by Pockey only: maxValueTotal.' : '';
 
   return {
     policyName: target.policyName,
@@ -115,21 +115,21 @@ export function toTurnkeyPolicy(policy: SigningPolicy, target: TurnkeyPolicyTarg
     consensus: `approvers.any(user, user.id == ${quote(target.sessionUserId)})`,
     condition,
     time: `time.now < Timestamp(${quote(policyTimestamp(target.expiresAt))})`,
-    notes: `Pocketkey session signer (${policy.chain}, ${policy.expiresIn}).${pocketkeyOnly}`,
+    notes: `Pockey session signer (${policy.chain}, ${policy.expiresIn}).${pockeyOnly}`,
   };
 }
 
 /**
- * Lets the Pocketkey signer delete policies in this sub-organization, so a session
+ * Lets the Pockey signer delete policies in this sub-organization, so a session
  * can be revoked from the API (developer backend, dashboard, expiry cleanup). It can
  * only remove power: creating policies still needs the end user.
  */
 export function revokePermissionPolicy(sessionUserId: string): TurnkeyPolicy {
   return {
-    policyName: 'pocketkey:revoke',
+    policyName: 'pockey:revoke',
     effect: 'EFFECT_ALLOW',
     consensus: `approvers.any(user, user.id == ${quote(sessionUserId)})`,
     condition: `activity.type == ${quote(TURNKEY_ACTIVITY.deletePolicy)}`,
-    notes: 'Lets Pocketkey revoke session signers. It cannot create or widen them.',
+    notes: 'Lets Pockey revoke session signers. It cannot create or widen them.',
   };
 }

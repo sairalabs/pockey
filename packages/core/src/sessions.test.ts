@@ -1,7 +1,7 @@
-import { SessionSigner, type CreateSessionInput } from '@pocketkey/types';
+import { SessionSigner, type CreateSessionInput } from '@pockey/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPocketkey, isSessionActive, type PocketkeyClient } from './client.js';
-import { isPocketkeyError, policyViolationReason, PocketkeyError } from './errors.js';
+import { createPockey, isSessionActive, type PockeyClient } from './client.js';
+import { isPockeyError, policyViolationReason, PockeyError } from './errors.js';
 import { memoryStorage, type TokenStorage } from './storage.js';
 import {
   apiError,
@@ -39,9 +39,9 @@ let api: FakeApi;
 let keys: FakeKeys;
 let storage: TokenStorage;
 
-async function signedIn(signerUserId: string | null = null): Promise<PocketkeyClient> {
+async function signedIn(signerUserId: string | null = null): Promise<PockeyClient> {
   routeEmailLogin(api, { session: keySession({ signerUserId }) });
-  const pk = createPocketkey({
+  const pk = createPockey({
     appId: APP_ID,
     baseUrl: BASE_URL,
     storage,
@@ -59,11 +59,11 @@ function routeSigner() {
   api.on('POST', '/v1/sessions/signer/permission', () => json({ ok: true }));
 }
 
-async function rejection(promise: Promise<unknown>): Promise<PocketkeyError> {
+async function rejection(promise: Promise<unknown>): Promise<PockeyError> {
   try {
     await promise;
   } catch (e) {
-    if (isPocketkeyError(e)) return e;
+    if (isPockeyError(e)) return e;
     throw e;
   }
   throw new Error('Expected a rejection');
@@ -121,7 +121,7 @@ describe('sessions', () => {
     const policyInput = keys.inputOf('sessionPolicy');
     expect(policyInput).toEqual({
       organizationId: ks.organizationId,
-      policyName: expect.stringMatching(/^pocketkey:ses:[A-Za-z0-9_-]{8,40}$/),
+      policyName: expect.stringMatching(/^pockey:ses:[A-Za-z0-9_-]{8,40}$/),
       policy: input.policy,
       walletId: ks.accounts.evm.walletId,
       address: ks.accounts.evm.address,
@@ -136,14 +136,14 @@ describe('sessions', () => {
       request: stamped('create_policy', { policyName: policyInput?.policyName }),
     });
     expect(call?.headers.authorization).toMatch(/^Bearer /);
-    expect(call?.headers['x-pocketkey-app-id']).toBe(APP_ID);
+    expect(call?.headers['x-pockey-app-id']).toBe(APP_ID);
 
     // The signer is remembered: a second session only stamps its policy.
     await pk.sessions.create(input);
     expect(api.count('POST', '/v1/sessions/signer')).toBe(1);
     expect(keys.methods().slice(-2)).toEqual(['sessionPolicy', 'sessionPolicy']);
     expect(
-      JSON.parse((await storage.get(`pocketkey:${APP_ID}:keySession`)) ?? 'null'),
+      JSON.parse((await storage.get(`pockey:${APP_ID}:keySession`)) ?? 'null'),
     ).toMatchObject({ signerUserId: 'tk_signer' });
   });
 
@@ -229,7 +229,7 @@ describe('sessions', () => {
     const error = await rejection(
       pk.sessions.sign(SESSION_ID, { kind: 'message', input: { chain: 'evm', message: 'gm' } }),
     );
-    expect(error).toBeInstanceOf(PocketkeyError);
+    expect(error).toBeInstanceOf(PockeyError);
     expect(error.code).toBe('policy_violation');
     expect(error.status).toBe(403);
     expect(error.details).toEqual({ reason: 'value_per_tx_exceeded' });
@@ -238,20 +238,20 @@ describe('sessions', () => {
 
   it('policyViolationReason accepts provider_denied and ignores anything else', () => {
     const refusal = (details: unknown) =>
-      new PocketkeyError('policy_violation', 'refused', { status: 403, details });
+      new PockeyError('policy_violation', 'refused', { status: 403, details });
     expect(policyViolationReason(refusal({ reason: 'provider_denied' }))).toBe('provider_denied');
     expect(policyViolationReason(refusal({ reason: 'made_up' }))).toBeNull();
     expect(policyViolationReason(refusal(undefined))).toBeNull();
     expect(
       policyViolationReason(
-        new PocketkeyError('forbidden', 'no', { details: { reason: 'session_revoked' } }),
+        new PockeyError('forbidden', 'no', { details: { reason: 'session_revoked' } }),
       ),
     ).toBeNull();
     expect(policyViolationReason(new Error('policy_violation'))).toBeNull();
   });
 
   it('rejects not_authenticated without calling the API when logged out', async () => {
-    const pk = createPocketkey({
+    const pk = createPockey({
       appId: APP_ID,
       baseUrl: BASE_URL,
       storage: memoryStorage(),

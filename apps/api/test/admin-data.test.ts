@@ -5,7 +5,7 @@ import {
   sponsorBalances,
   usageEvents,
   usageMonthly,
-} from '@pocketkey/db';
+} from '@pockey/db';
 import {
   AdminEndUserList,
   AdminUsage,
@@ -16,7 +16,7 @@ import {
   SponsorBalance,
   TopUpCheckoutOutput,
   type AdminApp,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { adminRequest, createAdminApp, db, loginAsDeveloper, seedDb } from './helpers.js';

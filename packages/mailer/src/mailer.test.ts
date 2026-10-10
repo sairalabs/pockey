@@ -22,7 +22,7 @@ describe('ResendMailer', () => {
     };
     const mailer = new ResendMailer({
       apiKey: 're_test',
-      from: 'Pocketkey <auth@pocketkey.dev>',
+      from: 'Pockey <auth@pockey.xyz>',
       fetch: fakeFetch,
     });
     await mailer.send(

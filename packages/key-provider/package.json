@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/key-provider",
+  "name": "@pockey/key-provider",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,16 +20,16 @@
   "dependencies": {
     "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
-    "@pocketkey/chains-evm": "workspace:*",
-    "@pocketkey/chains-solana": "workspace:*",
-    "@pocketkey/types": "workspace:*",
+    "@pockey/chains-evm": "workspace:*",
+    "@pockey/chains-solana": "workspace:*",
+    "@pockey/types": "workspace:*",
     "@scure/base": "^2.0.0",
     "viem": "^2.56.5",
     "zod": "^4.6.5",
     "@turnkey/crypto": "2.13.0"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "eslint": "^9.39.0",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"

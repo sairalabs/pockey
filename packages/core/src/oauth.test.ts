@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPocketkey, type PocketkeyClient } from './client.js';
-import { isPocketkeyError } from './errors.js';
+import { createPockey, type PockeyClient } from './client.js';
+import { isPockeyError } from './errors.js';
 import { memoryStorage } from './storage.js';
 import {
   APP_ID,
@@ -42,7 +42,7 @@ function fakeWindow(popup: FakePopup | null) {
 
 let api: FakeApi;
 let keys: FakeKeys;
-let pk: PocketkeyClient;
+let pk: PockeyClient;
 let popup: FakePopup;
 
 /** Lets the popup navigate: the session key is fetched after `window.open`. */
@@ -55,7 +55,7 @@ beforeEach(() => {
   api = fakeApi();
   keys = fakeKeys();
   api.on('POST', '/v1/auth/oauth/exchange', () => json(authResponse()));
-  pk = createPocketkey({
+  pk = createPockey({
     appId: APP_ID,
     baseUrl: BASE_URL,
     storage: memoryStorage(),
@@ -91,21 +91,21 @@ describe('OAuth popup', () => {
     // Opened before any await, inside the user gesture, then navigated once the key exists.
     expect(win.open).toHaveBeenCalledWith(
       'about:blank',
-      'pocketkey-oauth',
+      'pockey-oauth',
       expect.stringContaining('popup'),
     );
     await navigated();
     expect(popup.location.href).toBe(startUrl('google'));
     expect(keys.methods()).toEqual(['pendingPublicKey']);
 
-    win.post({ type: 'pocketkey:oauth', code: CODE }, 'https://evil.example', popup);
-    win.post({ type: 'pocketkey:oauth', code: CODE }, BASE_URL, { closed: false });
+    win.post({ type: 'pockey:oauth', code: CODE }, 'https://evil.example', popup);
+    win.post({ type: 'pockey:oauth', code: CODE }, BASE_URL, { closed: false });
     win.post({ type: 'something-else' }, BASE_URL, popup);
     await Promise.resolve();
     expect(api.count('POST', '/v1/auth/oauth/exchange')).toBe(0);
     expect(win.listeners.size).toBe(1);
 
-    win.post({ type: 'pocketkey:oauth', code: CODE }, BASE_URL, popup);
+    win.post({ type: 'pockey:oauth', code: CODE }, BASE_URL, popup);
     const result = await pending;
     expect(result.user.id).toBeTruthy();
     expect(api.last('POST', '/v1/auth/oauth/exchange')?.body).toEqual({
@@ -132,7 +132,7 @@ describe('OAuth popup', () => {
     vi.stubGlobal('window', fakeWindow(popup));
     keys.fail('pendingPublicKey', new Error('no storage'));
     const { error } = await settle(pk.auth.oauth.loginWithPopup('google'));
-    expect(isPocketkeyError(error) && error.code).toBe('internal');
+    expect(isPockeyError(error) && error.code).toBe('internal');
     expect(popup.close).toHaveBeenCalled();
     expect(popup.location.href).toBe('about:blank');
   });
@@ -142,8 +142,8 @@ describe('OAuth popup', () => {
     vi.stubGlobal('window', win);
     const pending = pk.auth.oauth.loginWithPopup('apple', { apiOrigin: 'https://auth.test.dev/x' });
     await navigated();
-    win.post({ type: 'pocketkey:oauth', code: CODE }, BASE_URL, popup);
-    win.post({ type: 'pocketkey:oauth', code: CODE }, 'https://auth.test.dev', popup);
+    win.post({ type: 'pockey:oauth', code: CODE }, BASE_URL, popup);
+    win.post({ type: 'pockey:oauth', code: CODE }, 'https://auth.test.dev', popup);
     await pending;
     expect(api.count('POST', '/v1/auth/oauth/exchange')).toBe(1);
   });
@@ -157,7 +157,7 @@ describe('OAuth popup', () => {
     popup.closed = true;
     await vi.advanceTimersByTimeAsync(1000);
     const { error } = await pending;
-    expect(isPocketkeyError(error) && error.code).toBe('user_rejected');
+    expect(isPockeyError(error) && error.code).toBe('user_rejected');
     expect(win.listeners.size).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
     expect(api.count('POST', '/v1/auth/oauth/exchange')).toBe(0);
@@ -167,13 +167,13 @@ describe('OAuth popup', () => {
   it('rejects popup_blocked when window.open returns null', async () => {
     vi.stubGlobal('window', fakeWindow(null));
     const { error } = await settle(pk.auth.oauth.loginWithPopup('google'));
-    expect(isPocketkeyError(error) && error.code).toBe('popup_blocked');
+    expect(isPockeyError(error) && error.code).toBe('popup_blocked');
     expect(keys.methods()).toEqual([]);
   });
 
   it('rejects unsupported outside browsers', async () => {
     const { error } = await settle(pk.auth.oauth.loginWithPopup('google'));
-    expect(isPocketkeyError(error) && error.code).toBe('unsupported');
+    expect(isPockeyError(error) && error.code).toBe('unsupported');
   });
 
   it('surfaces the provider error', async () => {
@@ -181,10 +181,10 @@ describe('OAuth popup', () => {
     vi.stubGlobal('window', win);
     const pending = settle(pk.auth.oauth.loginWithPopup('google'));
     await navigated();
-    win.post({ type: 'pocketkey:oauth', error: 'no_session' }, BASE_URL, popup);
+    win.post({ type: 'pockey:oauth', error: 'no_session' }, BASE_URL, popup);
     const { error } = await pending;
-    expect(isPocketkeyError(error) && error.code).toBe('unauthorized');
-    expect(isPocketkeyError(error) && error.details).toEqual({ providerError: 'no_session' });
+    expect(isPockeyError(error) && error.code).toBe('unauthorized');
+    expect(isPockeyError(error) && error.details).toEqual({ providerError: 'no_session' });
     expect(win.listeners.size).toBe(0);
   });
 
@@ -195,7 +195,7 @@ describe('OAuth popup', () => {
     await navigated();
     await vi.advanceTimersByTimeAsync(10_000);
     const { error } = await pending;
-    expect(isPocketkeyError(error) && error.code).toBe('user_rejected');
+    expect(isPockeyError(error) && error.code).toBe('user_rejected');
     expect(popup.close).toHaveBeenCalled();
     expect(win.listeners.size).toBe(0);
     expect(vi.getTimerCount()).toBe(0);

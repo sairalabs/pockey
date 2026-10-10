@@ -1,6 +1,6 @@
 'use client';
 
-import { AllowedOrigin, AppSlug, type AdminApp } from '@pocketkey/types';
+import { AllowedOrigin, AppSlug, type AdminApp } from '@pockey/types';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';

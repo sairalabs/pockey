@@ -1,6 +1,6 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
-import type { SigningPolicy } from '@pocketkey/types';
+import type { SigningPolicy } from '@pockey/types';
 import {
   hpkeDecrypt as turnkeyHpkeDecrypt,
   hpkeEncrypt as turnkeyHpkeEncrypt,
@@ -105,7 +105,7 @@ async function signUp(email = 'ada@example.com') {
   return { key, stamper: sessionStamper(key), ...created };
 }
 
-const digest = hexToBytes(keccak256(toHex('pocketkey')).slice(2));
+const digest = hexToBytes(keccak256(toHex('pockey')).slice(2));
 
 async function signRawAs(user: Awaited<ReturnType<typeof signUp>>, stamper = user.stamper) {
   const address = user.accounts.evm.address;
@@ -284,7 +284,7 @@ describe('relay checks', () => {
     expect(await codeOf(provider.relay(tampered, expectation))).toBe('unexpected_request');
   });
 
-  it('never lets Pocketkey credentials act on user keys', async () => {
+  it('never lets Pockey credentials act on user keys', async () => {
     const user = await signUp();
     const parentOnly = new TurnkeyKeyProvider({
       client: new TurnkeyClient({ transport: emulator, now, sleep: advance }),
@@ -346,7 +346,7 @@ describe('session signers', () => {
     const expiresAt = new Date(clock + 3600_000);
     const input = {
       organizationId: user.subOrgId,
-      policyName: 'pocketkey:ses_test',
+      policyName: 'pockey:ses_test',
       policy,
       walletId: account.walletId,
       address: account.address,
@@ -464,7 +464,7 @@ describe('session signers', () => {
     const request = await stampRequest(
       buildSessionPolicy({
         organizationId: user.subOrgId,
-        policyName: 'pocketkey:ses_test',
+        policyName: 'pockey:ses_test',
         policy: wide,
         walletId: account.walletId,
         address: account.address,
@@ -477,7 +477,7 @@ describe('session signers', () => {
       provider.relay(request, {
         kind: 'createSessionPolicy',
         subOrgId: user.subOrgId,
-        policyName: 'pocketkey:ses_test',
+        policyName: 'pockey:ses_test',
         policy: narrow,
         walletId: account.walletId,
         address: account.address,

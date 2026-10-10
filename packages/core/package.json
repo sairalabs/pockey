@@ -1,7 +1,7 @@
 {
-  "name": "@pocketkey/core",
+  "name": "@pockey/core",
   "version": "0.0.0",
-  "description": "Headless Pocketkey client: auth, sessions and embedded wallets over the Pocketkey API.",
+  "description": "Headless Pockey client: auth, sessions and embedded wallets over the Pockey API.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -24,12 +24,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pocketkey/types": "workspace:*",
+    "@pockey/types": "workspace:*",
     "@simplewebauthn/browser": "^14.0.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "eslint": "^9.39.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3",

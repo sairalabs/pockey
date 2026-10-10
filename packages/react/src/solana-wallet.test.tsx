@@ -16,7 +16,7 @@ import {
   SOLANA_ADDRESS,
   SOLANA_WALLET_ID,
   makeUser,
-  renderPocketkey,
+  renderPockey,
 } from './__tests__/fake-embed.js';
 
 type FullWallet = Wallet & {
@@ -61,10 +61,10 @@ afterEach(() => {
 
 describe('Solana Wallet Standard wallet', () => {
   it('registers once with the expected shape and unregisters on unmount', async () => {
-    const { result } = await renderPocketkey({ initUser: makeUser() });
+    const { result } = await renderPockey({ initUser: makeUser() });
     const wallet = onlyWallet();
 
-    expect(wallet.name).toBe('Pocketkey');
+    expect(wallet.name).toBe('Pockey');
     expect(wallet.version).toBe('1.0.0');
     expect(wallet.icon).toMatch(/^data:image\/svg\+xml;base64,/);
     expect(wallet.chains).toEqual(['solana:devnet']);
@@ -97,7 +97,7 @@ describe('Solana Wallet Standard wallet', () => {
   });
 
   it('maps mainnet-beta to solana:mainnet', async () => {
-    await renderPocketkey({
+    await renderPockey({
       initUser: makeUser(),
       config: { chains: { solana: ['mainnet-beta', 'devnet'] } },
     });
@@ -105,17 +105,17 @@ describe('Solana Wallet Standard wallet', () => {
   });
 
   it('does not register without a Solana wallet or when disabled', async () => {
-    const first = await renderPocketkey({ initUser: makeUser(['evm']) });
+    const first = await renderPockey({ initUser: makeUser(['evm']) });
     expect(registered).toHaveLength(0);
     first.result.unmount();
 
-    await renderPocketkey({ initUser: makeUser(), config: { solana: { walletStandard: false } } });
+    await renderPockey({ initUser: makeUser(), config: { solana: { walletStandard: false } } });
     expect(registered).toHaveLength(0);
   });
 
   it('registers with an app that loads after the provider', async () => {
     window.removeEventListener('wallet-standard:register-wallet', onRegister);
-    await renderPocketkey({ initUser: makeUser() });
+    await renderPockey({ initUser: makeUser() });
     expect(registered).toHaveLength(0);
 
     window.dispatchEvent(Object.assign(new Event('wallet-standard:app-ready'), { detail: api }));
@@ -123,7 +123,7 @@ describe('Solana Wallet Standard wallet', () => {
   });
 
   it('stays registered across logout and reports account changes', async () => {
-    const { embed } = await renderPocketkey({ initUser: makeUser() });
+    const { embed } = await renderPockey({ initUser: makeUser() });
     const wallet = onlyWallet();
     const change = vi.fn();
     const off = wallet.features['standard:events'].on('change', change);
@@ -144,7 +144,7 @@ describe('Solana Wallet Standard wallet', () => {
 
   it('connect, disconnect and signing go through the embed', async () => {
     const signature = new Uint8Array(64).fill(7);
-    const { embed } = await renderPocketkey({
+    const { embed } = await renderPockey({
       initUser: makeUser(),
       setup: (fake) => {
         fake.handle('signMessage', () => ({

@@ -1,4 +1,4 @@
-import type { LoginMethod } from '@pocketkey/types';
+import type { LoginMethod } from '@pockey/types';
 import { KeyRound, Lock, Wallet } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { AppLogo } from '../components/AppLogo';
@@ -100,7 +100,7 @@ export function LoginScreen({ actions, app, titleId }: ScreenProps<'login'>) {
       footer={
         <p className="flex items-center justify-center gap-1.5 text-[13px] leading-5 text-fg-2">
           <Lock size={13} strokeWidth={1.5} aria-hidden="true" className="text-fg-3" />
-          Protected by Pocketkey
+          Protected by Pockey
         </p>
       }
     >

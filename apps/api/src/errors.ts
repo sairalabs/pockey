@@ -1,4 +1,4 @@
-import { HTTP_STATUS_BY_CODE, type ApiErrorBody, type ApiErrorCode } from '@pocketkey/types';
+import { HTTP_STATUS_BY_CODE, type ApiErrorBody, type ApiErrorCode } from '@pockey/types';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { HTTPException } from 'hono/http-exception';

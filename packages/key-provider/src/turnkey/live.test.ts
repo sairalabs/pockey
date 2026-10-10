@@ -1,4 +1,4 @@
-import type { SigningPolicy } from '@pocketkey/types';
+import type { SigningPolicy } from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import { recoverTransactionAddress, serializeTransaction, type Hex } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
@@ -141,7 +141,7 @@ describe.skipIf(!live)('Turnkey live contract', () => {
       } as SigningPolicy;
       const account = user.accounts.evm;
       const sessionInput = {
-        policyName: 'pocketkey:ses_live',
+        policyName: 'pockey:ses_live',
         policy,
         walletId: account.walletId,
         address: account.address,

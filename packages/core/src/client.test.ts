@@ -1,7 +1,7 @@
-import { EvmAddress, type EndUser } from '@pocketkey/types';
+import { EvmAddress, type EndUser } from '@pockey/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPocketkey, type PocketkeyClient } from './client.js';
-import { isPocketkeyError, PocketkeyError } from './errors.js';
+import { createPockey, type PockeyClient } from './client.js';
+import { isPockeyError, PockeyError } from './errors.js';
 import { memoryStorage, type TokenStorage } from './storage.js';
 import {
   apiError,
@@ -27,15 +27,15 @@ import {
 } from './test-utils.js';
 
 const RECIPIENT = EvmAddress.parse('0x2222222222222222222222222222222222222222');
-const key = (name: string) => `pocketkey:${APP_ID}:${name}`;
+const key = (name: string) => `pockey:${APP_ID}:${name}`;
 
 let api: FakeApi;
 let storage: TokenStorage;
 let keys: FakeKeys;
 
-function client(extra: { storage?: TokenStorage; keys?: FakeKeys | null } = {}): PocketkeyClient {
+function client(extra: { storage?: TokenStorage; keys?: FakeKeys | null } = {}): PockeyClient {
   const keyClient = extra.keys === null ? undefined : (extra.keys ?? keys).keys;
-  return createPocketkey({
+  return createPockey({
     appId: APP_ID,
     baseUrl: `${BASE_URL}/`,
     storage: extra.storage ?? storage,
@@ -44,17 +44,17 @@ function client(extra: { storage?: TokenStorage; keys?: FakeKeys | null } = {}):
   });
 }
 
-async function rejection(promise: Promise<unknown>): Promise<PocketkeyError> {
+async function rejection(promise: Promise<unknown>): Promise<PockeyError> {
   try {
     await promise;
   } catch (e) {
-    if (isPocketkeyError(e)) return e;
+    if (isPockeyError(e)) return e;
     throw e;
   }
   throw new Error('Expected a rejection');
 }
 
-async function signedIn(user: EndUser = endUser()): Promise<PocketkeyClient> {
+async function signedIn(user: EndUser = endUser()): Promise<PockeyClient> {
   routeEmailLogin(api, { user });
   const pk = client();
   await pk.auth.loginWithEmail('a@test.dev');
@@ -85,17 +85,17 @@ describe('construction', () => {
   it('rejects a malformed app id with bad_request', () => {
     let error: unknown;
     try {
-      createPocketkey({ appId: 'app_nope', fetch: api.fetch });
+      createPockey({ appId: 'app_nope', fetch: api.fetch });
     } catch (e) {
       error = e;
     }
-    expect(isPocketkeyError(error) && error.code).toBe('bad_request');
+    expect(isPockeyError(error) && error.code).toBe('bad_request');
   });
 
   it('tolerates a trailing slash and defaults the base url', () => {
     expect(client().baseUrl).toBe(BASE_URL);
-    expect(createPocketkey({ appId: APP_ID, fetch: api.fetch }).baseUrl).toBe(
-      'https://api.pocketkey.dev',
+    expect(createPockey({ appId: APP_ID, fetch: api.fetch }).baseUrl).toBe(
+      'https://api.pockey.xyz',
     );
   });
 });
@@ -135,9 +135,9 @@ describe('email login', () => {
     expect(keys.inputOf('loginProof')).toEqual({ verificationToken: 'vtoken' });
 
     for (const call of api.calls) {
-      expect(call.headers['x-pocketkey-app-id']).toBe(APP_ID);
-      expect(call.headers['x-pocketkey-device']).toBeUndefined();
-      expect(call.headers['x-pocketkey-auth-cookies']).toBeUndefined();
+      expect(call.headers['x-pockey-app-id']).toBe(APP_ID);
+      expect(call.headers['x-pockey-device']).toBeUndefined();
+      expect(call.headers['x-pockey-auth-cookies']).toBeUndefined();
     }
     expect(await storage.get(key('refresh'))).toBe(response.refreshToken);
     expect(await storage.get(key('access'))).toBe(response.accessToken);
@@ -422,7 +422,7 @@ describe('refresh', () => {
     const refreshToken = await storage.get(key('refresh'));
     const failing = api.fetch;
     let offline = true;
-    const flaky = createPocketkey({
+    const flaky = createPockey({
       appId: APP_ID,
       baseUrl: BASE_URL,
       storage,
@@ -474,7 +474,7 @@ describe('errors', () => {
     const error = await rejection(
       pk.wallets.signMessage(wallet('evm').id, { chain: 'evm', message: 'gm' }),
     );
-    expect(error).toBeInstanceOf(PocketkeyError);
+    expect(error).toBeInstanceOf(PockeyError);
     expect(error.code).toBe('policy_violation');
     expect(error.status).toBe(403);
     expect(error.requestId).toBe('req_test');
@@ -504,7 +504,7 @@ describe('errors', () => {
   });
 
   it('turns fetch rejections into network_error', async () => {
-    const pk = createPocketkey({
+    const pk = createPockey({
       appId: APP_ID,
       storage,
       keys: keys.keys,

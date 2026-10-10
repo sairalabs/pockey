@@ -1,5 +1,5 @@
 import { init } from '@paralleldrive/cuid2';
-import { ID_PREFIXES, type IdPrefix } from '@pocketkey/types';
+import { ID_PREFIXES, type IdPrefix } from '@pockey/types';
 
 // Lazy: cuid2's init() draws randomness, which workerd forbids at module scope.
 let generator: (() => string) | undefined;

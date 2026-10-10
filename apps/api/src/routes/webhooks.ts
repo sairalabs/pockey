@@ -1,4 +1,4 @@
-import { PaymentsError, type PaymentEvent } from '@pocketkey/payments';
+import { PaymentsError, type PaymentEvent } from '@pockey/payments';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../context.js';

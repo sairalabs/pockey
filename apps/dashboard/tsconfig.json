@@ -1,5 +1,5 @@
 {
-  "extends": "@pocketkey/config/tsconfig.react.json",
+  "extends": "@pockey/config/tsconfig.react.json",
   "compilerOptions": {
     "noEmit": true,
     "incremental": true,

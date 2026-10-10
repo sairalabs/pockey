@@ -78,7 +78,7 @@ export type CreateSessionInput = z.infer<typeof CreateSessionInput>;
 
 /** `POST /v1/sessions`: the iframe stamps the provider policy after the user consented. */
 export const CreateSessionBody = CreateSessionInput.extend({
-  policyName: z.string().regex(/^pocketkey:ses:[A-Za-z0-9_-]{8,40}$/),
+  policyName: z.string().regex(/^pockey:ses:[A-Za-z0-9_-]{8,40}$/),
   /** Chosen by the iframe (now + expiresIn), written into the provider policy. */
   expiresAt: z.iso.datetime(),
   request: StampedRequest,

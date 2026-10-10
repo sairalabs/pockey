@@ -1,5 +1,5 @@
 /**
- * The subset of the Turnkey public API Pocketkey speaks, as plain data.
+ * The subset of the Turnkey public API Pockey speaks, as plain data.
  *
  * Checked against `@turnkey/http` 6.5 generated types and a live organization on
  * 2026-09-19 (see TURNKEY.md). Kept as our own definitions so the Worker, the

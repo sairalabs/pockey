@@ -1,5 +1,5 @@
 /**
- * @pocketkey/payments (private, server side)
+ * @pockey/payments (private, server side)
  *
  * Payments port over fetch and WebCrypto, no SDK, so it runs on Workers:
  * prepaid gas sponsoring top-ups through Stripe Checkout (section 7.5, T4.6) and

@@ -76,7 +76,7 @@ export type CreateApiKeyInput = z.infer<typeof CreateApiKeyInput>;
 
 export const CreateApiKeyOutput = z.object({
   key: ApiKeySummary,
-  /** Shown once. Pocketkey only stores its hash. */
+  /** Shown once. Pockey only stores its hash. */
   secret: SecretApiKey,
 });
 export type CreateApiKeyOutput = z.infer<typeof CreateApiKeyOutput>;

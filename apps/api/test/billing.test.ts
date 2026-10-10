@@ -1,6 +1,6 @@
-import { apps, developers, newId, newPublicAppId, usageEvents, type Db } from '@pocketkey/db';
-import { createMockPayments, type MockPayments } from '@pocketkey/payments';
-import { AdminSession, AppConfig, BillingPortalOutput, BillingSummary } from '@pocketkey/types';
+import { apps, developers, newId, newPublicAppId, usageEvents, type Db } from '@pockey/db';
+import { createMockPayments, type MockPayments } from '@pockey/payments';
+import { AdminSession, AppConfig, BillingPortalOutput, BillingSummary } from '@pockey/types';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DAILY_CRON } from '../src/cron.js';

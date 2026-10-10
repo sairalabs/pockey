@@ -1,14 +1,14 @@
 import { act, cleanup } from '@testing-library/react';
-import type { HostRequest } from '@pocketkey/types';
+import type { HostRequest } from '@pockey/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { PocketkeyConfig } from './config.js';
+import type { PockeyConfig } from './config.js';
 import { ProviderRpcError } from './errors.js';
 import type { EIP1193Provider } from './evm-provider.js';
 import {
   EVM_ADDRESS,
   EVM_WALLET_ID,
   makeUser,
-  renderPocketkey,
+  renderPockey,
   type FakeEmbed,
   type HarnessOptions,
 } from './__tests__/fake-embed.js';
@@ -21,9 +21,9 @@ afterEach(() => {
 });
 
 async function setup(
-  options: HarnessOptions & { config?: PocketkeyConfig } = {},
+  options: HarnessOptions & { config?: PockeyConfig } = {},
 ): Promise<{ provider: EIP1193Provider; embed: FakeEmbed; chainId: () => number | undefined }> {
-  const harness = await renderPocketkey({ initUser: makeUser(), ...options });
+  const harness = await renderPockey({ initUser: makeUser(), ...options });
   const provider = harness.hooks().wallet.evm?.getProvider();
   if (!provider) throw new Error('Expected an EVM provider');
   return { provider, embed: harness.embed, chainId: () => harness.hooks().wallet.evm?.chainId };
@@ -55,7 +55,7 @@ describe('EIP-1193 provider', () => {
 
   it('eth_accounts is empty when logged out, eth_requestAccounts logs in', async () => {
     const user = makeUser();
-    const harness = await renderPocketkey({
+    const harness = await renderPockey({
       initUser: null,
       setup: (embed) => embed.handle('login', () => ({ data: { user } })),
     });
@@ -77,7 +77,7 @@ describe('EIP-1193 provider', () => {
     await expect(provider.request({ method: 'eth_accounts' })).resolves.toEqual([EVM_ADDRESS]);
 
     await act(async () => {
-      await harness.hooks().pocketkey.logout();
+      await harness.hooks().pockey.logout();
     });
     await expect(provider.request({ method: 'eth_accounts' })).resolves.toEqual([]);
     expect(accountsChanged).toHaveBeenLastCalledWith([]);
@@ -324,7 +324,7 @@ describe('EIP-1193 provider', () => {
   });
 
   it('emits disconnect and connect on auth changes', async () => {
-    const harness = await renderPocketkey({ initUser: makeUser() });
+    const harness = await renderPockey({ initUser: makeUser() });
     const provider = harness.hooks().wallet.evm?.getProvider();
     if (!provider) throw new Error('Expected an EVM provider');
     const connect = vi.fn();

@@ -42,7 +42,7 @@ No em dash anywhere. Sentence case. Short.
    - Email field (placeholder `you@example.com`) with a trailing `Continue` primary button that appears only when the value is a plausible email.
    - Divider `or`.
    - One secondary button per enabled method, in config order: `Continue with Google`, `Continue with Apple`, `Continue with a passkey`, `Continue with a wallet`. 20px icon on the left, label centered optically.
-   - Footer: small lock icon + `Protected by Pocketkey`.
+   - Footer: small lock icon + `Protected by Pockey`.
 2. **Email code**: back button, title `Check your email`, subline `Enter the 6 digit code sent to {email}`. Six boxes, 48px tall, auto advance, full paste support, backspace goes back, submits automatically on the sixth digit. Error text below: `That code is not valid. Try again.` Resend link with countdown `Resend code in 0:30`, then `Resend code`.
 3. **Passkey**: large key icon, title `Use your passkey`, subline `Follow your device prompt`. On failure: `Passkey sign in was cancelled` + `Try again` button.
 4. **Wallet**: list of detected wallets (EIP-6963 announcements with their icons, then `window.ethereum`, then Phantom for Solana), each a row button. After choosing: `Confirm in {wallet name}` with the wallet icon. Nothing detected: `No wallet found in this browser`.

@@ -1,5 +1,5 @@
-import { PocketkeyError } from '@pocketkey/core';
-import { EndUser, HostRequest, PublicAppConfig } from '@pocketkey/types';
+import { PockeyError } from '@pockey/core';
+import { EndUser, HostRequest, PublicAppConfig } from '@pockey/types';
 import { describe, expect, it, vi } from 'vitest';
 import { narrowLoginMethods } from './config';
 import { createController, type EmbedClient } from './controller';
@@ -66,7 +66,7 @@ function setup(options: { signedIn: boolean }) {
     successDelayMs: 0,
   });
   const handle = (raw: Record<string, unknown>) => {
-    const message = { source: 'pocketkey', pk: 1, requestId: 'r', ...raw };
+    const message = { source: 'pockey', pk: 1, requestId: 'r', ...raw };
     return controller.handle(HostRequest.parse(message), { origin: HOST, raw: message });
   };
   return { client, store, controller, handle, signMessage };
@@ -77,7 +77,7 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const signRequest = (extra: Record<string, unknown> = {}) => ({
   type: 'signMessage',
   walletId,
-  input: { chain: 'evm', message: 'gm from the Pocketkey playground' },
+  input: { chain: 'evm', message: 'gm from the Pockey playground' },
   ...extra,
 });
 
@@ -107,7 +107,7 @@ describe('controller', () => {
     });
     expect(signMessage).toHaveBeenCalledWith(walletId, {
       chain: 'evm',
-      message: 'gm from the Pocketkey playground',
+      message: 'gm from the Pockey playground',
     });
     expect(store.get().phase).toBe('closed');
   });
@@ -129,7 +129,7 @@ describe('controller', () => {
     controller.actions.cancel();
     await expect(first).rejects.toMatchObject({ code: 'user_rejected' });
 
-    signMessage.mockRejectedValueOnce(new PocketkeyError('policy_violation', 'Blocked by policy'));
+    signMessage.mockRejectedValueOnce(new PockeyError('policy_violation', 'Blocked by policy'));
     const second = handle(signRequest());
     await flush();
     controller.actions.approve();
@@ -160,7 +160,7 @@ describe('controller', () => {
     await flush();
     const screen = store.get().screen;
     expect(screen?.name === 'signMessage' && screen.input.message).toBe(
-      'gm from the Pocketkey playground',
+      'gm from the Pockey playground',
     );
     let secondSettled = false;
     void second.then(() => {

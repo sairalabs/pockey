@@ -10,9 +10,9 @@ import {
   type HostRequestType,
   type HostResponseDataMap,
   type LoginMethod,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { z } from 'zod';
-import { PocketkeyEmbedError } from './errors.js';
+import { PockeyEmbedError } from './errors.js';
 
 /** Framework-free bridge to the embed iframe (section 4.1). Never talks to the API. */
 
@@ -54,7 +54,7 @@ export interface EmbedBridge {
   onAuthChanged(listener: (user: EndUser | null) => void): () => void;
   onVisibility(listener: (visible: boolean) => void): () => void;
   /** Bridge-level failures: ready timeout, rejected `init`. */
-  onError(listener: (error: PocketkeyEmbedError) => void): () => void;
+  onError(listener: (error: PockeyEmbedError) => void): () => void;
   destroy(): void;
 }
 
@@ -74,7 +74,7 @@ const IFRAME_STYLE: Partial<Record<string, string>> = {
 interface Pending {
   type: HostRequestType;
   resolve: (data: unknown) => void;
-  reject: (error: PocketkeyEmbedError) => void;
+  reject: (error: PockeyEmbedError) => void;
 }
 
 /**
@@ -121,7 +121,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
 
   const iframe = document.createElement('iframe');
   iframe.src = src;
-  iframe.title = 'Pocketkey';
+  iframe.title = 'Pockey';
   iframe.setAttribute(
     'allow',
     'publickey-credentials-get *; publickey-credentials-create *; clipboard-write',
@@ -145,13 +145,13 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
   const initListeners = createListeners<[HostResponseDataMap['init']]>();
   const authListeners = createListeners<[EndUser | null]>();
   const visibilityListeners = createListeners<[boolean]>();
-  const errorListeners = createListeners<[PocketkeyEmbedError]>();
+  const errorListeners = createListeners<[PockeyEmbedError]>();
 
   const post = (message: HostRequest) => {
     iframe.contentWindow?.postMessage(message, embedOrigin);
   };
 
-  const rejectAll = (error: PocketkeyEmbedError) => {
+  const rejectAll = (error: PockeyEmbedError) => {
     const entries = [...pending.values()];
     pending.clear();
     for (const entry of entries) entry.reject(error);
@@ -163,7 +163,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
   ): Promise<HostResponseDataMap[T]> =>
     new Promise<HostResponseDataMap[T]>((resolve, reject) => {
       if (state === 'destroyed' || state === 'timed_out') {
-        reject(new PocketkeyEmbedError('not_ready', 'The Pocketkey embed is not available.'));
+        reject(new PockeyEmbedError('not_ready', 'The Pockey embed is not available.'));
         return;
       }
       const requestId = newRequestId();
@@ -176,7 +176,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
       });
       if (!parsed.success) {
         reject(
-          new PocketkeyEmbedError(
+          new PockeyEmbedError(
             'invalid_message',
             `Invalid ${type} request: ${parsed.error.issues.map((issue) => `${issue.path.join('.')} ${issue.message}`).join('; ')}`,
           ),
@@ -205,7 +205,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
         initListeners.emit(result);
       },
       (error: unknown) => {
-        if (error instanceof PocketkeyEmbedError && state !== 'destroyed')
+        if (error instanceof PockeyEmbedError && state !== 'destroyed')
           errorListeners.emit(error);
       },
     );
@@ -268,7 +268,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
         clearTimeout(readyTimer);
         if (state === 'ready') {
           // The embed reloaded: requests sent to the previous document will never be answered.
-          rejectAll(new PocketkeyEmbedError('not_ready', 'The Pocketkey embed reloaded.'));
+          rejectAll(new PockeyEmbedError('not_ready', 'The Pockey embed reloaded.'));
         }
         state = 'ready';
         sendInit();
@@ -289,7 +289,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
         pending.delete(message.requestId);
         if (!message.ok) {
           entry.reject(
-            new PocketkeyEmbedError(
+            new PockeyEmbedError(
               message.error?.code ?? 'internal',
               message.error?.message ?? `The ${entry.type} request failed.`,
               errorReason(event.data),
@@ -300,7 +300,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
         const data = HostResponseData[entry.type].safeParse(message.data);
         if (!data.success) {
           entry.reject(
-            new PocketkeyEmbedError(
+            new PockeyEmbedError(
               'invalid_message',
               `Malformed ${entry.type} response from the embed.`,
             ),
@@ -317,9 +317,9 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
     if (state !== 'loading') return;
     state = 'timed_out';
     queue.length = 0;
-    const error = new PocketkeyEmbedError(
+    const error = new PockeyEmbedError(
       'not_ready',
-      `The Pocketkey embed did not load within ${options.readyTimeoutMs ?? READY_TIMEOUT_MS} ms.`,
+      `The Pockey embed did not load within ${options.readyTimeoutMs ?? READY_TIMEOUT_MS} ms.`,
     );
     rejectAll(error);
     errorListeners.emit(error);
@@ -345,7 +345,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
       state = 'destroyed';
       window.removeEventListener('message', onMessage);
       queue.length = 0;
-      rejectAll(new PocketkeyEmbedError('not_ready', 'The Pocketkey provider was unmounted.'));
+      rejectAll(new PockeyEmbedError('not_ready', 'The Pockey provider was unmounted.'));
       iframe.remove();
       initListeners.clear();
       authListeners.clear();

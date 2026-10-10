@@ -50,7 +50,7 @@ export async function deriveKeyHex(masterSecret: string, purpose: string): Promi
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt: new TextEncoder().encode('pocketkey'),
+      salt: new TextEncoder().encode('pockey'),
       info: new TextEncoder().encode(purpose),
     },
     baseKey,

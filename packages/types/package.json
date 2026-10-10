@@ -1,7 +1,7 @@
 {
-  "name": "@pocketkey/types",
+  "name": "@pockey/types",
   "version": "0.0.0",
-  "description": "Shared Zod schemas and TypeScript types for the Pocketkey SDK and API.",
+  "description": "Shared Zod schemas and TypeScript types for the Pockey SDK and API.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -27,7 +27,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "eslint": "^9.39.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3",

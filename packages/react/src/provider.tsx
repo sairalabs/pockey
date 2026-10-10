@@ -6,37 +6,37 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { PocketkeyClient } from './client.js';
-import { DEFAULT_EMBED_URL, type PocketkeyConfig } from './config.js';
-import type { PocketkeyEmbedError } from './errors.js';
+import { PockeyClient } from './client.js';
+import { DEFAULT_EMBED_URL, type PockeyConfig } from './config.js';
+import type { PockeyEmbedError } from './errors.js';
 import { createSolanaWallet, registerStandardWallet } from './solana-wallet.js';
 
-export interface PocketkeyProviderProps {
+export interface PockeyProviderProps {
   /** Public app id, `pk_app_...`. */
   appId: string;
-  config?: PocketkeyConfig;
-  /** Defaults to https://embed.pocketkey.dev. */
+  config?: PockeyConfig;
+  /** Defaults to https://embed.pockey.xyz. */
   embedUrl?: string;
   children: ReactNode;
   /** Bridge-level failures: embed not loading in time, `init` rejected. */
-  onError?: (error: PocketkeyEmbedError) => void;
+  onError?: (error: PockeyEmbedError) => void;
 }
 
-export interface PocketkeyContextValue {
-  client: PocketkeyClient;
-  config: PocketkeyConfig | undefined;
+export interface PockeyContextValue {
+  client: PockeyClient;
+  config: PockeyConfig | undefined;
 }
 
-export const PocketkeyContext = createContext<PocketkeyContextValue | null>(null);
+export const PockeyContext = createContext<PockeyContextValue | null>(null);
 
-export function PocketkeyProvider({
+export function PockeyProvider({
   appId,
   config,
   embedUrl = DEFAULT_EMBED_URL,
   children,
   onError,
-}: PocketkeyProviderProps) {
-  const [client] = useState(() => new PocketkeyClient(config));
+}: PockeyProviderProps) {
+  const [client] = useState(() => new PockeyClient(config));
 
   // Declared before the mount effect so the bridge reads the current config.
   useEffect(() => {
@@ -67,7 +67,7 @@ export function PocketkeyProvider({
     };
   }, [client, walletStandard, solanaSeen]);
 
-  const value = useMemo<PocketkeyContextValue>(() => ({ client, config }), [client, config]);
+  const value = useMemo<PockeyContextValue>(() => ({ client, config }), [client, config]);
 
-  return <PocketkeyContext.Provider value={value}>{children}</PocketkeyContext.Provider>;
+  return <PockeyContext.Provider value={value}>{children}</PockeyContext.Provider>;
 }

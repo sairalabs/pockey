@@ -1,4 +1,4 @@
-/** Server side of the Turnkey integration (`@pocketkey/key-provider/turnkey`). */
+/** Server side of the Turnkey integration (`@pockey/key-provider/turnkey`). */
 export { createTurnkeyEmulator, type TurnkeyEmulator } from './emulator/index.js';
 export {
   createHttpTransport,

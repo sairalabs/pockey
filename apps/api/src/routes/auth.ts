@@ -1,6 +1,6 @@
 import { secp256k1 } from '@noble/curves/secp256k1.js';
-import type { AppRow } from '@pocketkey/db';
-import { KeyProviderError, type ProviderSession } from '@pocketkey/key-provider';
+import type { AppRow } from '@pockey/db';
+import { KeyProviderError, type ProviderSession } from '@pockey/key-provider';
 import {
   AddPasskeyInput,
   AppConfig,
@@ -19,7 +19,7 @@ import {
   SessionPublicKey,
   StampedLoginInput,
   WalletLoginInput,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base58 } from '@scure/base';
 import { Hono, type Context } from 'hono';
 import { publicKeyToAddress } from 'viem/utils';
@@ -70,7 +70,7 @@ import { createWalletsOnLogin } from '../services/wallets.js';
  * The key provider runs every ceremony that grants access to keys: it sends and
  * checks email codes, verifies OIDC tokens, passkey and wallet signatures, and
  * registers the iframe session key. This API maps the verified identity to a
- * Pocketkey end user and issues Pocketkey tokens; it never holds a credential that
+ * Pockey end user and issues Pockey tokens; it never holds a credential that
  * could sign for the user.
  */
 
@@ -78,7 +78,7 @@ const OTP_TTL_SECONDS = 10 * 60;
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
 const EXCHANGE_CODE_TTL_SECONDS = 2 * 60;
 const OAUTH_PROVIDERS = ['google', 'apple'] as const;
-/** Matches the refresh token: the iframe session key lives as long as the Pocketkey session. */
+/** Matches the refresh token: the iframe session key lives as long as the Pockey session. */
 const SESSION_KEY_SECONDS = 30 * 24 * 3600;
 
 type Ctx = Context<AppEnv>;
@@ -130,9 +130,9 @@ async function endUserOfSession(c: Ctx, app: AppRow, session: ProviderSession) {
 
 function oauthResultPage(embedOrigin: string, payload: { code?: string; error?: string }): string {
   // Values are JSON encoded, never concatenated into markup.
-  const message = JSON.stringify({ type: 'pocketkey:oauth', ...payload });
+  const message = JSON.stringify({ type: 'pockey:oauth', ...payload });
   const target = JSON.stringify(embedOrigin);
-  return `<!doctype html><meta charset="utf-8"><title>Pocketkey</title><script>(function(){var m=${message};if(window.opener){window.opener.postMessage(m,${target});}window.close();})();</script><p>You can close this window.</p>`;
+  return `<!doctype html><meta charset="utf-8"><title>Pockey</title><script>(function(){var m=${message};if(window.opener){window.opener.postMessage(m,${target});}window.close();})();</script><p>You can close this window.</p>`;
 }
 
 const EmailOtpPayload = z.object({ verificationToken: z.string().min(1) });

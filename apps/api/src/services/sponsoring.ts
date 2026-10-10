@@ -9,10 +9,10 @@ import {
   type AppRow,
   type AppSystemWalletRow,
   type Db,
-} from '@pocketkey/db';
-import type { KeyProvider } from '@pocketkey/key-provider';
-import type { PaymentEvent } from '@pocketkey/payments';
-import { AppConfig, SponsorBalance } from '@pocketkey/types';
+} from '@pockey/db';
+import type { KeyProvider } from '@pockey/key-provider';
+import type { PaymentEvent } from '@pockey/payments';
+import { AppConfig, SponsorBalance } from '@pockey/types';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { ApiError } from '../errors.js';
 import { providerFailure } from './provider-failure.js';
@@ -93,7 +93,7 @@ export async function ensureSolanaFeePayer(
   const existing = await findFeePayer(deps.db, app.id);
   if (existing) return existing;
 
-  // A system sub-organization owned by the Pocketkey signer only: the app's gas
+  // A system sub-organization owned by the Pockey signer only: the app's gas
   // money, never a user key.
   const { subOrgId, account } = await deps.keyProvider
     .createSystemAccount({ name: `fee-payer-${app.id}`, chainFamily: 'solana' })

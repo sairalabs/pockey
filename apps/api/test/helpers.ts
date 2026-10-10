@@ -7,9 +7,9 @@ import {
   SEED,
   SEED_APP_CONFIG,
   type AppRow,
-} from '@pocketkey/db';
-import { MemoryMailer } from '@pocketkey/mailer';
-import { AdminApp, AppConfig, type AuthResponse, type AppConfigInput } from '@pocketkey/types';
+} from '@pockey/db';
+import { MemoryMailer } from '@pockey/mailer';
+import { AdminApp, AppConfig, type AuthResponse, type AppConfigInput } from '@pockey/types';
 import { env } from 'cloudflare:workers';
 import { eq } from 'drizzle-orm';
 import { expect } from 'vitest';
@@ -36,7 +36,7 @@ export function withApp(
   headers: Record<string, string> = {},
   publicId: string = SEED.app.publicId,
 ): Record<string, string> {
-  return { 'X-Pocketkey-App-Id': publicId, ...headers };
+  return { 'X-Pockey-App-Id': publicId, ...headers };
 }
 
 export function mailer(): MemoryMailer {

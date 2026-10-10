@@ -1,4 +1,4 @@
-import { base } from '@pocketkey/config/eslint';
+import { base } from '@pockey/config/eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [

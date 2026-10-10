@@ -1,4 +1,4 @@
-import { FREE_MONTHLY_ACTIVE_WALLETS, PRICE_CENTS_PER_ACTIVE_WALLET } from '@pocketkey/types';
+import { FREE_MONTHLY_ACTIVE_WALLETS, PRICE_CENTS_PER_ACTIVE_WALLET } from '@pockey/types';
 import { PaymentsError } from './errors.js';
 import type {
   BillingSubscription,

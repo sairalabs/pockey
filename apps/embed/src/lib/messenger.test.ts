@@ -1,4 +1,4 @@
-import type { HostRequest, PublicAppConfig } from '@pocketkey/types';
+import type { HostRequest, PublicAppConfig } from '@pockey/types';
 import { describe, expect, it, vi } from 'vitest';
 import { EmbedFailure } from './errors';
 import { createMessenger, type IncomingMessage, type RequestContext } from './messenger';
@@ -30,7 +30,7 @@ async function setup(handle?: (request: HostRequest, context: RequestContext) =>
 }
 
 const request = (extra: Record<string, unknown> = {}) => ({
-  source: 'pocketkey',
+  source: 'pockey',
   pk: 1,
   requestId: 'req-1',
   type: 'getUser',
@@ -53,12 +53,12 @@ describe('messenger', () => {
     expect(parent.postMessage).toHaveBeenCalledTimes(2);
     expect(parent.postMessage).toHaveBeenNthCalledWith(
       1,
-      { source: 'pocketkey', pk: 1, type: 'ready' },
+      { source: 'pockey', pk: 1, type: 'ready' },
       HOST,
     );
     expect(parent.postMessage).toHaveBeenNthCalledWith(
       2,
-      { source: 'pocketkey', pk: 1, type: 'ready' },
+      { source: 'pockey', pk: 1, type: 'ready' },
       OTHER,
     );
   });
@@ -71,7 +71,7 @@ describe('messenger', () => {
     expect(parent.postMessage).not.toHaveBeenCalled();
   });
 
-  it('ignores messages without the pocketkey tag', async () => {
+  it('ignores messages without the pockey tag', async () => {
     const { send, handler, parent } = await setup();
     send({ ...request(), source: 'metamask' });
     send('hello');
@@ -90,7 +90,7 @@ describe('messenger', () => {
 
   it('ignores an invalid shape that carries no request id', async () => {
     const { send, handler, parent } = await setup();
-    send({ source: 'pocketkey', pk: 1, type: 'getUser' });
+    send({ source: 'pockey', pk: 1, type: 'getUser' });
     await flush();
     expect(handler).not.toHaveBeenCalled();
     expect(parent.postMessage).not.toHaveBeenCalled();
@@ -98,13 +98,13 @@ describe('messenger', () => {
 
   it('answers invalid_message to a malformed request from an allowed origin', async () => {
     const { send, handler, parent } = await setup();
-    send({ source: 'pocketkey', pk: 1, requestId: 'bad-1', type: 'signMessage', walletId: 42 });
+    send({ source: 'pockey', pk: 1, requestId: 'bad-1', type: 'signMessage', walletId: 42 });
     await flush();
     expect(handler).not.toHaveBeenCalled();
     expect(parent.postMessage).toHaveBeenCalledTimes(1);
     expect(parent.postMessage).toHaveBeenCalledWith(
       {
-        source: 'pocketkey',
+        source: 'pockey',
         pk: 1,
         type: 'response',
         requestId: 'bad-1',
@@ -123,7 +123,7 @@ describe('messenger', () => {
     expect(handler.mock.calls[0]?.[1]).toMatchObject({ origin: HOST });
     expect(parent.postMessage).toHaveBeenCalledWith(
       {
-        source: 'pocketkey',
+        source: 'pockey',
         pk: 1,
         type: 'response',
         requestId: 'req-1',
@@ -142,7 +142,7 @@ describe('messenger', () => {
     await flush();
     expect(parent.postMessage).toHaveBeenCalledWith(
       {
-        source: 'pocketkey',
+        source: 'pockey',
         pk: 1,
         type: 'response',
         requestId: 'req-2',
@@ -175,8 +175,8 @@ describe('messenger', () => {
     messenger.setVisible(true);
     messenger.setVisible(false);
     expect(parent.postMessage.mock.calls).toEqual([
-      [{ source: 'pocketkey', pk: 1, type: 'visibility', visible: true }, HOST],
-      [{ source: 'pocketkey', pk: 1, type: 'visibility', visible: false }, HOST],
+      [{ source: 'pockey', pk: 1, type: 'visibility', visible: true }, HOST],
+      [{ source: 'pockey', pk: 1, type: 'visibility', visible: false }, HOST],
     ]);
   });
 });

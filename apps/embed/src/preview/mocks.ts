@@ -5,7 +5,7 @@ import {
   SigningPolicy,
   Wallet,
   type LoginMethod,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import type { Screen, WalletOption } from '../lib/state';
 
 /** Static mock data for the preview gallery. Nothing here touches the network. */
@@ -67,7 +67,7 @@ const walletOptions: WalletOption[] = [
 
 const SPENDER = EvmAddress.parse('0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD');
 
-const GM = 'gm from the Pocketkey playground';
+const GM = 'gm from the Pockey playground';
 
 const evmSessionPolicy = SigningPolicy.parse({
   chain: 'evm',
@@ -338,7 +338,7 @@ export function previewCards(now: number): PreviewCard[] {
       label: 'Error',
       screen: {
         name: 'error',
-        error: { code: 'internal', message: 'The Pocketkey API could not be reached.' },
+        error: { code: 'internal', message: 'The Pockey API could not be reached.' },
       },
     },
   ];

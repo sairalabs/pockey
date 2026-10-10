@@ -8,7 +8,7 @@ import type {
   SigningPolicy,
   TransactionRequest,
   Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { createStore, type Store } from './store';
 
 export type OAuthProvider = 'google' | 'apple';

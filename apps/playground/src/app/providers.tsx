@@ -1,15 +1,15 @@
 'use client';
 
-import { PocketkeyProvider } from '@pocketkey/react';
+import { PockeyProvider } from '@pockey/react';
 import type { ReactNode } from 'react';
 
 // Local defaults match the seed app and the dev ports (DECISIONS.md).
-const APP_ID = process.env.NEXT_PUBLIC_POCKETKEY_APP_ID ?? 'pk_app_seed00000000000000000001';
-const EMBED_URL = process.env.NEXT_PUBLIC_POCKETKEY_EMBED_URL ?? 'http://localhost:5174';
+const APP_ID = process.env.NEXT_PUBLIC_POCKEY_APP_ID ?? 'pk_app_seed00000000000000000001';
+const EMBED_URL = process.env.NEXT_PUBLIC_POCKEY_EMBED_URL ?? 'http://localhost:5174';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <PocketkeyProvider
+    <PockeyProvider
       appId={APP_ID}
       embedUrl={EMBED_URL}
       config={{
@@ -18,6 +18,6 @@ export function Providers({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </PocketkeyProvider>
+    </PockeyProvider>
   );
 }

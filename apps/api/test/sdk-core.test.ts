@@ -1,32 +1,32 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
 import {
-  createPocketkey,
-  isPocketkeyError,
+  createPockey,
+  isPockeyError,
   memoryStorage,
-  type PocketkeyClient,
+  type PockeyClient,
   type TokenStorage,
-} from '@pocketkey/core';
+} from '@pockey/core';
 import {
   createTurnkeyKeyClient,
   memoryKeyStore,
   type KeyStore,
-} from '@pocketkey/key-provider/client';
-import { encryptOtpForTests } from '@pocketkey/key-provider/testing';
-import { KeySession } from '@pocketkey/types';
+} from '@pockey/key-provider/client';
+import { encryptOtpForTests } from '@pockey/key-provider/testing';
+import { KeySession } from '@pockey/types';
 import { base58, base64 } from '@scure/base';
 import { verifyMessage, type Address, type Hex } from 'viem';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { app, EMBED_ORIGIN, env, otpFrom, SEED, seedDb } from './helpers.js';
 
 /**
- * Contract test: @pocketkey/core against the real API inside Miniflare, with the
+ * Contract test: @pockey/core against the real API inside Miniflare, with the
  * real Turnkey key client (session key in memory) and the Turnkey emulator
  * (KEY_PROVIDER=mock). Requests go through `app.request` with the embed Origin,
  * like the iframe.
  */
 
 const BASE_URL = 'http://localhost:8787';
-const key = (name: string) => `pocketkey:${SEED.app.publicId}:${name}`;
+const key = (name: string) => `pockey:${SEED.app.publicId}:${name}`;
 
 function keyClient(store: KeyStore) {
   return createTurnkeyKeyClient({
@@ -35,8 +35,8 @@ function keyClient(store: KeyStore) {
   });
 }
 
-function sdk(storage: TokenStorage, store: KeyStore, calls: string[] = []): PocketkeyClient {
-  return createPocketkey({
+function sdk(storage: TokenStorage, store: KeyStore, calls: string[] = []): PockeyClient {
+  return createPockey({
     appId: SEED.app.publicId,
     baseUrl: BASE_URL,
     storage,
@@ -51,7 +51,7 @@ function sdk(storage: TokenStorage, store: KeyStore, calls: string[] = []): Pock
   });
 }
 
-async function emailLogin(pk: PocketkeyClient, email: string) {
+async function emailLogin(pk: PockeyClient, email: string) {
   await pk.auth.loginWithEmail(email);
   return pk.auth.verifyOtp(otpFrom(email));
 }
@@ -60,17 +60,17 @@ async function errorOf(promise: Promise<unknown>) {
   try {
     await promise;
   } catch (e) {
-    if (isPocketkeyError(e)) return e;
+    if (isPockeyError(e)) return e;
     throw e;
   }
-  throw new Error('Expected a PocketkeyError');
+  throw new Error('Expected a PockeyError');
 }
 
 beforeAll(async () => {
   await seedDb();
 });
 
-describe('@pocketkey/core against the API', () => {
+describe('@pockey/core against the API', () => {
   it('returns the seed public config', async () => {
     const config = await sdk(memoryStorage(), memoryKeyStore()).getConfig();
     expect(config.appId).toBe(SEED.app.publicId);
@@ -209,7 +209,7 @@ describe('@pocketkey/core against the API', () => {
     expect(pk.auth.getUser()).not.toBeNull();
   });
 
-  it('creates a session signer, adding the Pocketkey signer only once', async () => {
+  it('creates a session signer, adding the Pockey signer only once', async () => {
     const storage = memoryStorage();
     const calls: string[] = [];
     const pk = sdk(storage, memoryKeyStore(), calls);

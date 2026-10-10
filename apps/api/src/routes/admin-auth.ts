@@ -1,4 +1,4 @@
-import { AuthProviders } from '@pocketkey/types';
+import { AuthProviders } from '@pockey/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import {

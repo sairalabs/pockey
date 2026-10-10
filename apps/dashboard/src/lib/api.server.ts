@@ -9,7 +9,7 @@ import {
   SponsorBalance,
   type AdminApp,
   type UsageRange,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { ZodType } from 'zod';
@@ -23,7 +23,7 @@ import { ApiError, isUnauthorized, parseResponse, toQuery, type QueryValue } fro
  */
 
 /** Base URL of the API. Server only: the browser never sees this origin. */
-export const API_URL = process.env.POCKETKEY_API_URL ?? 'http://localhost:8787';
+export const API_URL = process.env.POCKEY_API_URL ?? 'http://localhost:8787';
 
 async function cookieHeader(): Promise<string> {
   const jar = await cookies();
@@ -45,7 +45,7 @@ async function serverFetch<T>(
   }).catch((cause: unknown) => {
     throw new ApiError(
       'internal',
-      `The Pocketkey API at ${API_URL} is unreachable`,
+      `The Pockey API at ${API_URL} is unreachable`,
       502,
       cause instanceof Error ? cause.message : null,
     );

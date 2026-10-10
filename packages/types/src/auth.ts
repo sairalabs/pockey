@@ -4,7 +4,7 @@ import { KeySession } from './keys.js';
 import { EndUser } from './user.js';
 
 /**
- * Pocketkey session model (T1.4).
+ * Pockey session model (T1.4).
  * - Access token: JWT HS256, 15 minutes, sent as `Authorization: Bearer`.
  * - Refresh token: opaque `pk_rt_...`, 30 days, rotated on every use.
  * Both live inside the embed iframe, never in the host page (section 4.1).
@@ -70,5 +70,5 @@ export const WalletVerifyInput = z.discriminatedUnion('chainFamily', [
 export type WalletVerifyInput = z.infer<typeof WalletVerifyInput>;
 
 /* Device binding for email OTP (section 8.1). Generated once per browser inside the iframe. */
-export const DEVICE_ID_HEADER = 'X-Pocketkey-Device';
+export const DEVICE_ID_HEADER = 'X-Pockey-Device';
 export const DeviceId = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/, 'Expected a device id');

@@ -1,4 +1,4 @@
-# Pocketkey : spécification technique v0.1
+# Pockey : spécification technique v0.1
 
 > Embedded wallets + auth pour indie devs et side projects web3. Usage-based dès le premier dollar, pas de falaise de prix.
 > Ce document est la source de vérité pour les agents de dev. Toute décision non listée ici se prend en respectant les principes de la section 2, puis se documente dans `DECISIONS.md`.
@@ -9,7 +9,7 @@
 
 - **Problème** : Privy passe de gratuit à 299 $/mois sans palier. Les devs indé, side projects et petites teams se retrouvent éjectés dès qu'ils dépassent le free tier.
 - **Cible** : devs solo, hackathons, side projects, studios de 1 à 5 personnes. Gaming, TCG, rewards, consumer apps.
-- **Promesse** : `npm i @pocketkey/react`, 3 hooks, un modal, wallets EVM + Solana, facturé à l'usage. Zéro minimum.
+- **Promesse** : `npm i @pockey/react`, 3 hooks, un modal, wallets EVM + Solana, facturé à l'usage. Zéro minimum.
 - **Ce qu'on n'est PAS** : pas un custodian, pas un concurrent enterprise de Privy/Dynamic. On délègue la sécurité des clés à un provider audité (Turnkey) et on vend le DX, l'UI et le pricing.
 - **Modèle** : SDK open source (MIT), backend privé, hosted service payant.
 
@@ -20,7 +20,7 @@
 3. **Le moins cher qui marche.** Cloudflare Workers + D1 par défaut. On ne monte en gamme que sur signal réel.
 4. **Le SDK est le produit.** Le DX du SDK et le modal UI sont prioritaires sur la richesse backend. Un hook mal nommé est un bug.
 5. **Usage-based partout.** Aucun plan flat. Le coût du client suit sa croissance, le nôtre aussi.
-6. **TypeScript strict de bout en bout.** Types partagés entre SDK et backend via un package `@pocketkey/types`.
+6. **TypeScript strict de bout en bout.** Types partagés entre SDK et backend via un package `@pockey/types`.
 7. **Pas de tirets longs (em dash) dans la doc, les commits, ni l'UI.**
 
 ## 3. Décisions prises
@@ -38,16 +38,16 @@
 | Billing            | Stripe usage-based (metered)                                                          |                                                               |
 | Monorepo           | pnpm + Turborepo                                                                      |                                                               |
 | Open source        | `packages/sdk-*` et `packages/types` en MIT. `apps/api` et `apps/dashboard` privés    |                                                               |
-| Nom de travail     | Pocketkey (pocketkey.dev, pocketkey.so libres au 15/09/2026)                          |                                                               |
+| Nom de travail     | Pockey (pockey.xyz, pockey.xyz libres au 15/09/2026)                          |                                                               |
 
 ## 4. Architecture
 
 ```
                  ┌──────────────────────────────┐
                  │  App cliente (React / RN)    │
-                 │  @pocketkey/react | /react-native
+                 │  @pockey/react | /react-native
                  │  ┌────────────────────────┐  │
-                 │  │ @pocketkey/core (JS)   │  │
+                 │  │ @pockey/core (JS)   │  │
                  │  │ - auth client          │  │
                  │  │ - wallet client        │  │
                  │  │ - session mgmt         │  │
@@ -78,7 +78,7 @@
 
 ### 4.1 Isolation du modal
 
-Le modal d'auth/signature tourne dans un **iframe** servi depuis `embed.pocketkey.dev` (web) ou une WebView / écran natif (RN). Le token de session utilisateur vit dans l'iframe, jamais dans le contexte de l'app cliente. L'app cliente parle à l'iframe via `postMessage` typé. Ça évite qu'un XSS chez le client ne vole la session wallet.
+Le modal d'auth/signature tourne dans un **iframe** servi depuis `embed.pockey.xyz` (web) ou une WebView / écran natif (RN). Le token de session utilisateur vit dans l'iframe, jamais dans le contexte de l'app cliente. L'app cliente parle à l'iframe via `postMessage` typé. Ça évite qu'un XSS chez le client ne vole la session wallet.
 
 ### 4.2 Modèle multi-tenant
 
@@ -90,18 +90,18 @@ Le modal d'auth/signature tourne dans un **iframe** servi depuis `embed.pocketke
 ## 5. Monorepo
 
 ```
-pocketkey/
+pockey/
 ├── apps/
 │   ├── api/                # Hono + Workers. Privé.
 │   ├── dashboard/          # Next.js 15, App Router. Privé.
-│   ├── embed/              # Iframe UI (Vite + React). Servi sur embed.pocketkey.dev. Privé.
+│   ├── embed/              # Iframe UI (Vite + React). Servi sur embed.pockey.xyz. Privé.
 │   ├── docs/               # Fumadocs ou Mintlify. Public.
 │   └── playground/         # App de démo consommant le SDK. Public.
 ├── packages/
-│   ├── types/              # @pocketkey/types. Zod schemas + types. MIT.
-│   ├── core/               # @pocketkey/core. Client JS sans UI. MIT.
-│   ├── react/              # @pocketkey/react. Provider + hooks + modal web. MIT.
-│   ├── react-native/       # @pocketkey/react-native. Provider + hooks + écrans natifs. MIT.
+│   ├── types/              # @pockey/types. Zod schemas + types. MIT.
+│   ├── core/               # @pockey/core. Client JS sans UI. MIT.
+│   ├── react/              # @pockey/react. Provider + hooks + modal web. MIT.
+│   ├── react-native/       # @pockey/react-native. Provider + hooks + écrans natifs. MIT.
 │   ├── chains-evm/         # Adapter viem. MIT.
 │   ├── chains-solana/      # Adapter @solana/web3.js. MIT.
 │   ├── key-provider/       # Interface KeyProvider + impl turnkey/. Privé.
@@ -112,16 +112,16 @@ pocketkey/
 └── turbo.json
 ```
 
-Deux dépôts Git à terme (public `pocketkey-sdk`, privé `pocketkey`) synchronisés via `git subtree`. Au MVP : un seul repo privé, split au moment du lancement public.
+Deux dépôts Git à terme (public `pockey-sdk`, privé `pockey`) synchronisés via `git subtree`. Au MVP : un seul repo privé, split au moment du lancement public.
 
 ## 6. Packages SDK : API publique
 
-### 6.1 `@pocketkey/react`
+### 6.1 `@pockey/react`
 
 ```tsx
-import { PocketkeyProvider, usePocketkey, useWallet, useSign } from '@pocketkey/react';
+import { PockeyProvider, usePockey, useWallet, useSign } from '@pockey/react';
 
-<PocketkeyProvider
+<PockeyProvider
   appId="pk_app_xxx"
   config={{
     loginMethods: ['email', 'google', 'apple', 'passkey', 'wallet'],
@@ -131,12 +131,12 @@ import { PocketkeyProvider, usePocketkey, useWallet, useSign } from '@pocketkey/
   }}
 >
   <App />
-</PocketkeyProvider>;
+</PockeyProvider>;
 ```
 
 ```ts
 // Auth
-const { ready, authenticated, user, login, logout } = usePocketkey();
+const { ready, authenticated, user, login, logout } = usePockey();
 // login() ouvre le modal. login({ method: 'email', email }) skip le choix.
 
 // Wallets
@@ -156,24 +156,24 @@ await createSession({
 });
 ```
 
-### 6.2 `@pocketkey/core`
+### 6.2 `@pockey/core`
 
 Client sans UI. Tout ce que `react` fait, `core` le fait en impératif. Utilisé par `react`, `react-native`, et par les devs qui veulent leur propre UI.
 
 ```ts
-const pk = createPocketkey({ appId, baseUrl? });
+const pk = createPockey({ appId, baseUrl? });
 await pk.auth.loginWithEmail(email); await pk.auth.verifyOtp(code);
 const w = await pk.wallets.list();
 await pk.wallets.evm.sign({ ... });
 ```
 
-### 6.3 `@pocketkey/react-native`
+### 6.3 `@pockey/react-native`
 
 Même surface que `react`. Modal = bottom sheet natif (`@gorhom/bottom-sheet`) qui charge l'embed en WebView. Passkeys via `react-native-passkey`. Stockage session via `expo-secure-store` / Keychain.
 
 ### 6.4 Interop
 
-- `evm.getProvider()` retourne un provider **EIP-1193**. Compatible wagmi via un connector `@pocketkey/wagmi` (post-MVP).
+- `evm.getProvider()` retourne un provider **EIP-1193**. Compatible wagmi via un connector `@pockey/wagmi` (post-MVP).
 - `solana` expose l'interface **Wallet Standard**, compatible `@solana/wallet-adapter`.
 
 ## 7. Backend : `apps/api`
@@ -217,7 +217,7 @@ POST   /admin/apps/:id/api-keys
 GET    /admin/billing/portal
 ```
 
-Toutes les routes `/v1/*` exigent un header `X-Pocketkey-App-Id`. Les routes user exigent un JWT EndUser (court, 15 min, refresh 30 j). Les routes `/v1/server/*` exigent `Authorization: Bearer pk_sk_xxx`.
+Toutes les routes `/v1/*` exigent un header `X-Pockey-App-Id`. Les routes user exigent un JWT EndUser (court, 15 min, refresh 30 j). Les routes `/v1/server/*` exigent `Authorization: Bearer pk_sk_xxx`.
 
 ### 7.3 KeyProvider (port)
 
@@ -262,7 +262,7 @@ Implémentation `packages/key-provider/src/turnkey/`. Toute méthode Turnkey-sp�
 Port `GasSponsor` avec deux implémentations :
 
 - **EVM** : ERC-4337 via un bundler/paymaster tiers (Pimlico ou Alchemy). Le wallet embarqué devient signer d'un smart account (Kernel ou Safe). Au MVP : EOA par défaut, smart account uniquement si `sponsored: true` est demandé sur l'app. Documenter clairement les deux adresses.
-- **Solana** : fee payer = un keypair Pocketkey par app (chez Turnkey, sub-org système). On co-signe la tx. Limites par app (SOL/jour) configurables dans le dashboard.
+- **Solana** : fee payer = un keypair Pockey par app (chez Turnkey, sub-org système). On co-signe la tx. Limites par app (SOL/jour) configurables dans le dashboard.
 
 Le sponsoring est **prépayé** : le dev charge un solde (Stripe), on décrémente à l'usage avec marge. Jamais de sponsoring à découvert.
 
@@ -344,7 +344,7 @@ Vérification à faire aussi : le free tier de Turnkey et ses limites de requêt
 ## 12. Instructions pour les agents (à copier dans `CLAUDE.md`)
 
 ```
-Tu travailles sur Pocketkey, un SDK d'embedded wallets. Lis POCKETKEY_SPEC.md avant toute tâche.
+Tu travailles sur Pockey, un SDK d'embedded wallets. Lis POCKEY_SPEC.md avant toute tâche.
 
 Règles :
 - TypeScript strict. Pas de `any`. Zod pour toute entrée externe.
@@ -382,7 +382,7 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 - [x] **T2.1** `packages/chains-evm` : adapter viem. sign message, typed data, tx. Chains : Base, Arbitrum, Ethereum, Polygon.
 - [x] **T2.2** `packages/chains-solana` : adapter. sign message, tx, versioned tx.
-- [x] **T2.3** Service wallets `apps/api` : création à la login (config `createOnLogin`), routes sign-*, send-transaction avec broadcast RPC (Alchemy/Helius, clés par app ou fallback Pocketkey).
+- [x] **T2.3** Service wallets `apps/api` : création à la login (config `createOnLogin`), routes sign-*, send-transaction avec broadcast RPC (Alchemy/Helius, clés par app ou fallback Pockey).
 - [x] **T2.4** Export wallet (section 8.4).
 - [x] **T2.5** Usage events : émission sur chaque action, table + cron d'agrégation.
 
@@ -390,7 +390,7 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 
 - [x] **T3.1** `packages/core` : client HTTP typé, gestion session, auth, wallets. Tests unitaires.
 - [x] **T3.2** `apps/embed` : iframe UI. Écrans : choix méthode, email OTP, OAuth redirect, passkey, wallet externe, confirmation signature, export. Thémable via config. `postMessage` protocol typé dans `types`.
-- [x] **T3.3** `packages/react` : Provider, `usePocketkey`, `useWallet`, `useSign`, modal wrapper iframe. EIP-1193 provider. Wallet Standard Solana.
+- [x] **T3.3** `packages/react` : Provider, `usePockey`, `useWallet`, `useSign`, modal wrapper iframe. EIP-1193 provider. Wallet Standard Solana.
 - [x] **T3.4** `apps/playground` : app Next.js qui exerce tout le SDK. Sert de test E2E (Playwright).
 
 ### Phase 4 : session signers + gas (semaine 5)
@@ -420,8 +420,8 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 ### Phase 7 : lancement (semaine 9)
 
 - [ ] **T7.1** `apps/docs` : quickstart React, quickstart RN, référence hooks, guide migration depuis Privy.
-- [ ] **T7.2** Split repo public `pocketkey-sdk`, publish npm sous `@pocketkey/*`.
-- [ ] **T7.3** Landing page pocketkey.dev : pitch, pricing calculator vs Privy, demo live.
+- [ ] **T7.2** Split repo public `pockey-sdk`, publish npm sous `@pockey/*`.
+- [ ] **T7.3** Landing page pockey.xyz : pitch, pricing calculator vs Privy, demo live.
 - [ ] **T7.4** Post de lancement : "Privy m'a coûté 299 $ pour 600 users".
 
 ## 14. Post-MVP (ne pas implémenter sans demande)
@@ -432,7 +432,7 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 - Bitcoin, Cosmos, Sui.
 - Provider Para en second KeyProvider.
 - Migration D1 vers Neon Postgres.
-- Wallet partagé cross-apps (identité Pocketkey globale).
+- Wallet partagé cross-apps (identité Pockey globale).
 - Self-hosting du backend (licence commerciale).
 
 ## 15. Questions ouvertes
@@ -440,4 +440,4 @@ Chaque tâche est autonome, testable, et tient dans une session d'agent. Ordre =
 1. Grille tarifaire Turnkey exacte : impacte le prix MAW (section 11).
 2. Smart account EVM par défaut ou EOA ? EOA au MVP pour la simplicité, mais deux adresses par user si sponsoring activé. À trancher après retours playground.
 3. Résidence des données : D1 est global. Si un client EU l'exige, migrer vers Neon EU. Pas au MVP.
-4. Nom définitif : Pocketkey ou autre. Acheter `pocketkey.dev` et `pocketkey.so` maintenant, ça coûte rien.
+4. Nom définitif : Pockey ou autre. Acheter `pockey.xyz` et `pockey.xyz` maintenant, ça coûte rien.

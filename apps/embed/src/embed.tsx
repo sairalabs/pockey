@@ -1,5 +1,5 @@
-import { createPocketkey, localStorageStorage } from '@pocketkey/core';
-import type { PublicAppConfig } from '@pocketkey/types';
+import { createPockey, localStorageStorage } from '@pockey/core';
+import type { PublicAppConfig } from '@pockey/types';
 import { StrictMode } from 'react';
 import type { Root } from 'react-dom/client';
 import { App } from './App';
@@ -21,14 +21,14 @@ export function startEmbed(root: Root, appId: string): void {
   // provider it talks to (production builds only ever trust Turnkey's enclave key).
   let config: PublicAppConfig | null = null;
   try {
-    client = createPocketkey({
+    client = createPockey({
       appId,
-      baseUrl: import.meta.env.VITE_POCKETKEY_API_URL ?? DEFAULT_API_URL,
+      baseUrl: import.meta.env.VITE_POCKEY_API_URL ?? DEFAULT_API_URL,
       storage: localStorageStorage(),
       keys: createEmbedKeyClient(appId, () => config),
     });
   } catch (error) {
-    console.error('[pocketkey] invalid embed configuration', error);
+    console.error('[pockey] invalid embed configuration', error);
     return;
   }
 
@@ -95,7 +95,7 @@ export function startEmbed(root: Root, appId: string): void {
         await messenger.start();
         return;
       } catch (error) {
-        console.error('[pocketkey] could not load the app config', error);
+        console.error('[pockey] could not load the app config', error);
         await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
       }
     }

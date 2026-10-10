@@ -2,9 +2,9 @@ import {
   decodeKernelExecute,
   deserializeUserOperation,
   serializeUserOperation,
-  toPocketkeyAccount,
+  toPockeyAccount,
   userOperationDigest,
-} from '@pocketkey/chains-evm';
+} from '@pockey/chains-evm';
 import { toKernelSmartAccount } from 'permissionless/accounts';
 import { describe, expect, it, vi } from 'vitest';
 import type { Address, Hex } from 'viem';
@@ -27,7 +27,7 @@ describe('Kernel v3.1 user operations', () => {
       version: KERNEL_VERSION,
       entryPoint: ENTRY_POINT,
       owners: [
-        toPocketkeyAccount({
+        toPockeyAccount({
           address: owner.address,
           signHash: (hash) => owner.sign({ hash }),
         }),

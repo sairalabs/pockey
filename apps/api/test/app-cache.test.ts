@@ -1,4 +1,4 @@
-import { PublicAppConfig } from '@pocketkey/types';
+import { PublicAppConfig } from '@pockey/types';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { request, SEED, seedDb, updateSeedConfig, withApp } from './helpers.js';
 
@@ -14,7 +14,7 @@ describe('public config edge cache (T1.5)', () => {
     const second = await request(configPath, { headers: withApp() });
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
-    expect(second.headers.get('X-Pocketkey-App-Cache')).toBe('HIT');
+    expect(second.headers.get('X-Pockey-App-Cache')).toBe('HIT');
     expect(second.headers.get('Cache-Control')).toBe('public, max-age=60');
     expect(second.headers.get('Vary')).toContain('Origin');
     expect(await second.json()).toEqual(await first.json());
@@ -24,7 +24,7 @@ describe('public config edge cache (T1.5)', () => {
     await request(configPath, { headers: withApp() });
     await updateSeedConfig({ appearance: { theme: 'dark', accent: '#0052ff' } });
     const res = await request(configPath, { headers: withApp() });
-    expect(res.headers.get('X-Pocketkey-App-Cache')).toBe('MISS');
+    expect(res.headers.get('X-Pockey-App-Cache')).toBe('MISS');
     expect(PublicAppConfig.parse(await res.json()).appearance.accent).toBe('#0052ff');
   });
 

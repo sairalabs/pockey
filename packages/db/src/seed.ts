@@ -1,4 +1,4 @@
-import { AppConfig } from '@pocketkey/types';
+import { AppConfig } from '@pockey/types';
 import type { Db } from './client.js';
 import { apiKeyPrefix, sha256Hex } from './hash.js';
 import { apps, apiKeys, developers, sponsorBalances } from './schema.js';
@@ -10,7 +10,7 @@ import { apps, apiKeys, developers, sponsorBalances } from './schema.js';
 export const SEED = {
   developer: {
     id: 'dev_seed00000000000000000001',
-    email: 'dev@pocketkey.local',
+    email: 'dev@pockey.local',
     name: 'Local Developer',
   },
   app: {

@@ -1,4 +1,4 @@
-import type { EvmChainId } from '@pocketkey/types';
+import type { EvmChainId } from '@pockey/types';
 import { RpcRequestError, type Address, type Hex } from 'viem';
 import { describe, expect, it, vi } from 'vitest';
 import { GasSponsorError } from './errors.js';

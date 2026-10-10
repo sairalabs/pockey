@@ -15,7 +15,7 @@ import {
   SmartAccountOutput,
   Wallet,
   WalletList,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../context.js';

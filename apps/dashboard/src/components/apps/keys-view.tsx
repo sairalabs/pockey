@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, ApiKeySummary } from '@pocketkey/types';
+import type { AdminApp, ApiKeySummary } from '@pockey/types';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { ApiKeysList, NewApiKeyDialog, useApiKeys } from '@/components/apps/api-keys-manager';

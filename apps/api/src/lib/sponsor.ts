@@ -4,9 +4,9 @@ import {
   createStaticPriceFeed,
   type EvmSponsorClientsFactory,
   type PriceFeed,
-} from '@pocketkey/gas-sponsor';
-import { createMockPayments, createStripePayments, type Payments } from '@pocketkey/payments';
-import { EVM_CHAINS, EvmChainId } from '@pocketkey/types';
+} from '@pockey/gas-sponsor';
+import { createMockPayments, createStripePayments, type Payments } from '@pockey/payments';
+import { EVM_CHAINS, EvmChainId } from '@pockey/types';
 import type { Context } from 'hono';
 import type { AppEnv } from '../context.js';
 import type { ParsedEnv } from '../env.js';

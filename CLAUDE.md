@@ -1,4 +1,4 @@
-Tu travailles sur Pocketkey, un SDK d'embedded wallets. Lis POCKETKEY_SPEC.md avant toute tâche.
+Tu travailles sur Pockey, un SDK d'embedded wallets. Lis POCKEY_SPEC.md avant toute tâche.
 
 Règles :
 

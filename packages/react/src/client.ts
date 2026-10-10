@@ -14,7 +14,7 @@ import {
   type SolanaCluster,
   type SolanaTransactionRequest,
   type Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import type { z } from 'zod';
 import {
   createEmbedBridge,
@@ -22,8 +22,8 @@ import {
   type EmbedInitOptions,
   type HostRequestPayload,
 } from './bridge.js';
-import { resolveEvmChains, resolveSolanaClusters, type PocketkeyConfig } from './config.js';
-import { PocketkeyEmbedError } from './errors.js';
+import { resolveEvmChains, resolveSolanaClusters, type PockeyConfig } from './config.js';
+import { PockeyEmbedError } from './errors.js';
 import { createEvmProvider, type EIP1193Provider } from './evm-provider.js';
 
 /* Public input types: the wire schemas' input shapes, with chainId and cluster defaulting to the current selection. */
@@ -113,7 +113,7 @@ export function findWallet(user: EndUser | null, family: ChainFamily): Wallet | 
 }
 
 export function selectChainId(
-  config: PocketkeyConfig | undefined,
+  config: PockeyConfig | undefined,
   snapshot: Pick<ClientSnapshot, 'serverConfig' | 'selectedChainId'>,
 ): number {
   const chains = resolveEvmChains(config, snapshot.serverConfig);
@@ -123,21 +123,21 @@ export function selectChainId(
 }
 
 export function selectCluster(
-  config: PocketkeyConfig | undefined,
+  config: PockeyConfig | undefined,
   snapshot: Pick<ClientSnapshot, 'serverConfig'>,
 ): SolanaCluster {
   return resolveSolanaClusters(config, snapshot.serverConfig)[0] ?? 'mainnet-beta';
 }
 
 const notAuthenticated = () =>
-  new PocketkeyEmbedError('not_authenticated', 'No Pocketkey user is logged in.');
+  new PockeyEmbedError('not_authenticated', 'No Pockey user is logged in.');
 
 /**
- * Framework-free state and actions behind `PocketkeyProvider`. One client per provider
+ * Framework-free state and actions behind `PockeyProvider`. One client per provider
  * instance; `mount` creates the iframe bridge and returns its teardown, so React StrictMode
  * double effects destroy the first bridge before creating the second.
  */
-export class PocketkeyClient {
+export class PockeyClient {
   #snapshot: ClientSnapshot = {
     ready: false,
     user: null,
@@ -147,8 +147,8 @@ export class PocketkeyClient {
   };
   #listeners = new Set<() => void>();
   #bridge: EmbedBridge | null = null;
-  #config: PocketkeyConfig | undefined;
-  #onError: ((error: PocketkeyEmbedError) => void) | undefined;
+  #config: PockeyConfig | undefined;
+  #onError: ((error: PockeyEmbedError) => void) | undefined;
   #evmProvider: EIP1193Provider | null = null;
   #sessions: SessionsSnapshot = NO_SESSIONS;
   #sessionListeners = new Set<() => void>();
@@ -158,7 +158,7 @@ export class PocketkeyClient {
   /** Creations and revocations made while a load is in flight, replayed over its result. */
   #sessionsPatches: SessionsPatch[] = [];
 
-  constructor(config?: PocketkeyConfig) {
+  constructor(config?: PockeyConfig) {
     this.#config = config;
   }
 
@@ -210,15 +210,15 @@ export class PocketkeyClient {
     for (const listener of [...this.#sessionListeners]) listener();
   }
 
-  setConfig(config: PocketkeyConfig | undefined): void {
+  setConfig(config: PockeyConfig | undefined): void {
     this.#config = config;
   }
 
-  get config(): PocketkeyConfig | undefined {
+  get config(): PockeyConfig | undefined {
     return this.#config;
   }
 
-  setOnError(onError: ((error: PocketkeyEmbedError) => void) | undefined): void {
+  setOnError(onError: ((error: PockeyEmbedError) => void) | undefined): void {
     this.#onError = onError;
   }
 
@@ -265,7 +265,7 @@ export class PocketkeyClient {
     const bridge = this.#bridge;
     if (!bridge) {
       return Promise.reject(
-        new PocketkeyEmbedError('not_ready', 'PocketkeyProvider is not mounted.'),
+        new PockeyEmbedError('not_ready', 'PockeyProvider is not mounted.'),
       );
     }
     return bridge.request(type, payload);
@@ -293,7 +293,7 @@ export class PocketkeyClient {
     if (!this.#snapshot.user) throw notAuthenticated();
     const wallet = this.getWallet(family);
     if (!wallet) {
-      throw new PocketkeyEmbedError('wallet_not_found', `The user has no ${family} wallet.`);
+      throw new PockeyEmbedError('wallet_not_found', `The user has no ${family} wallet.`);
     }
     return wallet;
   }
@@ -341,7 +341,7 @@ export class PocketkeyClient {
 
   switchChain = async (chainId: number): Promise<void> => {
     if (!this.getEvmChains().includes(chainId)) {
-      throw new PocketkeyEmbedError(
+      throw new PockeyEmbedError(
         'chain_not_configured',
         `Chain ${chainId} is not in the configured EVM chains.`,
       );
@@ -454,9 +454,9 @@ export class PocketkeyClient {
     const chainId = input.chainId ?? this.getChainId();
     const parsed = EvmChainId.safeParse(chainId);
     if (!parsed.success) {
-      throw new PocketkeyEmbedError(
+      throw new PockeyEmbedError(
         'unsupported',
-        `Chain ${chainId} is not supported by Pocketkey.`,
+        `Chain ${chainId} is not supported by Pockey.`,
       );
     }
     return { ...input, chainId: parsed.data };

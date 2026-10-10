@@ -2,7 +2,7 @@ import { p256 } from '@noble/curves/nist.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
-import type { ChainFamily, SigningPolicy } from '@pocketkey/types';
+import type { ChainFamily, SigningPolicy } from '@pockey/types';
 import { base58, base64, base64urlnopad } from '@scure/base';
 import { hashMessage, recoverPublicKey, type Hex } from 'viem';
 import type { ClientSignature, StampedRequest } from '../index.js';
@@ -18,7 +18,7 @@ import {
 import { ACTIVITY } from './wire.js';
 
 /**
- * Browser side of the Turnkey integration (`@pocketkey/key-provider/client`),
+ * Browser side of the Turnkey integration (`@pockey/key-provider/client`),
  * used by the embed iframe and by tests. Enclave crypto (OTP encryption, export
  * decryption) lives in `client-crypto.ts` because `@turnkey/crypto` does not load
  * in the Workers test pool. Everything here runs where the end user's
@@ -111,7 +111,7 @@ export function buildExportAccount(input: {
   });
 }
 
-/** Adds the Pocketkey signer as a non-root user. It can do nothing until a policy says so. */
+/** Adds the Pockey signer as a non-root user. It can do nothing until a policy says so. */
 export function buildCreateSigner(input: {
   organizationId: string;
   signerPublicKey: string;
@@ -119,10 +119,10 @@ export function buildCreateSigner(input: {
   return prepareActivity(ACTIVITY.createUsers, input.organizationId, {
     users: [
       {
-        userName: 'pocketkey-signer',
+        userName: 'pockey-signer',
         apiKeys: [
           {
-            apiKeyName: 'pocketkey',
+            apiKeyName: 'pockey',
             publicKey: input.signerPublicKey,
             curveType: 'API_KEY_CURVE_P256',
           },

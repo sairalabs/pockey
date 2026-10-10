@@ -1,5 +1,5 @@
 {
-  "name": "pocketkey",
+  "name": "pockey",
   "private": true,
   "version": "0.0.0",
   "packageManager": "pnpm@10.30.3",
@@ -15,10 +15,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "e2e": "pnpm --filter @pocketkey/core --filter @pocketkey/react --filter @pocketkey/chains-evm --filter @pocketkey/chains-solana --filter @pocketkey/types build && pnpm --filter @pocketkey/playground e2e"
+    "e2e": "pnpm --filter @pockey/core --filter @pockey/react --filter @pockey/chains-evm --filter @pockey/chains-solana --filter @pockey/types build && pnpm --filter @pockey/playground e2e"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "prettier": "3.9.6",
     "turbo": "2.10.13",
     "typescript": "5.9.3"

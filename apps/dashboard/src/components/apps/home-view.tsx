@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, AdminUsage, SponsorBalance } from '@pocketkey/types';
+import type { AdminApp, AdminUsage, SponsorBalance } from '@pockey/types';
 import { ChevronRight } from 'lucide-react';
 import { rangeOptions, useUsage } from '@/components/apps/use-usage';
 import { countSeries, gasSeries, numbers, sumCounts, sumWei } from '@/components/apps/usage-series';

@@ -1,13 +1,13 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
-import type { HostRequest, SessionSigner } from '@pocketkey/types';
+import type { HostRequest, SessionSigner } from '@pockey/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PocketkeyEmbedError } from './errors.js';
+import { PockeyEmbedError } from './errors.js';
 import { useSessionSigners, type UseSessionSignersResult } from './hooks.js';
 import {
   EVM_WALLET_ID,
   flush,
   makeUser,
-  renderPocketkey,
+  renderPockey,
   type FakeEmbed,
   type HarnessOptions,
 } from './__tests__/fake-embed.js';
@@ -42,7 +42,7 @@ function SessionsProbe({ history }: { history: UseSessionSignersResult[] }) {
 
 async function renderSessions(options: HarnessOptions & { consumers?: number } = {}) {
   const history: UseSessionSignersResult[] = [];
-  const harness = await renderPocketkey({
+  const harness = await renderPockey({
     ...options,
     children: Array.from({ length: options.consumers ?? 1 }, (_, index) => (
       <SessionsProbe key={index} history={history} />
@@ -295,7 +295,7 @@ describe('useSessionSigners', () => {
     const error: unknown = await sessions()
       .signWithSession(OLDER.id, { kind: 'message', input: { chain: 'evm', message: 'gm' } })
       .catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(PocketkeyEmbedError);
+    expect(error).toBeInstanceOf(PockeyEmbedError);
     expect(error).toMatchObject({
       code: 'policy_violation',
       message: 'Above the per transaction limit.',
@@ -343,7 +343,7 @@ describe('useSessionSigners', () => {
   it('throws a clear error outside the provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => renderHook(() => useSessionSigners())).toThrow(
-      'useSessionSigners() must be used inside <PocketkeyProvider>.',
+      'useSessionSigners() must be used inside <PockeyProvider>.',
     );
   });
 });

@@ -1,8 +1,8 @@
-# Pocketkey
+# Pockey
 
 Embedded wallets + auth for indie devs and side projects. Usage-based from the first dollar.
 
-Read `POCKETKEY_SPEC.md` for the full spec and roadmap, `DECISIONS.md` for the decision log, and `TURNKEY.md` for the key provider integration.
+Read `POCKEY_SPEC.md` for the full spec and roadmap, `DECISIONS.md` for the decision log, and `TURNKEY.md` for the key provider integration.
 
 ## Status
 
@@ -13,15 +13,15 @@ Phases 0 to 5 are done (foundations, auth, wallets, web SDK, session signers, ga
 ```
 apps/
   api/             Hono on Cloudflare Workers: auth, wallets, usage (private)
-  embed/           Iframe UI served from embed.pocketkey.dev, holds the session (private)
+  embed/           Iframe UI served from embed.pockey.xyz, holds the session (private)
   playground/      Next.js app exercising the SDK + Playwright end to end suite
   dashboard/       Next.js developer dashboard on the admin API (private)
 packages/
-  types/           @pocketkey/types     Zod schemas and the iframe protocol (MIT)
-  core/            @pocketkey/core      headless client (MIT)
-  react/           @pocketkey/react     provider, hooks, EIP-1193, Wallet Standard (MIT)
-  chains-evm/      @pocketkey/chains-evm     viem adapter, signer callbacks only (MIT)
-  chains-solana/   @pocketkey/chains-solana  wire codec + SIWS, no web3.js at runtime (MIT)
+  types/           @pockey/types     Zod schemas and the iframe protocol (MIT)
+  core/            @pockey/core      headless client (MIT)
+  react/           @pockey/react     provider, hooks, EIP-1193, Wallet Standard (MIT)
+  chains-evm/      @pockey/chains-evm     viem adapter, signer callbacks only (MIT)
+  chains-solana/   @pockey/chains-solana  wire codec + SIWS, no web3.js at runtime (MIT)
   db/              Drizzle schema + D1 migrations + seed (private)
   key-provider/    KeyProvider port + mock (private)
   mailer/          Mailer port: memory, console, Resend (private)
@@ -36,8 +36,8 @@ packages/
 nvm use                                             # Node 24, Wrangler refuses Node 20
 pnpm install
 cp apps/api/.dev.vars.example apps/api/.dev.vars    # fill BETTER_AUTH_SECRET (and TURNKEY_* for KEY_PROVIDER=turnkey)
-pnpm --filter @pocketkey/api db:migrate:local
-pnpm --filter @pocketkey/api db:seed
+pnpm --filter @pockey/api db:migrate:local
+pnpm --filter @pockey/api db:seed
 pnpm check                                          # typecheck + lint + test everywhere
 pnpm e2e                                            # API + embed + playground in Chromium
 ```
@@ -45,31 +45,31 @@ pnpm e2e                                            # API + embed + playground i
 Run the stack by hand:
 
 ```bash
-pnpm --filter @pocketkey/api dev          # http://localhost:8787 (OTP codes print in this log)
-pnpm --filter @pocketkey/embed dev        # http://localhost:5174 (design gallery: /?preview=1&appId=pk_app_seed00000000000000000001)
-pnpm --filter @pocketkey/playground dev   # http://localhost:3810
-pnpm --filter @pocketkey/dashboard dev    # http://localhost:3800
+pnpm --filter @pockey/api dev          # http://localhost:8787 (OTP codes print in this log)
+pnpm --filter @pockey/embed dev        # http://localhost:5174 (design gallery: /?preview=1&appId=pk_app_seed00000000000000000001)
+pnpm --filter @pockey/playground dev   # http://localhost:3810
+pnpm --filter @pockey/dashboard dev    # http://localhost:3800
 ```
 
 ## Using the SDK
 
 ```tsx
 import {
-  PocketkeyProvider,
-  usePocketkey,
+  PockeyProvider,
+  usePockey,
   useSessionSigners,
   useSign,
   useWallet,
-} from '@pocketkey/react';
+} from '@pockey/react';
 
-<PocketkeyProvider
+<PockeyProvider
   appId="pk_app_..."
   config={{ chains: { evm: [8453], solana: ['mainnet-beta'] } }}
 >
   <App />
-</PocketkeyProvider>;
+</PockeyProvider>;
 
-const { ready, authenticated, user, login, logout } = usePocketkey();
+const { ready, authenticated, user, login, logout } = usePockey();
 const { evm, solana } = useWallet();
 const { signMessage, sendTransaction } = useSign();
 const { sessions, createSession, signWithSession } = useSessionSigners();
@@ -92,7 +92,7 @@ const { sessions, createSession, signWithSession } = useSessionSigners();
 | Webhooks                      | `POST /webhooks/stripe`                                                                                                                                                                                                                      |
 | Dashboard (developer session) | `GET /admin/auth/providers`, `/admin/auth/*`, `GET /admin/session`, CRUD `/admin/apps`, `/admin/apps/:id/{config,api-keys,usage,users,sponsoring}`, `GET /admin/billing`, `GET /admin/billing/portal`                                        |
 
-Every `/v1/*` call sends `X-Pocketkey-App-Id`. User routes send `Authorization: Bearer <access token>`. Server routes send `Authorization: Bearer pk_sk_...` and never come from a browser. The dashboard calls `/admin/*` through its own origin, which proxies to the API with the developer session cookie.
+Every `/v1/*` call sends `X-Pockey-App-Id`. User routes send `Authorization: Bearer <access token>`. Server routes send `Authorization: Bearer pk_sk_...` and never come from a browser. The dashboard calls `/admin/*` through its own origin, which proxies to the API with the developer session cookie.
 
 ## Rate limits
 

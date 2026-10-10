@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/dashboard",
+  "name": "@pockey/dashboard",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",
-    "@pocketkey/types": "workspace:*",
+    "@pockey/types": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^1.46.0",
     "motion": "^13.3.0",
@@ -23,7 +23,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.18.0",
     "@types/react": "19.3.0",

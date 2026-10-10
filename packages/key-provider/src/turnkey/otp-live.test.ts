@@ -1,6 +1,6 @@
 import { p256 } from '@noble/curves/nist.js';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
-import type { SigningPolicy } from '@pocketkey/types';
+import type { SigningPolicy } from '@pockey/types';
 import { base64urlnopad } from '@scure/base';
 import {
   keccak256,
@@ -118,7 +118,7 @@ describe.skipIf(!live)('email OTP against real Turnkey', () => {
     if (!provider || !env.OTP_EMAIL || env.OTP_CODE) return;
     const secret = bytesToHex(p256.utils.randomSecretKey());
     const key = await toSessionKey(secret);
-    const started = await provider.startEmailOtp({ email: env.OTP_EMAIL, appName: 'Pocketkey' });
+    const started = await provider.startEmailOtp({ email: env.OTP_EMAIL, appName: 'Pockey' });
     const state: OtpState = {
       email: env.OTP_EMAIL,
       secret,
@@ -173,7 +173,7 @@ describe.skipIf(!live)('email OTP against real Turnkey', () => {
       console.info('SIGNED UP', created.subOrgId, created.accounts.evm.address);
 
       // The session key alone can now sign for this user.
-      const digest = hexToBytes(keccak256(toHex('pocketkey otp live')).slice(2));
+      const digest = hexToBytes(keccak256(toHex('pockey otp live')).slice(2));
       const request = await stampRequest(
         buildSignRaw({
           organizationId: created.subOrgId,
@@ -225,7 +225,7 @@ describe.skipIf(!live)('email OTP against real Turnkey', () => {
         ?.address ?? '';
     expect(address).toMatch(/^0x[0-9a-fA-F]{40}$/);
 
-    // Session policy created by the user, then used by the Pocketkey signer alone.
+    // Session policy created by the user, then used by the Pockey signer alone.
     const { signerUserId } = await provider.relay(
       await stampRequest(
         buildCreateSigner({ organizationId: subOrgId, signerPublicKey: signerPair.publicKey }),
@@ -239,7 +239,7 @@ describe.skipIf(!live)('email OTP against real Turnkey', () => {
     );
     const contract = '0x4200000000000000000000000000000000000006';
     const sessionInput = {
-      policyName: `pocketkey:ses_otp_${Date.now()}`,
+      policyName: `pockey:ses_otp_${Date.now()}`,
       policy: {
         chain: 'evm',
         expiresIn: '1h',

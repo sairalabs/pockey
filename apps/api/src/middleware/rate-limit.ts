@@ -1,4 +1,4 @@
-import { DEVICE_ID_HEADER, PublicAppId } from '@pocketkey/types';
+import { DEVICE_ID_HEADER, PublicAppId } from '@pockey/types';
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { z } from 'zod';

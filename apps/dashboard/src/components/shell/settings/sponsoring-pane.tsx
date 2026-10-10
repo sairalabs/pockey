@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, SponsorBalance } from '@pocketkey/types';
+import type { AdminApp, SponsorBalance } from '@pockey/types';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { TopUpDialog } from '@/components/apps/top-up-dialog';

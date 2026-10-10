@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, Developer } from '@pocketkey/types';
+import type { AdminApp, Developer } from '@pockey/types';
 import { Dialog } from '@/components/ui/dialog';
 import { cn } from '@/lib/cn';
 import { AccountInformationPane } from './account-information-pane';

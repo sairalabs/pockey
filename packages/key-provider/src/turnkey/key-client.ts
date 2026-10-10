@@ -3,7 +3,7 @@ import {
   deserializeUserOperation,
   parseEvmTransaction,
   userOperationDigest,
-} from '@pocketkey/chains-evm';
+} from '@pockey/chains-evm';
 import type {
   ChainFamily,
   ClientSignature,
@@ -14,7 +14,7 @@ import type {
   SignTypedDataInput,
   StampedRequest,
   TransactionRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base64 } from '@scure/base';
 import {
   hashMessage,
@@ -51,7 +51,7 @@ import {
 
 /**
  * Turnkey implementation of the `KeyClient` the core SDK expects (structural: this
- * package does not depend on @pocketkey/core). It owns the iframe session key, turns
+ * package does not depend on @pockey/core). It owns the iframe session key, turns
  * each operation into the exact provider request the API will compare, and checks
  * what the API prepared (EVM transactions, sponsored user operations) against what
  * the user approved before stamping it.

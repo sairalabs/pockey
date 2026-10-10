@@ -1,5 +1,5 @@
-import { apiKeys, apps, endUsers, sponsorBalances, type AppRow, type Db } from '@pocketkey/db';
-import { AdminApp, App, AppConfig, AppSlug } from '@pocketkey/types';
+import { apiKeys, apps, endUsers, sponsorBalances, type AppRow, type Db } from '@pockey/db';
+import { AdminApp, App, AppConfig, AppSlug } from '@pockey/types';
 import { and, count, eq, inArray, isNull } from 'drizzle-orm';
 import { ApiError } from '../errors.js';
 import { currentMonthTotals, currentMonthWindow, zeroMonth } from './admin-usage.js';

@@ -1,5 +1,5 @@
 /**
- * Accent rules live in `@pocketkey/types` so the dashboard preview renders the
+ * Accent rules live in `@pockey/types` so the dashboard preview renders the
  * exact colors this modal uses (white text first, inverted accent when it
  * disappears into the surface).
  */
@@ -12,7 +12,7 @@ export {
   textOnColor,
   type AccentColors,
   type ColorMode,
-} from '@pocketkey/types';
+} from '@pockey/types';
 
 export function resolveTheme(
   theme: 'light' | 'dark' | 'system',

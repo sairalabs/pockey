@@ -1,4 +1,4 @@
-import { base } from '@pocketkey/config/eslint';
+import { base } from '@pockey/config/eslint';
 
 export default [
   ...base,
@@ -14,7 +14,7 @@ export default [
               group: ['@turnkey/*'],
               message: 'Turnkey stays inside packages/key-provider/src/turnkey/.',
             },
-            { group: ['drizzle-orm/d1'], message: 'Use createDb() from @pocketkey/db.' },
+            { group: ['drizzle-orm/d1'], message: 'Use createDb() from @pockey/db.' },
           ],
         },
       ],

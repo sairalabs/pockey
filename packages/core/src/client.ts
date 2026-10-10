@@ -31,20 +31,20 @@ import {
   type SignTypedDataInput,
   type SolanaCluster,
   type TransactionRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { z } from 'zod';
-import { errorFromResponse, isPocketkeyError, PocketkeyError } from './errors.js';
+import { errorFromResponse, isPockeyError, PockeyError } from './errors.js';
 import type { KeyClient } from './keys.js';
 import { OAUTH_POPUP_TIMEOUT_MS, openPopup, popupHost, waitForOAuthCode } from './oauth.js';
 import { assertPasskey, createPasskey, isPasskeySupported } from './passkey.js';
 import { localStorageStorage, memoryStorage, type TokenStorage } from './storage.js';
 
-export const DEFAULT_BASE_URL = 'https://api.pocketkey.dev';
+export const DEFAULT_BASE_URL = 'https://api.pockey.xyz';
 
-export const APP_ID_HEADER = 'X-Pocketkey-App-Id';
+export const APP_ID_HEADER = 'X-Pockey-App-Id';
 
-export interface PocketkeyOptions {
-  /** Public app id (`pk_app_...`). Throws `PocketkeyError('bad_request')` when malformed. */
+export interface PockeyOptions {
+  /** Public app id (`pk_app_...`). Throws `PockeyError('bad_request')` when malformed. */
   appId: string;
   /** Defaults to `DEFAULT_BASE_URL`. A trailing slash is tolerated. */
   baseUrl?: string;
@@ -56,7 +56,7 @@ export interface PocketkeyOptions {
   refreshLeewaySeconds?: number;
   /**
    * The user's key session (the embed iframe provides it). Without it, logins and
-   * signatures throw `unsupported`: Pocketkey cannot sign on anyone's behalf.
+   * signatures throw `unsupported`: Pockey cannot sign on anyone's behalf.
    */
   keys?: KeyClient;
   /** WebAuthn relying party id. Defaults to the current host (the embed iframe). */
@@ -96,7 +96,7 @@ export type WalletLogin =
       signMessage: (message: Uint8Array) => Promise<Uint8Array>;
     };
 
-export interface PocketkeyClient {
+export interface PockeyClient {
   readonly appId: string;
   readonly baseUrl: string;
   /**
@@ -236,8 +236,8 @@ export function isSessionActive(session: SessionSigner, now: Date = new Date()):
   return Number.isFinite(expiresAt) && expiresAt > now.getTime();
 }
 
-function notAuthenticated(message = 'Sign in first'): PocketkeyError {
-  return new PocketkeyError('not_authenticated', message);
+function notAuthenticated(message = 'Sign in first'): PockeyError {
+  return new PockeyError('not_authenticated', message);
 }
 
 function isBrowser(): boolean {
@@ -250,7 +250,7 @@ function normalizeBaseUrl(raw: string): string {
     const url = new URL(trimmed);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('protocol');
   } catch {
-    throw new PocketkeyError('bad_request', `Invalid baseUrl: ${raw}`);
+    throw new PockeyError('bad_request', `Invalid baseUrl: ${raw}`);
   }
   return trimmed;
 }
@@ -264,46 +264,46 @@ function randomToken(bytes: number): string {
 
 /** Key session failures surface as SDK errors the UI can act on. */
 function keyFailure(error: unknown): never {
-  if (isPocketkeyError(error)) throw error;
+  if (isPockeyError(error)) throw error;
   const reason = (error as { reason?: unknown }).reason;
   if (reason === 'no_session') {
-    throw new PocketkeyError('not_authenticated', 'Sign in again to use your wallet', {
+    throw new PockeyError('not_authenticated', 'Sign in again to use your wallet', {
       details: { reason: 'key_session_missing' },
       cause: error,
     });
   }
   if (reason === 'unsupported') {
-    throw new PocketkeyError(
+    throw new PockeyError(
       'unsupported',
       error instanceof Error ? error.message : 'Not available here',
       { details: { reason }, cause: error },
     );
   }
   if (reason === 'invalid_input') {
-    throw new PocketkeyError(
+    throw new PockeyError(
       'bad_request',
       error instanceof Error ? error.message : 'Invalid request',
       { details: { reason }, cause: error },
     );
   }
   if (reason === 'prepared_mismatch') {
-    throw new PocketkeyError(
+    throw new PockeyError(
       'bad_request',
       error instanceof Error ? error.message : 'The prepared transaction does not match',
       { details: { reason: 'prepared_mismatch' }, cause: error },
     );
   }
-  throw new PocketkeyError(
+  throw new PockeyError(
     'internal',
     error instanceof Error ? error.message : 'Key session failure',
     { cause: error },
   );
 }
 
-export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
+export function createPockey(options: PockeyOptions): PockeyClient {
   const parsedAppId = PublicAppId.safeParse(options.appId);
   if (!parsedAppId.success) {
-    throw new PocketkeyError('bad_request', 'Invalid appId, expected "pk_app_..."', {
+    throw new PockeyError('bad_request', 'Invalid appId, expected "pk_app_..."', {
       details: parsedAppId.error.issues,
     });
   }
@@ -316,10 +316,10 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   const leewayMs = Math.max(0, options.refreshLeewaySeconds ?? 60) * 1000;
 
   const keys = {
-    refresh: `pocketkey:${appId}:refresh`,
-    access: `pocketkey:${appId}:access`,
-    accessExp: `pocketkey:${appId}:accessExp`,
-    keySession: `pocketkey:${appId}:keySession`,
+    refresh: `pockey:${appId}:refresh`,
+    access: `pockey:${appId}:access`,
+    accessExp: `pockey:${appId}:accessExp`,
+    keySession: `pockey:${appId}:keySession`,
   };
 
   let session: Session | null = null;
@@ -338,9 +338,9 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
 
   function keyClient(): KeyClient {
     if (!options.keys) {
-      throw new PocketkeyError(
+      throw new PockeyError(
         'unsupported',
-        'This client has no key session: logins and signatures run in the Pocketkey iframe',
+        'This client has no key session: logins and signatures run in the Pockey iframe',
       );
     }
     return options.keys;
@@ -421,7 +421,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
       try {
         listener(next);
       } catch (e) {
-        console.error('[pocketkey] auth listener threw', e);
+        console.error('[pockey] auth listener threw', e);
       }
     }
   }
@@ -474,7 +474,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
         ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
       });
     } catch (e) {
-      throw new PocketkeyError('network_error', 'Could not reach the Pocketkey API', { cause: e });
+      throw new PockeyError('network_error', 'Could not reach the Pockey API', { cause: e });
     }
 
     if (!response.ok) {
@@ -499,7 +499,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
       try {
         data = JSON.parse(text);
       } catch (e) {
-        throw new PocketkeyError('invalid_response', 'The API answered with invalid JSON', {
+        throw new PockeyError('invalid_response', 'The API answered with invalid JSON', {
           status: response.status,
           requestId,
           cause: e,
@@ -508,7 +508,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     }
     const parsed = init.schema.safeParse(data);
     if (!parsed.success) {
-      throw new PocketkeyError('invalid_response', `Unexpected response from ${path}`, {
+      throw new PockeyError('invalid_response', `Unexpected response from ${path}`, {
         status: response.status,
         requestId,
         details: parsed.error.issues,
@@ -546,9 +546,9 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
         schema: AuthTokens,
       });
     } catch (e) {
-      if (isPocketkeyError(e) && e.status === 401) {
+      if (isPockeyError(e) && e.status === 401) {
         await clearSession();
-        throw new PocketkeyError('not_authenticated', 'Session expired, sign in again', {
+        throw new PockeyError('not_authenticated', 'Session expired, sign in again', {
           status: 401,
           requestId: e.requestId,
           details: { code: e.code },
@@ -568,7 +568,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
       setUser(me.user);
       return me.user;
     } catch (e) {
-      if (isPocketkeyError(e) && e.code === 'not_authenticated') return null;
+      if (isPockeyError(e) && e.code === 'not_authenticated') return null;
       throw e;
     }
   }
@@ -612,7 +612,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   function requireKeySession(): KeySession {
     if (!session) throw notAuthenticated();
     if (!keySession) {
-      throw new PocketkeyError('not_authenticated', 'Sign in again to use your wallet', {
+      throw new PockeyError('not_authenticated', 'Sign in again to use your wallet', {
         details: { reason: 'key_session_missing' },
       });
     }
@@ -646,7 +646,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     await ready();
     const flow = pendingOtp;
     if (flow?.email !== email.trim().toLowerCase()) {
-      throw new PocketkeyError('bad_request', 'Request a code for this email first');
+      throw new PockeyError('bad_request', 'Request a code for this email first');
     }
     const encryptedOtpBundle = await withKeys((client) =>
       client.encryptOtp({ code: code.trim(), targetBundle: flow.targetBundle }),
@@ -712,7 +712,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   function rpId(): string {
     if (options.passkeyRpId) return options.passkeyRpId;
     const host = (globalThis as { location?: { hostname?: string } }).location?.hostname;
-    if (!host) throw new PocketkeyError('unsupported', 'Passkeys need a browser page');
+    if (!host) throw new PockeyError('unsupported', 'Passkeys need a browser page');
     return host;
   }
 
@@ -748,7 +748,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
       wallet = (await loadUser())?.wallets.find((w) => w.chainFamily === family);
     if (!currentSession()) throw notAuthenticated();
     if (!wallet) {
-      throw new PocketkeyError('not_found', `The user has no ${family} wallet`, {
+      throw new PockeyError('not_found', `The user has no ${family} wallet`, {
         details: { reason: 'wallet_not_found', chainFamily: family },
       });
     }
@@ -762,7 +762,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     let wallet = user?.wallets.find((w) => w.id === walletId);
     wallet ??= (await loadUser())?.wallets.find((w) => w.id === walletId);
     if (!wallet) {
-      throw new PocketkeyError('not_found', 'Wallet not found', {
+      throw new PockeyError('not_found', 'Wallet not found', {
         details: { reason: 'wallet_not_found' },
       });
     }
@@ -796,7 +796,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     return { request, ...(prepared.kind === 'none' ? {} : { ticket: prepared.ticket }) };
   }
 
-  const wallets: PocketkeyClient['wallets'] = {
+  const wallets: PockeyClient['wallets'] = {
     async list() {
       const out = await authed('/v1/wallets', { schema: WalletList });
       return out.wallets;
@@ -924,7 +924,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     },
   };
 
-  /** Adds the Pocketkey signer to the user's sub-organization, once. */
+  /** Adds the Pockey signer to the user's sub-organization, once. */
   async function ensureSigner(ks: KeySession): Promise<string> {
     if (ks.signerUserId) return ks.signerUserId;
     const config = await client.getConfig();
@@ -954,13 +954,13 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
   const sessionPath = (sessionId: string, action = '') =>
     `/v1/sessions/${encodeURIComponent(sessionId)}${action ? `/${action}` : ''}`;
 
-  const sessions: PocketkeyClient['sessions'] = {
+  const sessions: PockeyClient['sessions'] = {
     async create(input) {
       const { wallet, keys: ks } = await ownWallet(input.walletId);
       const signerUserId = await ensureSigner(ks);
       const account = ks.accounts[wallet.chainFamily];
       const expiresAt = new Date(Date.now() + durationToSeconds(input.policy.expiresIn) * 1000);
-      const policyName = `pocketkey:ses:${randomToken(15)}`;
+      const policyName = `pockey:ses:${randomToken(15)}`;
       const request = await withKeys((client) =>
         client.sessionPolicy({
           organizationId: ks.organizationId,
@@ -995,7 +995,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
     isActive: isSessionActive,
   };
 
-  const client: PocketkeyClient = {
+  const client: PockeyClient = {
     appId,
     baseUrl,
     ready,
@@ -1032,7 +1032,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
       },
       async verifyOtp(code) {
         if (pendingEmail === null) {
-          throw new PocketkeyError(
+          throw new PockeyError(
             'bad_request',
             'Call loginWithEmail(email) before verifyOtp(code)',
           );
@@ -1047,7 +1047,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
           await ready();
           const ks = requireKeySession();
           if (!isPasskeySupported()) {
-            throw new PocketkeyError('unsupported', 'Passkeys are not supported in this browser');
+            throw new PockeyError('unsupported', 'Passkeys are not supported in this browser');
           }
           const config = await client.getConfig();
           const label =
@@ -1080,7 +1080,7 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
         async login() {
           await ready();
           if (!isPasskeySupported()) {
-            throw new PocketkeyError('unsupported', 'Passkeys are not supported in this browser');
+            throw new PockeyError('unsupported', 'Passkeys are not supported in this browser');
           }
           const config = await client.getConfig();
           const request = await withKeys((keysClient) =>
@@ -1110,19 +1110,19 @@ export function createPocketkey(options: PocketkeyOptions): PocketkeyClient {
           const host = popupHost();
           if (!host) {
             return Promise.reject(
-              new PocketkeyError('unsupported', 'OAuth popups need a browser window'),
+              new PockeyError('unsupported', 'OAuth popups need a browser window'),
             );
           }
           let expectedOrigin: string;
           try {
             expectedOrigin = new URL(popupOptions.apiOrigin ?? baseUrl).origin;
           } catch {
-            return Promise.reject(new PocketkeyError('bad_request', 'Invalid apiOrigin'));
+            return Promise.reject(new PockeyError('bad_request', 'Invalid apiOrigin'));
           }
           const popup = openPopup(host, 'about:blank');
           if (!popup) {
             return Promise.reject(
-              new PocketkeyError('popup_blocked', 'The browser blocked the sign-in popup'),
+              new PockeyError('popup_blocked', 'The browser blocked the sign-in popup'),
             );
           }
           return (async () => {

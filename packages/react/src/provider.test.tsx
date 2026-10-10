@@ -1,8 +1,8 @@
 import { act, cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PocketkeyEmbedError } from './errors.js';
-import { usePocketkey, useSign, useWallet } from './hooks.js';
-import { PocketkeyProvider } from './provider.js';
+import { PockeyEmbedError } from './errors.js';
+import { usePockey, useSign, useWallet } from './hooks.js';
+import { PockeyProvider } from './provider.js';
 import {
   APP_ID,
   EMBED_URL,
@@ -13,7 +13,7 @@ import {
   flush,
   makeServerConfig,
   makeUser,
-  renderPocketkey,
+  renderPockey,
 } from './__tests__/fake-embed.js';
 
 afterEach(() => {
@@ -21,19 +21,19 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('PocketkeyProvider', () => {
+describe('PockeyProvider', () => {
   it('leaves exactly one iframe under StrictMode and removes it on unmount', async () => {
-    const { result, embed, hooks } = await renderPocketkey({ strict: true });
+    const { result, embed, hooks } = await renderPockey({ strict: true });
     expect(document.querySelectorAll('iframe')).toHaveLength(1);
     expect(embed.requestsOf('init')).toHaveLength(1);
-    expect(hooks().pocketkey.ready).toBe(true);
+    expect(hooks().pockey.ready).toBe(true);
 
     result.unmount();
     expect(document.querySelectorAll('iframe')).toHaveLength(0);
   });
 
   it('sends host appearance and login methods with init', async () => {
-    const { embed } = await renderPocketkey({
+    const { embed } = await renderPockey({
       config: { appearance: { theme: 'dark', accent: '#112233' }, loginMethods: ['passkey'] },
     });
     expect(embed.last('init')).toMatchObject({
@@ -44,53 +44,53 @@ describe('PocketkeyProvider', () => {
 
   it('login resolves the user and updates every hook', async () => {
     const user = makeUser();
-    const { embed, hooks } = await renderPocketkey({
+    const { embed, hooks } = await renderPockey({
       setup: (fake) => fake.handle('login', () => ({ data: { user } })),
     });
-    expect(hooks().pocketkey).toMatchObject({ ready: true, authenticated: false, user: null });
+    expect(hooks().pockey).toMatchObject({ ready: true, authenticated: false, user: null });
     expect(hooks().wallet.evm).toBeNull();
 
     let resolved: unknown;
     await act(async () => {
-      resolved = await hooks().pocketkey.login({ method: 'email', email: 'ada@example.com' });
+      resolved = await hooks().pockey.login({ method: 'email', email: 'ada@example.com' });
     });
 
     expect(resolved).toEqual(user);
     expect(embed.last('login')).toMatchObject({ method: 'email', email: 'ada@example.com' });
-    expect(hooks().pocketkey).toMatchObject({ authenticated: true, user });
+    expect(hooks().pockey).toMatchObject({ authenticated: true, user });
     expect(hooks().wallet.wallets).toHaveLength(2);
     expect(hooks().wallet.evm).toMatchObject({ address: EVM_ADDRESS, chainId: 8453 });
     expect(hooks().wallet.solana).toMatchObject({ publicKey: SOLANA_ADDRESS, cluster: 'devnet' });
   });
 
   it('picks up the session from init and follows authChanged events', async () => {
-    const { embed, hooks } = await renderPocketkey({ initUser: makeUser(['evm']) });
-    expect(hooks().pocketkey.authenticated).toBe(true);
+    const { embed, hooks } = await renderPockey({ initUser: makeUser(['evm']) });
+    expect(hooks().pockey.authenticated).toBe(true);
     expect(hooks().wallet.solana).toBeNull();
 
     act(() => {
       embed.send({ type: 'authChanged', user: null });
     });
-    expect(hooks().pocketkey).toMatchObject({ authenticated: false, user: null });
+    expect(hooks().pockey).toMatchObject({ authenticated: false, user: null });
     expect(hooks().wallet.evm).toBeNull();
   });
 
   it('keeps hook results stable across unrelated re-renders', async () => {
     const config = { chains: { evm: [8453, 84532] } };
-    const { hooks, rerender } = await renderPocketkey({ initUser: makeUser(), config });
+    const { hooks, rerender } = await renderPockey({ initUser: makeUser(), config });
     const before = hooks();
     // A fresh but equivalent inline config object, as apps usually write it.
     rerender({ chains: { evm: [8453, 84532] } });
     const after = hooks();
     expect(after).not.toBe(before);
-    expect(after.pocketkey).toBe(before.pocketkey);
+    expect(after.pockey).toBe(before.pockey);
     expect(after.wallet).toBe(before.wallet);
     expect(after.sign).toBe(before.sign);
     expect(after.wallet.evm?.getProvider()).toBe(before.wallet.evm?.getProvider());
   });
 
   it('switchChain updates useWallet and refuses unconfigured chains', async () => {
-    const { hooks } = await renderPocketkey({
+    const { hooks } = await renderPockey({
       initUser: makeUser(),
       config: { chains: { evm: [{ id: 8453 }, { id: 84532 }] } },
     });
@@ -105,7 +105,7 @@ describe('PocketkeyProvider', () => {
   });
 
   it('useSign routes to the right wallet and forwards confirm', async () => {
-    const { embed, hooks } = await renderPocketkey({
+    const { embed, hooks } = await renderPockey({
       initUser: makeUser(),
       setup: (fake) => {
         fake.handle('signMessage', () => ({ data: { signature: '0xsig' } }));
@@ -134,7 +134,7 @@ describe('PocketkeyProvider', () => {
   });
 
   it('solana handle encodes messages and transactions as base64', async () => {
-    const { embed, hooks } = await renderPocketkey({
+    const { embed, hooks } = await renderPockey({
       initUser: makeUser(),
       setup: (fake) => {
         fake.handle('signMessage', () => ({ data: { signature: 'AQID' } }));
@@ -157,17 +157,17 @@ describe('PocketkeyProvider', () => {
   });
 
   it('rejects signing with not_authenticated when logged out', async () => {
-    const { hooks } = await renderPocketkey();
+    const { hooks } = await renderPockey();
     const error: unknown = await hooks()
       .sign.signMessage({ chain: 'evm', message: 'x' })
       .catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(PocketkeyEmbedError);
+    expect(error).toBeInstanceOf(PockeyEmbedError);
     expect(error).toMatchObject({ code: 'not_authenticated' });
   });
 
   it('createWallet merges the new wallet into the user', async () => {
     const created = makeUser(['solana']).wallets[0];
-    const { hooks } = await renderPocketkey({
+    const { hooks } = await renderPockey({
       initUser: makeUser(['evm']),
       setup: (fake) => fake.handle('createWallet', () => ({ data: created })),
     });
@@ -178,7 +178,7 @@ describe('PocketkeyProvider', () => {
   });
 
   it('exportWallet accepts a chain family or a wallet id', async () => {
-    const { embed, hooks } = await renderPocketkey({
+    const { embed, hooks } = await renderPockey({
       initUser: makeUser(),
       setup: (fake) => fake.handle('exportWallet', () => ({ data: { ok: true } })),
     });
@@ -194,9 +194,9 @@ describe('PocketkeyProvider', () => {
     vi.useFakeTimers();
     const onError = vi.fn();
     render(
-      <PocketkeyProvider appId={APP_ID} embedUrl={EMBED_URL} onError={onError}>
+      <PockeyProvider appId={APP_ID} embedUrl={EMBED_URL} onError={onError}>
         <span />
-      </PocketkeyProvider>,
+      </PockeyProvider>,
     );
     act(() => {
       vi.advanceTimersByTime(15_000);
@@ -206,7 +206,7 @@ describe('PocketkeyProvider', () => {
   });
 
   it('uses the server chains when the host config has none', async () => {
-    const { hooks } = await renderPocketkey({
+    const { hooks } = await renderPockey({
       initUser: makeUser(),
       serverConfig: makeServerConfig({ chains: { evm: [42161], solana: ['mainnet-beta'] } }),
     });
@@ -217,13 +217,13 @@ describe('PocketkeyProvider', () => {
 
 describe('hooks outside the provider', () => {
   it.each([
-    ['usePocketkey', usePocketkey],
+    ['usePockey', usePockey],
     ['useWallet', useWallet],
     ['useSign', useSign],
   ] as const)('%s throws a clear error', (name, hook) => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => renderHook(() => hook())).toThrow(
-      `${name}() must be used inside <PocketkeyProvider>.`,
+      `${name}() must be used inside <PockeyProvider>.`,
     );
   });
 });

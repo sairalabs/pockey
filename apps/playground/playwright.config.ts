@@ -26,7 +26,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'pnpm --filter @pocketkey/embed dev',
+      command: 'pnpm --filter @pockey/embed dev',
       url: 'http://localhost:5174',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

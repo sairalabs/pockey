@@ -1,5 +1,5 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
-import { estimateFeeLamports, inspectTransaction } from '@pocketkey/chains-solana';
+import { estimateFeeLamports, inspectTransaction } from '@pockey/chains-solana';
 import { base64 } from '@scure/base';
 import {
   AddressLookupTableAccount,

@@ -200,7 +200,7 @@ describe('transactionId', () => {
 
 describe('signMessage', () => {
   it('returns a base64 signature that verifies', async () => {
-    const bytes = new TextEncoder().encode('hello pocketkey');
+    const bytes = new TextEncoder().encode('hello pockey');
     const signature = await signMessage(base64.encode(bytes), signBytesFor(payer));
     expect(ed25519.verify(base64.decode(signature), bytes, payer.publicKey.toBytes())).toBe(true);
   });

@@ -1,4 +1,4 @@
-import { SigningPolicy } from '@pocketkey/types';
+import { SigningPolicy } from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import {
   formatDateTime,

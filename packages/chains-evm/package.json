@@ -1,7 +1,7 @@
 {
-  "name": "@pocketkey/chains-evm",
+  "name": "@pockey/chains-evm",
   "version": "0.0.0",
-  "description": "EVM chain adapter for Pocketkey (viem). Signing is delegated, no private key ever lives here.",
+  "description": "EVM chain adapter for Pockey (viem). Signing is delegated, no private key ever lives here.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -24,12 +24,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pocketkey/types": "workspace:*",
+    "@pockey/types": "workspace:*",
     "viem": "^2.56.5"
   },
   "devDependencies": {
     "@noble/curves": "^2.4.0",
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "eslint": "^9.39.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3",

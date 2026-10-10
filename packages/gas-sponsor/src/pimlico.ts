@@ -2,10 +2,10 @@ import {
   deserializeUserOperation,
   EVM_VIEM_CHAINS,
   serializeUserOperation,
-  toPocketkeyAccount,
+  toPockeyAccount,
   userOperationDigest,
-} from '@pocketkey/chains-evm';
-import type { EvmChainId } from '@pocketkey/types';
+} from '@pockey/chains-evm';
+import type { EvmChainId } from '@pockey/types';
 import { toKernelSmartAccount } from 'permissionless/accounts';
 import { createSmartAccountClient } from 'permissionless';
 import { createPimlicoClient, type PimlicoClient } from 'permissionless/clients/pimlico';
@@ -97,7 +97,7 @@ export function createPimlicoClientsFactory(
       version: KERNEL_VERSION,
       entryPoint: ENTRY_POINT,
       owners: [
-        toPocketkeyAccount({
+        toPockeyAccount({
           address: owner.address,
           signHash: () => Promise.reject(new Error('Preparing a user operation never signs')),
         }),

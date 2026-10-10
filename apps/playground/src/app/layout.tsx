@@ -5,8 +5,8 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Pocketkey playground',
-  description: 'Exercises every @pocketkey/react hook against a local API and embed.',
+  title: 'Pockey playground',
+  description: 'Exercises every @pockey/react hook against a local API and embed.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
-        <DevFeedback appName="Pocketkey playground" />
+        <DevFeedback appName="Pockey playground" />
       </body>
     </html>
   );

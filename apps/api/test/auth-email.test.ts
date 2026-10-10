@@ -1,13 +1,13 @@
-import { endUserIdentities } from '@pocketkey/db';
+import { endUserIdentities } from '@pockey/db';
 import {
   generateSessionKey,
   loginSignature,
   sessionKeyParams,
   signupSignature,
   type SessionKeyPair,
-} from '@pocketkey/key-provider/client';
-import { encryptOtpForTests } from '@pocketkey/key-provider/testing';
-import { ApiErrorBody, AuthResponse, EmailOtpVerifyOutput, MeResponse } from '@pocketkey/types';
+} from '@pockey/key-provider/client';
+import { encryptOtpForTests } from '@pockey/key-provider/testing';
+import { ApiErrorBody, AuthResponse, EmailOtpVerifyOutput, MeResponse } from '@pockey/types';
 import { and, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getEmulator } from '../src/lib/key-provider.js';

@@ -1,4 +1,4 @@
-import type { EmbedError } from '@pocketkey/types';
+import type { EmbedError } from '@pockey/types';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import { useState, type ReactNode } from 'react';

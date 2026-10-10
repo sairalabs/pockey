@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp } from '@pocketkey/types';
+import type { AdminApp } from '@pockey/types';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/avatar';
@@ -27,7 +27,7 @@ export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
           className="flex h-9 items-center gap-2 rounded-[10px] ps-1.5 pe-2 text-sm font-medium text-fg transition-[background-color,transform] duration-150 ease-out hover:bg-surface-2 active:scale-[0.96] data-popup-open:bg-surface-2"
         >
           <Avatar
-            seed={current?.app.id ?? 'pocketkey'}
+            seed={current?.app.id ?? 'pockey'}
             size={20}
             shape="square"
             initial={label.charAt(0)}

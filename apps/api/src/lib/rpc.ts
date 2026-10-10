@@ -1,6 +1,6 @@
-import { createEvmRpc, type EvmRpc } from '@pocketkey/chains-evm';
-import { createSolanaRpc, type SolanaRpc } from '@pocketkey/chains-solana';
-import type { EvmChainId, SolanaCluster } from '@pocketkey/types';
+import { createEvmRpc, type EvmRpc } from '@pockey/chains-evm';
+import { createSolanaRpc, type SolanaRpc } from '@pockey/chains-solana';
+import type { EvmChainId, SolanaCluster } from '@pockey/types';
 import type { ParsedEnv } from '../env.js';
 
 /**

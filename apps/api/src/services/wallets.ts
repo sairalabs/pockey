@@ -5,14 +5,14 @@ import {
   signPersonalMessage,
   signTypedDataInput,
   type SignHash,
-} from '@pocketkey/chains-evm';
+} from '@pockey/chains-evm';
 import {
   inspectTransaction,
   signMessage as signSolanaMessage,
   transactionId,
   type InspectedTransaction,
   type SignBytes,
-} from '@pocketkey/chains-solana';
+} from '@pockey/chains-solana';
 import {
   newId,
   usageEvents,
@@ -21,9 +21,9 @@ import {
   type Db,
   type EndUserRow,
   type WalletRow,
-} from '@pocketkey/db';
-import { GasSponsorError } from '@pocketkey/gas-sponsor';
-import type { KeyProvider, StampedRequest } from '@pocketkey/key-provider';
+} from '@pockey/db';
+import { GasSponsorError } from '@pockey/gas-sponsor';
+import type { KeyProvider, StampedRequest } from '@pockey/key-provider';
 import {
   AppConfig,
   Wallet,
@@ -39,7 +39,7 @@ import {
   type SignTransactionOutput,
   type SignTypedDataInput,
   type TransactionRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base64 } from '@scure/base';
 import { and, eq } from 'drizzle-orm';
 import { hexToBytes, type Address, type Hex } from 'viem';
@@ -65,7 +65,7 @@ export { providerFailure };
 
 /**
  * Wallet service (T2.3, non-custodial since 2026-09-19). Keys never leave the key
- * provider, and Pocketkey cannot sign with them: every signature here comes from a
+ * provider, and Pockey cannot sign with them: every signature here comes from a
  * request the iframe stamped with the user's session key. This code checks that the
  * request is exactly the operation of the route (same digest, same transaction),
  * relays it, and assembles or broadcasts the result.
@@ -100,7 +100,7 @@ export async function listWallets(deps: WalletDeps, endUserId: string): Promise<
 
 /**
  * Both accounts exist at the provider from sign-up (one wallet, EVM and Solana);
- * this exposes one of them as a Pocketkey wallet.
+ * this exposes one of them as a Pockey wallet.
  */
 export async function createWallet(
   deps: WalletDeps,

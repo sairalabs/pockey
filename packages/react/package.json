@@ -1,7 +1,7 @@
 {
-  "name": "@pocketkey/react",
+  "name": "@pockey/react",
   "version": "0.0.0",
-  "description": "React provider, hooks and modal for Pocketkey embedded wallets.",
+  "description": "React provider, hooks and modal for Pockey embedded wallets.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -24,7 +24,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@pocketkey/types": "workspace:*",
+    "@pockey/types": "workspace:*",
     "@solana/wallet-standard-features": "^1.5.0",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
@@ -35,7 +35,7 @@
     "react-dom": ">=18"
   },
   "devDependencies": {
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "@testing-library/react": "^16.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

@@ -5,7 +5,7 @@ import { ChainFamily, EvmChainId } from './chains.js';
  * Non-custodial key sessions (T0.5, DECISIONS.md 2026-09-19).
  *
  * The iframe holds a P-256 session key registered at the key provider and stamps
- * every request that touches the user's keys. Pocketkey's API relays those requests
+ * every request that touches the user's keys. Pockey's API relays those requests
  * after checking they match the route, and cannot change a byte of them.
  */
 
@@ -38,7 +38,7 @@ export const KeySession = z.object({
   organizationId: z.string().min(1),
   /** Provider user id of the end user. */
   userId: z.string().min(1),
-  /** Provider user holding the Pocketkey signer key, null before the first session signer. */
+  /** Provider user holding the Pockey signer key, null before the first session signer. */
   signerUserId: z.string().nullable(),
   accounts: z.object({ evm: ProviderAccount, solana: ProviderAccount }),
 });
@@ -49,7 +49,7 @@ export const KeyProviderFacts = z.object({
   kind: z.enum(['turnkey', 'emulator']),
   /** Parent organization: target of passkey and wallet logins. */
   organizationId: z.string().min(1),
-  /** Pocketkey signer key, added by the user as a non-root user for session signers. */
+  /** Pockey signer key, added by the user as a non-root user for session signers. */
   signerPublicKey: SessionPublicKey,
   /** Emulator only. Production iframe builds ignore it. */
   enclaveSignerPublicKey: z.string().optional(),
@@ -137,7 +137,7 @@ export const OAuthExchangeInput = z.object({
 });
 export type OAuthExchangeInput = z.infer<typeof OAuthExchangeInput>;
 
-/* Session signers: the iframe adds the Pocketkey signer, then creates each policy. */
+/* Session signers: the iframe adds the Pockey signer, then creates each policy. */
 
 export const SignerSetupInput = z.object({
   /** Creates the signer user. */

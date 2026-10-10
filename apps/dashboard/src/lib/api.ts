@@ -16,7 +16,7 @@ import {
   type CreateAppInput,
   type UpdateAppInput,
   type UsageRange,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { z, type ZodType } from 'zod';
 
 /**
@@ -24,7 +24,7 @@ import { z, type ZodType } from 'zod';
  *
  * The browser only ever talks to the dashboard origin: every call goes to the
  * Next route handler of `app/api/admin/[...path]`, which forwards method, body,
- * query and cookies to `${POCKETKEY_API_URL}/admin/...` and hands `Set-Cookie`
+ * query and cookies to `${POCKEY_API_URL}/admin/...` and hands `Set-Cookie`
  * back. No CORS, no third party cookie. Server components use the same parsing
  * through `api.server.ts`, which reads the cookies of the incoming request.
  */

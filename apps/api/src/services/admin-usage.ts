@@ -1,11 +1,11 @@
-import { endUserIdentities, usageEvents, usageMonthly, type Db } from '@pocketkey/db';
+import { endUserIdentities, usageEvents, usageMonthly, type Db } from '@pockey/db';
 import {
   AdminUsage,
   LoginMethod,
   UsageMonthly,
   type UsagePoint,
   type UsageRange,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { and, count, countDistinct, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { monthKey } from './usage.js';
 

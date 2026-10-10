@@ -1,4 +1,4 @@
-import { AppConfig, PublicAppConfig, PublicAppId } from '@pocketkey/types';
+import { AppConfig, PublicAppConfig, PublicAppId } from '@pockey/types';
 import { Hono } from 'hono';
 import type { AppEnv } from '../context.js';
 import { ApiError } from '../errors.js';
@@ -12,7 +12,7 @@ import { requireApp } from '../middleware/app.js';
  */
 export const appRoutes = new Hono<AppEnv>().get('/:appId/config', requireApp, (c) => {
   c.header('Cache-Control', `public, max-age=${APP_CACHE_TTL_SECONDS}`);
-  c.header('Vary', 'Origin, X-Pocketkey-App-Id');
+  c.header('Vary', 'Origin, X-Pockey-App-Id');
   const app = c.var.app;
   const requested = c.req.param('appId');
   if (requested !== app.publicId) {

@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminUsage, UsageRange } from '@pocketkey/types';
+import type { AdminUsage, UsageRange } from '@pockey/types';
 import { useRef, useState } from 'react';
 import { errorMessage, getUsage } from '@/lib/api';
 

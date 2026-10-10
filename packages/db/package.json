@@ -1,5 +1,5 @@
 {
-  "name": "@pocketkey/db",
+  "name": "@pockey/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,12 +19,12 @@
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^3.3.0",
-    "@pocketkey/types": "workspace:*",
+    "@pockey/types": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260915.1",
-    "@pocketkey/config": "workspace:*",
+    "@pockey/config": "workspace:*",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.0",
     "typescript": "5.9.3",

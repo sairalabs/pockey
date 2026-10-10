@@ -3,9 +3,9 @@ import {
   stampRequest,
   webauthnChallenge,
   type Stamper,
-} from '@pocketkey/key-provider/client';
-import { TestAuthenticator } from '@pocketkey/key-provider/testing';
-import { ApiErrorBody, EndUser, type KeySession } from '@pocketkey/types';
+} from '@pockey/key-provider/client';
+import { TestAuthenticator } from '@pockey/key-provider/testing';
+import { ApiErrorBody, EndUser, type KeySession } from '@pockey/types';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getEmulator } from '../src/lib/key-provider.js';
 import { Device } from './device.js';

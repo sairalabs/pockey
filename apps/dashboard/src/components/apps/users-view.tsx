@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminEndUserList, EndUser, Identity, IdentityType } from '@pocketkey/types';
+import type { AdminEndUserList, EndUser, Identity, IdentityType } from '@pockey/types';
 import { Search, Users } from 'lucide-react';
 import { useId, useState } from 'react';
 import { PageHeader } from '@/components/shell/page-header';

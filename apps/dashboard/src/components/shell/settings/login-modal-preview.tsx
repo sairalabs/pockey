@@ -6,7 +6,7 @@ import {
   THEME_TEXT,
   type Appearance,
   type LoginMethod,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { Mail, ScanFace, Wallet } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 
@@ -138,7 +138,7 @@ export function LoginModalPreview({ name, appearance, loginMethods }: LoginModal
         ) : null}
 
         <p className="mt-3 text-center text-[10px]" style={{ color: muted }}>
-          Secured by Pocketkey
+          Secured by Pockey
         </p>
       </div>
     </div>

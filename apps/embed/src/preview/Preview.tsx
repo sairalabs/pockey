@@ -131,7 +131,7 @@ export function Preview({ appId }: { appId: string }) {
         <header className="sticky top-0 z-10 border-b border-ring bg-surface/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <h1 className="text-[15px] font-semibold text-fg">Pocketkey embed preview</h1>
+              <h1 className="text-[15px] font-semibold text-fg">Pockey embed preview</h1>
               <p className="truncate text-[13px] text-fg-2 tabular-nums">
                 {appId || 'No appId'} · mock data, no network
               </p>
@@ -184,7 +184,7 @@ export function Preview({ appId }: { appId: string }) {
             <Card key={card.id} card={card} app={app} mobile={mobile} />
           ))}
         </main>
-        <DevFeedback appName="Pocketkey embed screens" />
+        <DevFeedback appName="Pockey embed screens" />
       </ThemeScope>
     </LazyMotion>
   );

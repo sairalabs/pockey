@@ -11,7 +11,7 @@ BASE="http://localhost:$PORT"
 APP="pk_app_seed00000000000000000001"
 EMBED="http://localhost:5174"
 LOG="$(mktemp)"
-EMAIL="smoke-$(date +%s)@pocketkey.local"
+EMAIL="smoke-$(date +%s)@pockey.local"
 DEVICE="smokedevice$(date +%s)abcdef"
 
 if ss -ltn | grep -q ":$PORT "; then
@@ -35,10 +35,10 @@ for _ in $(seq 1 60); do
   kill -0 "$WRANGLER_PID" 2>/dev/null || { cat "$LOG"; exit 1; }
 done
 
-H_APP="X-Pocketkey-App-Id: $APP"
+H_APP="X-Pockey-App-Id: $APP"
 H_JSON="Content-Type: application/json"
 H_ORIGIN="Origin: $EMBED"
-H_DEVICE="X-Pocketkey-Device: $DEVICE"
+H_DEVICE="X-Pockey-Device: $DEVICE"
 
 echo "== health";          curl -s "$BASE/health"; echo
 echo "== config";          curl -s -H "$H_APP" -H "$H_ORIGIN" "$BASE/v1/apps/$APP/config"; echo

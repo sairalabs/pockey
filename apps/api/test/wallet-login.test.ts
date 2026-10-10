@@ -4,8 +4,8 @@ import {
   evmWalletStamp,
   generateSessionKey,
   solanaWalletStamp,
-} from '@pocketkey/key-provider/client';
-import { ApiErrorBody } from '@pocketkey/types';
+} from '@pockey/key-provider/client';
+import { ApiErrorBody } from '@pockey/types';
 import { base58, base64urlnopad } from '@scure/base';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { beforeAll, describe, expect, it } from 'vitest';

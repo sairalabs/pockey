@@ -1,4 +1,4 @@
-import { ApiErrorBody, PublicAppConfig } from '@pocketkey/types';
+import { ApiErrorBody, PublicAppConfig } from '@pockey/types';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { isOriginAllowed } from '../src/middleware/app.js';
 import { request, SEED, seedDb, withApp } from './helpers.js';
@@ -16,7 +16,7 @@ describe('requireApp middleware', () => {
 
   it('rejects a malformed header with app_id_invalid', async () => {
     const res = await request(`/v1/apps/${SEED.app.publicId}/config`, {
-      headers: { 'X-Pocketkey-App-Id': 'pk_app_nope' },
+      headers: { 'X-Pockey-App-Id': 'pk_app_nope' },
     });
     expect(res.status).toBe(401);
     expect(ApiErrorBody.parse(await res.json()).error.code).toBe('app_id_invalid');
@@ -24,7 +24,7 @@ describe('requireApp middleware', () => {
 
   it('rejects an unknown app id with app_id_invalid', async () => {
     const res = await request(`/v1/apps/${SEED.app.publicId}/config`, {
-      headers: { 'X-Pocketkey-App-Id': 'pk_app_zzzzzzzzzzzzzzzzzzzzzzzz' },
+      headers: { 'X-Pockey-App-Id': 'pk_app_zzzzzzzzzzzzzzzzzzzzzzzz' },
     });
     expect(res.status).toBe(401);
     expect(ApiErrorBody.parse(await res.json()).error.code).toBe('app_id_invalid');
@@ -70,11 +70,11 @@ describe('requireApp middleware', () => {
       headers: {
         Origin: 'http://localhost:3810',
         'Access-Control-Request-Method': 'GET',
-        'Access-Control-Request-Headers': 'x-pocketkey-app-id',
+        'Access-Control-Request-Headers': 'x-pockey-app-id',
       },
     });
     expect(res.status).toBe(204);
-    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('X-Pocketkey-App-Id');
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('X-Pockey-App-Id');
   });
 });
 

@@ -1,4 +1,4 @@
-import type { AdminApp, Developer } from '@pocketkey/types';
+import type { AdminApp, Developer } from '@pockey/types';
 import type { ReactNode } from 'react';
 import { Footer } from '@/components/shell/footer';
 import { TopBar } from '@/components/shell/top-bar';

@@ -1,4 +1,4 @@
-# Cloudflare Pages headers for embed.pocketkey.dev.
+# Cloudflare Pages headers for embed.pockey.xyz.
 # Framing is allowed from any origin on purpose: every customer app embeds this
 # page. The app allowlist is enforced in JavaScript on every postMessage and by
 # the API on every request (DECISIONS.md, 2026-09-16).
@@ -6,4 +6,4 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin
   Permissions-Policy: publickey-credentials-get=(self), publickey-credentials-create=(self), clipboard-write=(self)
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.pocketkey.dev; frame-ancestors *; base-uri 'none'; form-action 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.pockey.xyz; frame-ancestors *; base-uri 'none'; form-action 'none'

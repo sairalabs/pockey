@@ -1,4 +1,4 @@
-import { endUsers, sessionSigners, wallets } from '@pocketkey/db';
+import { endUsers, sessionSigners, wallets } from '@pockey/db';
 import {
   ApiErrorBody,
   EndUserId,
@@ -9,8 +9,8 @@ import {
   TopUpCheckoutInput,
   TopUpCheckoutOutput,
   WalletId,
-} from '@pocketkey/types';
-import { PaymentsError } from '@pocketkey/payments';
+} from '@pockey/types';
+import { PaymentsError } from '@pockey/payments';
 import { and, eq } from 'drizzle-orm';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';

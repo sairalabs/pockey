@@ -1,4 +1,4 @@
-import { MeResponse } from '@pocketkey/types';
+import { MeResponse } from '@pockey/types';
 import { Hono } from 'hono';
 import type { AppEnv } from '../context.js';
 import { requireApp } from '../middleware/app.js';

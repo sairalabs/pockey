@@ -1,5 +1,5 @@
-import { baUser, developers, endUserIdentities } from '@pocketkey/db';
-import { AdminSession, ApiErrorBody, AuthProviders } from '@pocketkey/types';
+import { baUser, developers, endUserIdentities } from '@pockey/db';
+import { AdminSession, ApiErrorBody, AuthProviders } from '@pockey/types';
 import { and, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -46,7 +46,7 @@ describe('developer authentication (T5.1)', () => {
   it('signs in with an email OTP and reuses the session cookie', async () => {
     const email = 'ada.dev@test.dev';
     const cookie = await loginAsDeveloper(email);
-    expect(mailer().lastTo(email)?.text).toContain('Pocketkey');
+    expect(mailer().lastTo(email)?.text).toContain('Pockey');
 
     const first = await adminRequest('/admin/session', cookie);
     expect(first.status, await first.clone().text()).toBe(200);
@@ -200,7 +200,7 @@ describe('developer authentication (T5.1)', () => {
       method: 'POST',
       body: { email, otp: otpFrom(email) },
     });
-    expect(cookiesOf(signIn)).toContain('pocketkey_dev.session_token=');
+    expect(cookiesOf(signIn)).toContain('pockey_dev.session_token=');
   });
 });
 

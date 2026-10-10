@@ -1,9 +1,9 @@
 /**
- * Error raised by every Pocketkey call that goes through the embed iframe.
+ * Error raised by every Pockey call that goes through the embed iframe.
  * `code` is one of the embed protocol codes (`user_rejected`, `not_ready`, ...)
  * or an API error code relayed by the embed.
  */
-export class PocketkeyEmbedError extends Error {
+export class PockeyEmbedError extends Error {
   readonly code: string;
   /**
    * For `policy_violation` (session signers): why the policy refused the request,
@@ -13,7 +13,7 @@ export class PocketkeyEmbedError extends Error {
 
   constructor(code: string, message: string, reason?: string) {
     super(message);
-    this.name = 'PocketkeyEmbedError';
+    this.name = 'PockeyEmbedError';
     this.code = code;
     this.reason = reason;
   }
@@ -32,5 +32,5 @@ export class ProviderRpcError extends Error {
   }
 }
 
-export const isPocketkeyEmbedError = (error: unknown): error is PocketkeyEmbedError =>
-  error instanceof PocketkeyEmbedError;
+export const isPockeyEmbedError = (error: unknown): error is PockeyEmbedError =>
+  error instanceof PockeyEmbedError;

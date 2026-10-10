@@ -1,4 +1,4 @@
-import { base } from '@pocketkey/config/eslint';
+import { base } from '@pockey/config/eslint';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 
 export default [

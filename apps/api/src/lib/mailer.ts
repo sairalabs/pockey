@@ -1,4 +1,4 @@
-import { ConsoleMailer, type Mailer, MemoryMailer, ResendMailer } from '@pocketkey/mailer';
+import { ConsoleMailer, type Mailer, MemoryMailer, ResendMailer } from '@pockey/mailer';
 import type { ParsedEnv } from '../env.js';
 
 let cached: Mailer | undefined;

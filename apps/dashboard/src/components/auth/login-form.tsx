@@ -80,7 +80,7 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
   return (
     <div className="stagger w-full max-w-[400px]">
       <div className="mb-6 text-center">
-        <p className="text-sm font-semibold tracking-tight">Pocketkey</p>
+        <p className="text-sm font-semibold tracking-tight">Pockey</p>
         <h1 className="mt-3 text-[28px] font-medium leading-tight tracking-[-0.02em]">
           {step === 'email' ? 'Sign in' : 'Check your email'}
         </h1>

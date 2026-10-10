@@ -7,7 +7,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import type { AppConfig, SigningPolicy } from '@pocketkey/types';
+import type { AppConfig, SigningPolicy } from '@pockey/types';
 
 /* Helpers */
 
@@ -20,7 +20,7 @@ const nullableTimestamp = (name: string) => integer(name, { mode: 'timestamp_ms'
 
 const json = <T>(name: string) => text(name, { mode: 'json' }).$type<T>();
 
-/* Section 9: Pocketkey tables */
+/* Section 9: Pockey tables */
 
 export const developers = sqliteTable(
   'developers',
@@ -46,7 +46,7 @@ export const apps = sqliteTable(
   'apps',
   {
     id: text('id').primaryKey(),
-    /** `pk_app_...`, the id the SDK sends in `X-Pocketkey-App-Id`. */
+    /** `pk_app_...`, the id the SDK sends in `X-Pockey-App-Id`. */
     publicId: text('public_id').notNull(),
     developerId: text('developer_id')
       .notNull()
@@ -98,7 +98,7 @@ export const endUsers = sqliteTable(
     keyProviderSubOrgId: text('key_provider_sub_org_id'),
     /** Provider user id of the end user (root of the sub-organization). */
     keyProviderUserId: text('key_provider_user_id'),
-    /** Provider user holding the Pocketkey signer key, created with the first session. */
+    /** Provider user holding the Pockey signer key, created with the first session. */
     keyProviderSignerUserId: text('key_provider_signer_user_id'),
     /** Accounts created with the sub-organization: { evm: {walletId, address}, solana: {...} }. */
     keyProviderAccounts: text('key_provider_accounts', { mode: 'json' }).$type<
@@ -310,7 +310,7 @@ export const sponsorLedger = sqliteTable(
 );
 
 /**
- * Wallets Pocketkey owns on behalf of an app (section 7.5): the Solana fee payer
+ * Wallets Pockey owns on behalf of an app (section 7.5): the Solana fee payer
  * lives in a system sub-organization at the key provider, one per app.
  */
 export const appSystemWallets = sqliteTable(

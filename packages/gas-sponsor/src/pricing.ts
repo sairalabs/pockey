@@ -1,4 +1,4 @@
-import { SPONSOR_MARGIN, type EvmChainId } from '@pocketkey/types';
+import { SPONSOR_MARGIN, type EvmChainId } from '@pockey/types';
 import { GasSponsorError } from './errors.js';
 
 /** Native gas assets of the supported chains. */

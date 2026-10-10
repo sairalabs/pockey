@@ -1,4 +1,4 @@
-import { usageEvents, usageMonthly, type Db } from '@pocketkey/db';
+import { usageEvents, usageMonthly, type Db } from '@pockey/db';
 import { and, count, countDistinct, eq, gte, lt } from 'drizzle-orm';
 
 /**

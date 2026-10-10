@@ -9,7 +9,7 @@ import type {
   SignTransactionOutput,
   SolanaCluster,
   Wallet,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
 import {
   findWallet,
@@ -17,7 +17,7 @@ import {
   selectCluster,
   type ClientSnapshot,
   type CreateSessionParams,
-  type PocketkeyClient,
+  type PockeyClient,
   type SessionSignParams,
   type SendTransactionParams,
   type SignMessageParams,
@@ -28,9 +28,9 @@ import {
 } from './client.js';
 import { base64ToBytes, bytesToBase64, isHex, utf8ToBytes } from './encoding.js';
 import type { EIP1193Provider } from './evm-provider.js';
-import { PocketkeyContext, type PocketkeyContextValue } from './provider.js';
+import { PockeyContext, type PockeyContextValue } from './provider.js';
 
-export interface UsePocketkeyResult {
+export interface UsePockeyResult {
   /** True once the embed loaded and answered `init`. */
   ready: boolean;
   authenticated: boolean;
@@ -116,20 +116,20 @@ export interface UseSessionSignersResult {
 
 const NO_WALLETS: Wallet[] = [];
 
-function usePocketkeyContext(hook: string): PocketkeyContextValue {
-  const context = useContext(PocketkeyContext);
+function usePockeyContext(hook: string): PockeyContextValue {
+  const context = useContext(PockeyContext);
   if (!context) {
-    throw new Error(`${hook}() must be used inside <PocketkeyProvider>.`);
+    throw new Error(`${hook}() must be used inside <PockeyProvider>.`);
   }
   return context;
 }
 
-function useSnapshot(client: PocketkeyClient): ClientSnapshot {
+function useSnapshot(client: PockeyClient): ClientSnapshot {
   return useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
 }
 
-export function usePocketkey(): UsePocketkeyResult {
-  const { client } = usePocketkeyContext('usePocketkey');
+export function usePockey(): UsePockeyResult {
+  const { client } = usePockeyContext('usePockey');
   const { ready, user } = useSnapshot(client);
   return useMemo(
     () => ({
@@ -148,7 +148,7 @@ const toBase64 = (value: Uint8Array | string): string =>
   typeof value === 'string' ? value : bytesToBase64(value);
 
 function solanaHandle(
-  client: PocketkeyClient,
+  client: PockeyClient,
   publicKey: string,
   cluster: SolanaCluster,
 ): SolanaWalletHandle {
@@ -184,7 +184,7 @@ function solanaHandle(
 }
 
 export function useWallet(): UseWalletResult {
-  const { client, config } = usePocketkeyContext('useWallet');
+  const { client, config } = usePockeyContext('useWallet');
   const snapshot = useSnapshot(client);
   const { user } = snapshot;
   const chainId = selectChainId(config, snapshot);
@@ -213,7 +213,7 @@ export function useWallet(): UseWalletResult {
 }
 
 export function useSign(): UseSignResult {
-  const { client } = usePocketkeyContext('useSign');
+  const { client } = usePockeyContext('useSign');
   return useMemo(
     () => ({
       signMessage: client.signMessage,
@@ -226,7 +226,7 @@ export function useSign(): UseSignResult {
 }
 
 export function useSessionSigners(): UseSessionSignersResult {
-  const { client } = usePocketkeyContext('useSessionSigners');
+  const { client } = usePockeyContext('useSessionSigners');
   const { user } = useSnapshot(client);
   const state = useSyncExternalStore(
     client.subscribeSessions,

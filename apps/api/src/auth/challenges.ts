@@ -1,4 +1,4 @@
-import { authChallenges, type AuthChallengeRow, type Db } from '@pocketkey/db';
+import { authChallenges, type AuthChallengeRow, type Db } from '@pockey/db';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 
 export type ChallengePurpose = AuthChallengeRow['purpose'];

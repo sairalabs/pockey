@@ -1,5 +1,5 @@
-import { isPocketkeyError, policyViolationReason } from '@pocketkey/core';
-import type { EmbedError } from '@pocketkey/types';
+import { isPockeyError, policyViolationReason } from '@pockey/core';
+import type { EmbedError } from '@pockey/types';
 import { isRecord } from './guards';
 
 /**
@@ -35,7 +35,7 @@ export function toEmbedError(error: unknown): EmbedErrorPayload {
   if (error instanceof EmbedFailure) {
     return withReason({ code: error.code, message: error.message }, error.reason);
   }
-  if (isPocketkeyError(error)) {
+  if (isPockeyError(error)) {
     return withReason({ code: error.code, message: error.message }, policyViolationReason(error));
   }
   if (error instanceof Error) return { code: 'internal', message: error.message };

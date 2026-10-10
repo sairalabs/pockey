@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Every identifier in Pocketkey is a prefixed cuid2: `<prefix>_<cuid2>`.
+ * Every identifier in Pockey is a prefixed cuid2: `<prefix>_<cuid2>`.
  * The prefix makes ids self-describing in logs and support tickets.
  */
 export const ID_PREFIXES = {

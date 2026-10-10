@@ -1,6 +1,6 @@
 'use client';
 
-import type { ApiKeySummary } from '@pocketkey/types';
+import type { ApiKeySummary } from '@pockey/types';
 import { KeyRound, TriangleAlert } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -167,7 +167,7 @@ export function ApiKeysList({
             Copy your new secret key now
           </p>
           <p className="mt-0.5 text-[13px] text-fg-2">
-            This is the only time it is shown. Pocketkey stores only its hash and its first 12
+            This is the only time it is shown. Pockey stores only its hash and its first 12
             characters, so it cannot be displayed again. Lose it and you create a new key.
           </p>
           <div className="mt-3 flex items-center gap-2 rounded-[8px] bg-bg px-3 py-2 tabular-nums text-[13px]">

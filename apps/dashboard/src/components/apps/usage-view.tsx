@@ -1,6 +1,6 @@
 'use client';
 
-import type { AdminApp, AdminUsage } from '@pocketkey/types';
+import type { AdminApp, AdminUsage } from '@pockey/types';
 import type { ReactNode } from 'react';
 import { rangeOptions, useUsage } from '@/components/apps/use-usage';
 import { countSeries, gasSeries, sumCounts, sumWei } from '@/components/apps/usage-series';

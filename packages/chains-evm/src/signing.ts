@@ -10,7 +10,7 @@ import {
   type TypedDataDefinition,
   type TypedDataDomain,
 } from 'viem';
-import type { SignTypedDataInput } from '@pocketkey/types';
+import type { SignTypedDataInput } from '@pockey/types';
 
 /**
  * Signs a 32-byte digest. Implemented by the caller (the API wires it to
@@ -79,7 +79,7 @@ function toTypedDataDefinition(input: SignTypedDataInput): LooseTypedData {
   };
 }
 
-/** EIP-712 digest of a Pocketkey typed data payload. */
+/** EIP-712 digest of a Pockey typed data payload. */
 export function hashTypedDataInput(input: SignTypedDataInput): Hex {
   return hashTypedData(toTypedDataDefinition(input));
 }

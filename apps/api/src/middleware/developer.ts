@@ -1,5 +1,5 @@
-import { apps, type AppRow } from '@pocketkey/db';
-import { AppId } from '@pocketkey/types';
+import { apps, type AppRow } from '@pockey/db';
+import { AppId } from '@pockey/types';
 import { and, eq } from 'drizzle-orm';
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';

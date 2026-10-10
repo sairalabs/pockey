@@ -4,7 +4,7 @@ import {
   signTransaction,
   SolanaTransactionError,
   type InspectedTransaction,
-} from '@pocketkey/chains-solana';
+} from '@pockey/chains-solana';
 import { GasSponsorError } from './errors.js';
 
 /**

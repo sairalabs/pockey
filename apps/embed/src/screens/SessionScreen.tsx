@@ -1,4 +1,4 @@
-import type { ChainFamily } from '@pocketkey/types';
+import type { ChainFamily } from '@pockey/types';
 import { clsx } from 'clsx';
 import { ChevronDown, TriangleAlert } from 'lucide-react';
 import { useId, useState } from 'react';

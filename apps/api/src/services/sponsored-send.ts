@@ -1,6 +1,6 @@
-import { normalizeSignature, type SignHash } from '@pocketkey/chains-evm';
-import { decodeTransaction, SolanaTransactionError, transactionId } from '@pocketkey/chains-solana';
-import { newId, usageEvents, wallets, type AppRow, type Db, type WalletRow } from '@pocketkey/db';
+import { normalizeSignature, type SignHash } from '@pockey/chains-evm';
+import { decodeTransaction, SolanaTransactionError, transactionId } from '@pockey/chains-solana';
+import { newId, usageEvents, wallets, type AppRow, type Db, type WalletRow } from '@pockey/db';
 import {
   chargedCents,
   ENTRY_POINT,
@@ -11,14 +11,14 @@ import {
   validateSponsoredSolanaTransaction,
   type EvmSponsorClientsFactory,
   type PriceFeed,
-} from '@pocketkey/gas-sponsor';
-import { KeyProviderError, type KeyProvider } from '@pocketkey/key-provider';
+} from '@pockey/gas-sponsor';
+import { KeyProviderError, type KeyProvider } from '@pockey/key-provider';
 import {
   AppConfig,
   type ChainFamily,
   type EvmTransactionRequest,
   type SolanaTransactionRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import { base64 } from '@scure/base';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { Address, Hex } from 'viem';
@@ -40,7 +40,7 @@ import {
  * any failure after the charge refunds it in full.
  *
  * The end user signs either in the iframe (a relayed request) or under a session
- * policy (Pocketkey signer key); Pocketkey only ever signs as the app fee payer.
+ * policy (Pockey signer key); Pockey only ever signs as the app fee payer.
  */
 
 export interface SponsoredSendDeps {

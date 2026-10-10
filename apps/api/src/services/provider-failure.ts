@@ -1,4 +1,4 @@
-import { KeyProviderError } from '@pocketkey/key-provider';
+import { KeyProviderError } from '@pockey/key-provider';
 import { ApiError } from '../errors.js';
 
 /** Maps key provider failures to a stable API error. Other errors pass through. */

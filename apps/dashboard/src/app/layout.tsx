@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'Pocketkey', template: '%s | Pocketkey' },
+  title: { default: 'Pockey', template: '%s | Pockey' },
   description: 'Embedded wallets dashboard.',
 };
 
@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={inter.variable}>
       <body className="min-h-dvh bg-bg text-fg antialiased">
         {children}
-        <DevFeedback appName="Pocketkey dashboard" />
+        <DevFeedback appName="Pockey dashboard" />
       </body>
     </html>
   );

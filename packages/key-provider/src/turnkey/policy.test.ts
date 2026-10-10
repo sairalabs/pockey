@@ -1,4 +1,4 @@
-import type { SigningPolicy } from '@pocketkey/types';
+import type { SigningPolicy } from '@pockey/types';
 import { describe, expect, it } from 'vitest';
 import { policyTimestamp, quote, revokePermissionPolicy, toTurnkeyPolicy } from './policy.js';
 
@@ -7,7 +7,7 @@ const target = {
   walletId: 'wlt-1',
   address: '0xAbC0000000000000000000000000000000000001',
   sessionUserId: 'user-1',
-  policyName: 'pocketkey:ses_1',
+  policyName: 'pockey:ses_1',
   expiresAt,
 };
 const SCOPE =
@@ -28,14 +28,14 @@ describe('toTurnkeyPolicy', () => {
       allowMessages: true,
     } as SigningPolicy;
     expect(toTurnkeyPolicy(policy, target)).toEqual({
-      policyName: 'pocketkey:ses_1',
+      policyName: 'pockey:ses_1',
       effect: 'EFFECT_ALLOW',
       consensus: "approvers.any(user, user.id == 'user-1')",
       condition:
         `${SCOPE} && ((${TX} && eth.tx.chain_id in [8453, 84532] && ` +
         `eth.tx.to in ['0x4200000000000000000000000000000000000006'] && eth.tx.value <= 1000) || ${RAW})`,
       time: "time.now < Timestamp('2026-09-20T10:00:00Z')",
-      notes: 'Pocketkey session signer (evm, 1d). Enforced by Pocketkey only: maxValueTotal.',
+      notes: 'Pockey session signer (evm, 1d). Enforced by Pockey only: maxValueTotal.',
     });
   });
 
@@ -53,7 +53,7 @@ describe('toTurnkeyPolicy', () => {
         `['11111111111111111111111111111111', 'ComputeBudget111111111111111111111111111111']) && ` +
         `solana.tx.transfers.all(t, t.amount <= 5000)))`,
     );
-    expect(out.notes).toBe('Pocketkey session signer (solana, 2h).');
+    expect(out.notes).toBe('Pockey session signer (solana, 2h).');
   });
 
   it('maps an empty policy to account scoped transactions only', () => {

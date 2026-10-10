@@ -21,8 +21,8 @@ import {
 } from './wallet.js';
 
 /**
- * postMessage protocol between the host page (`@pocketkey/react`) and the
- * iframe served from embed.pocketkey.dev (section 4.1).
+ * postMessage protocol between the host page (`@pockey/react`) and the
+ * iframe served from embed.pockey.xyz (section 4.1).
  *
  * - The host sends requests. Each carries a unique `requestId`.
  * - The embed answers every request with exactly one `response` carrying the
@@ -36,7 +36,7 @@ import {
 export const EMBED_PROTOCOL_VERSION = 1 as const;
 
 /** Every message on the wire is tagged, so unrelated postMessage traffic is ignored cheaply. */
-export const EMBED_MESSAGE_TAG = 'pocketkey' as const;
+export const EMBED_MESSAGE_TAG = 'pockey' as const;
 
 const base = { source: z.literal(EMBED_MESSAGE_TAG), pk: z.literal(EMBED_PROTOCOL_VERSION) };
 const request = <T extends z.ZodRawShape>(shape: T) =>

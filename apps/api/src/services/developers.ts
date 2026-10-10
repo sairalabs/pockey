@@ -1,5 +1,5 @@
-import { developers, newId, type Db, type DeveloperRow } from '@pocketkey/db';
-import { Developer } from '@pocketkey/types';
+import { developers, newId, type Db, type DeveloperRow } from '@pockey/db';
+import { Developer } from '@pockey/types';
 import { and, eq, isNull } from 'drizzle-orm';
 import { ApiError } from '../errors.js';
 

@@ -8,7 +8,7 @@ import {
   type KeySession,
   PublicAppConfig,
   type StampedRequest,
-} from '@pocketkey/types';
+} from '@pockey/types';
 import type { KeyClient } from './keys.js';
 
 const pad = (seed: string, length: number) => seed.padEnd(length, '0').slice(0, length);
@@ -197,7 +197,7 @@ export interface KeyCall {
   input: unknown;
 }
 
-/** Rejection shaped like `KeyClientError` from `@pocketkey/key-provider/client`. */
+/** Rejection shaped like `KeyClientError` from `@pockey/key-provider/client`. */
 export function keyError(reason: string, message = `key client: ${reason}`): Error {
   return Object.assign(new Error(message), { name: 'KeyClientError', reason });
 }
