@@ -9,6 +9,7 @@ import { noopActions, type Nav } from '../lib/state';
 import { ScreenView } from '../screens/ScreenView';
 import type { AppInfo } from '../screens/types';
 import { ACCENT_PRESETS, AccentPicker } from './AccentPicker';
+import { DevFeedback } from './DevFeedback';
 import { PREVIEW_METHODS, PREVIEW_ORIGIN, previewCards, type PreviewCard } from './mocks';
 
 const NAV: Nav = { key: 1, direction: 1, keyboard: false };
@@ -183,6 +184,7 @@ export function Preview({ appId }: { appId: string }) {
             <Card key={card.id} card={card} app={app} mobile={mobile} />
           ))}
         </main>
+        <DevFeedback appName="Pocketkey embed screens" />
       </ThemeScope>
     </LazyMotion>
   );
