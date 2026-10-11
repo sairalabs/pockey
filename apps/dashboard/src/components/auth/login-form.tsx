@@ -131,11 +131,7 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
 
             {githubEnabled ? (
               <>
-                <div className="my-5 flex items-center gap-3 text-[12px] text-fg-3">
-                  <span className="h-px flex-1 bg-border" />
-                  or
-                  <span className="h-px flex-1 bg-border" />
-                </div>
+                <p className="my-5 text-center text-[12px] text-fg-3">or</p>
                 <Button
                   className="w-full"
                   disabled={pending}

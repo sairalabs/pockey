@@ -146,12 +146,12 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
         </p>
       ) : null}
 
-      <div className="divide-y divide-border">
+      <div className="">
         <PaneSection
           title="Login methods"
           description="What end users see in the modal. At least one method is required."
         >
-          <div className="divide-y divide-border">
+          <div className="">
             {loginMethodRows.map((row) => (
               <SwitchRow
                 key={row.value}
@@ -170,7 +170,7 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
         </PaneSection>
 
         <PaneSection title="Chains" description="Networks wallets can transact on.">
-          <div className="divide-y divide-border">
+          <div className="">
             {evmChainRows.map((row) => (
               <SwitchRow
                 key={row.id}

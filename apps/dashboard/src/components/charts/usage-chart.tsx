@@ -120,13 +120,13 @@ export function UsageChart({
           }}
         >
           {/* Recessive hairlines: the rounded maximum and the baseline. */}
-          <line x1="0" y1={TOP} x2={WIDTH} y2={TOP} stroke="var(--border)" strokeWidth="1" />
+          <line x1="0" y1={TOP} x2={WIDTH} y2={TOP} stroke="var(--grid)" strokeWidth="1" />
           <line
             x1="0"
             y1={HEIGHT - 0.5}
             x2={WIDTH}
             y2={HEIGHT - 0.5}
-            stroke="var(--border-strong)"
+            stroke="var(--grid-strong)"
             strokeWidth="1"
           />
           {points.map((point, index) => {

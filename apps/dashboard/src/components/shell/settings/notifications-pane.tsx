@@ -23,7 +23,7 @@ export function NotificationsPane() {
 
   return (
     <Pane title="Notifications">
-      <div className="divide-y divide-border">
+      <div className="">
         {rows.map((row) => (
           <SwitchRow
             key={row.id}

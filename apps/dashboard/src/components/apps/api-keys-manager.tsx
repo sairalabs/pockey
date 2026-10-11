@@ -195,7 +195,7 @@ export function ApiKeysList({
           description="Create a key to call the API from your server."
         />
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="">
           {keys.map((key) => {
             const revoked = key.revokedAt !== null;
             return (

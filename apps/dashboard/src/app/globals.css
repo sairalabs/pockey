@@ -12,8 +12,9 @@
   --surface: #181818;
   --surface-2: #202020;
   --surface-3: #2a2a2a;
-  --border: oklch(1 0 0 / 0.08);
-  --border-strong: oklch(1 0 0 / 0.13);
+  /* Chart furniture only: a baseline and a hover guide inside the SVG. */
+  --grid: oklch(1 0 0 / 0.08);
+  --grid-strong: oklch(1 0 0 / 0.13);
   --text: #ffffff;
   --text-2: #a1a1a1;
   --text-3: #6b6b6b;
@@ -38,8 +39,6 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
   --color-fg: var(--text);
   --color-fg-2: var(--text-2);
   --color-fg-3: var(--text-3);

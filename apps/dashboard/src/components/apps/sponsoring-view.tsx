@@ -97,7 +97,7 @@ export function SponsoringView({ app, balance }: SponsoringViewProps) {
 
       <Card>
         <p className="text-sm font-medium">Chains</p>
-        <div className="mt-1 divide-y divide-border">
+        <div className="mt-1">
           <SwitchRow
             title="EVM"
             description="ERC-4337 paymaster on the enabled EVM chains."

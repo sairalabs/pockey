@@ -119,6 +119,14 @@ export function createBrowserWalletAdapter(win: Window, discoveryMs = 300): Wall
         providers.set('phantom:solana', { family: 'solana', provider: phantom });
         options.push({ id: 'phantom:solana', name: 'Phantom', icon: null, family: 'solana' });
       }
+
+      // A wallet that gave us no usable icon gets its brand mark from our own set.
+      if (options.some((option) => option.icon === null)) {
+        const { walletMark } = await import('./wallet-marks');
+        for (const option of options) {
+          option.icon ??= walletMark(option.name);
+        }
+      }
       return options;
     },
 

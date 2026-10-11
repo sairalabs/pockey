@@ -160,7 +160,7 @@ export function AppInformationPane({ app }: { app: AdminApp }) {
           />
         </Field>
 
-        <div className="divide-y divide-border">
+        <div className="">
           <KeyValue label="Public app id">
             <span className="inline-flex items-center gap-1">
               <span className="tabular-nums text-[13px]">{app.app.publicId}</span>

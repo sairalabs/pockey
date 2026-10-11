@@ -46,7 +46,7 @@ export function NotificationsPopover({
               description="New notifications will show up here."
             />
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="">
               {unread.map((n) => (
                 <li key={n.id} className="px-4 py-3">
                   <p className="text-sm font-medium">{n.title}</p>
@@ -64,7 +64,7 @@ export function NotificationsPopover({
               description="Notifications you mark as done land here."
             />
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="">
               {completed.map((n) => (
                 <li key={n.id} className="px-4 py-3">
                   <p className="text-sm font-medium">{n.title}</p>

@@ -87,7 +87,7 @@ export function SponsoringPane({ app }: { app: AdminApp }) {
         </p>
       ) : null}
 
-      <div className="divide-y divide-border">
+      <div className="">
         <PaneSection title="Balance" description="Prepaid balance used to pay gas for your users.">
           <div className="flex items-center justify-between gap-4 rounded-[12px] bg-surface-2 px-4 py-3.5">
             <div>
@@ -112,7 +112,7 @@ export function SponsoringPane({ app }: { app: AdminApp }) {
         </PaneSection>
 
         <PaneSection title="Chains" description="Which wallets get their gas paid.">
-          <div className="divide-y divide-border">
+          <div className="">
             <SwitchRow
               title="EVM"
               description="ERC-4337 paymaster on the enabled EVM chains."
@@ -149,7 +149,7 @@ export function SponsoringPane({ app }: { app: AdminApp }) {
         </PaneSection>
 
         <PaneSection title="Today">
-          <div className="divide-y divide-border">
+          <div className="">
             <KeyValue label="Solana spent today">
               <span className="num">
                 {balance ? formatInt(Number(balance.solanaSpentTodayLamports)) : '...'} lamports

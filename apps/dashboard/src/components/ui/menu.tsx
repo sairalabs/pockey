@@ -80,7 +80,7 @@ export function MenuItem({ icon, tone = 'default', className, children, ...props
 }
 
 export function MenuSeparator() {
-  return <div role="separator" className="my-1 h-px bg-border" />;
+  return <div role="separator" className="my-1.5" />;
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {

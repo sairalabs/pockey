@@ -112,7 +112,7 @@ export function NewAppDialog({ open, onOpenChange, onCreated }: NewAppDialogProp
             value={slug}
             spellCheck={false}
             aria-invalid={slugError !== null || undefined}
-            className={slugError === null ? 'num' : 'num border-danger'}
+            className={slugError === null ? 'num' : 'num shadow-[0_0_0_2px_var(--danger)]'}
             onChange={(event) => {
               setSlug(event.target.value);
               setSlugError(null);

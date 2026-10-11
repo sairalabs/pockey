@@ -159,7 +159,7 @@ export function UsageView({ app, usage: initial }: UsageViewProps) {
         <p className="mt-0.5 mb-3 text-[13px] text-fg-2">
           Distinct end users per identity, all time.
         </p>
-        <div className="divide-y divide-border">
+        <div className="">
           {usage.loginMethods.map((entry) => (
             <MethodRow
               key={entry.method}

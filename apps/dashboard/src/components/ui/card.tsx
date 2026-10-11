@@ -9,7 +9,7 @@ export interface CardProps extends ComponentPropsWithRef<'div'> {
 }
 
 /**
- * Surface with a ring instead of a border (better-ui surfaces).
+ * Flat surface: its fill is what sets it apart, never an outline.
  * Radius 16px. Nested rounded rows inside use 10px and are treated as their own
  * surface: with 20px padding the concentric formula would give a negative radius.
  */

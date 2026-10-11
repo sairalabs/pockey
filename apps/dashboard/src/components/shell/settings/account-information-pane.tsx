@@ -37,7 +37,7 @@ export function AccountInformationPane({ developer }: { developer: Developer }) 
         </Button>
       }
     >
-      <div className="divide-y divide-border">
+      <div className="">
         <KeyValue label="Name">{developer.name ?? 'Not set'}</KeyValue>
         <KeyValue label="Email">
           <span className="inline-flex items-center gap-1">

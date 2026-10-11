@@ -17,7 +17,7 @@ export function MembersPane({ developer }: { developer: Developer }) {
       <p className="mb-4 text-[13px] text-fg-2">
         Teams are not part of the MVP. An app belongs to the developer who created it.
       </p>
-      <ul className="divide-y divide-border">
+      <ul className="">
         <li className="flex items-center justify-between gap-4 py-3.5">
           <span className="flex min-w-0 items-center gap-3">
             <Avatar seed={developer.email} size={32} />

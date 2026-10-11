@@ -32,7 +32,7 @@ export function AppearancePane() {
       <p className="mb-2 text-[13px] text-fg-2">
         The dashboard ships in dark only for now. A light theme follows the same tokens.
       </p>
-      <div className="divide-y divide-border">
+      <div className="">
         {rows.map((row) => (
           <SwitchRow
             key={row.id}
