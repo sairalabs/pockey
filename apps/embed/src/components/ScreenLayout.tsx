@@ -48,46 +48,54 @@ export function ScreenLayout({
 }: ScreenLayoutProps) {
   // A screen with a mark carries its title under it; one without puts the title in the bar.
   const titleInBar = !media;
+  // An outcome screen has nothing to act on: no bar, and the message sits in the middle.
+  const bar = titleInBar || Boolean(onBack ?? onHelp ?? onClose) || label !== undefined;
+  const settled = !bar && !children && !footer;
   return (
-    <div className="pk-screen">
+    <div className={clsx('pk-screen', settled && 'pk-screen-settled')}>
       <header className="shrink-0">
-        <div className="-mx-1 flex h-10 items-center justify-between gap-2">
-          {onBack ? (
-            <IconButton label="Back" onClick={onBack}>
-              <ChevronLeft size={20} aria-hidden="true" />
-            </IconButton>
-          ) : onHelp ? (
-            <IconButton label="What is a wallet?" onClick={onHelp}>
-              <Info size={18} aria-hidden="true" />
-            </IconButton>
-          ) : (
-            <span className="size-10 shrink-0" />
-          )}
-          {titleInBar ? (
-            <h2
-              id={titleId}
-              className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg"
-            >
-              {title}
-            </h2>
-          ) : (
-            <span className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg">
-              {label}
-            </span>
-          )}
-          {onClose ? (
-            <IconButton label="Close" onClick={onClose}>
-              <X size={18} aria-hidden="true" />
-            </IconButton>
-          ) : (
-            <span className="size-10 shrink-0" />
-          )}
-        </div>
+        {bar ? (
+          <div className="-mx-1 flex h-10 items-center justify-between gap-2">
+            {onBack ? (
+              <IconButton label="Back" onClick={onBack}>
+                <ChevronLeft size={20} aria-hidden="true" />
+              </IconButton>
+            ) : onHelp ? (
+              <IconButton label="What is a wallet?" onClick={onHelp}>
+                <Info size={18} aria-hidden="true" />
+              </IconButton>
+            ) : (
+              <span className="size-10 shrink-0" />
+            )}
+            {titleInBar ? (
+              <h2
+                id={titleId}
+                className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg"
+              >
+                {title}
+              </h2>
+            ) : (
+              <span className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg">
+                {label}
+              </span>
+            )}
+            {onClose ? (
+              <IconButton label="Close" onClick={onClose}>
+                <X size={18} aria-hidden="true" />
+              </IconButton>
+            ) : (
+              <span className="size-10 shrink-0" />
+            )}
+          </div>
+        ) : null}
         {media || subtitle || meta ? (
           <div
-            className={clsx('flex flex-col items-center px-2 text-center', media ? 'pt-3' : null)}
+            className={clsx(
+              'flex flex-col items-center px-2 text-center',
+              media && bar ? 'pt-3' : null,
+            )}
           >
-            {media ? <div className="mb-5">{media}</div> : null}
+            {media ? <div className="mb-3">{media}</div> : null}
             {media ? (
               <h2
                 id={titleId}

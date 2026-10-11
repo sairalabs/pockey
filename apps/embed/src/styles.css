@@ -133,6 +133,12 @@
     padding: var(--pk-pad);
   }
 
+  /* Nothing to act on: the message sits in the middle of a calm panel. */
+  .pk-screen-settled {
+    justify-content: center;
+    min-height: 220px;
+  }
+
   [data-variant='sheet'] .pk-screen {
     padding-bottom: calc(var(--pk-pad) + env(safe-area-inset-bottom));
   }
