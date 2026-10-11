@@ -1,13 +1,12 @@
 'use client';
 
 import { ArrowLeft, ArrowRight } from '../ui/icons';
-import { Lockup } from '../ui/logo';
+import { Mark } from '../ui/logo';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { OtpInput } from '@/components/auth/otp-input';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Field, Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';
 import { errorMessage, sendLoginCode, startGithubSignIn, verifyLoginCode } from '@/lib/api';
 
 export interface LoginFormProps {
@@ -81,22 +80,18 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
   return (
     <div className="stagger w-full max-w-[400px]">
       <div className="mb-6 text-center">
-        <Lockup height={20} aria-label="Pockey" className="mx-auto" />
-        <h1 className="mt-3 text-[28px] font-medium leading-tight tracking-[-0.02em]">
+        <Mark height={44} aria-label="Pockey" className="mx-auto" />
+        <h1 className="mt-5 text-[28px] font-medium leading-tight tracking-[-0.02em]">
           {step === 'email' ? 'Sign in' : 'Check your email'}
         </h1>
-        <p className="mt-1 text-sm text-fg-2">
-          {step === 'email' ? (
-            'Developer dashboard for your embedded wallets.'
-          ) : (
-            <>
-              We sent a 6 digit code to <span className="text-fg">{email.trim()}</span>.
-            </>
-          )}
-        </p>
+        {step === 'email' ? null : (
+          <p className="mt-1 text-sm text-fg-2">
+            We sent a 6 digit code to <span className="text-fg">{email.trim()}</span>.
+          </p>
+        )}
       </div>
 
-      <Card className="p-6">
+      <div>
         {step === 'email' ? (
           <>
             <form
@@ -106,19 +101,18 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
                 void requestCode();
               }}
             >
-              <Field label="Email" htmlFor={`${id}-email`}>
-                <Input
-                  id={`${id}-email`}
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  disabled={pending}
-                  onChange={(event) => {
-                    setEmail(event.target.value);
-                  }}
-                />
-              </Field>
+              <Input
+                id={`${id}-email`}
+                type="email"
+                aria-label="Email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                value={email}
+                disabled={pending}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                }}
+              />
               <Button
                 variant="primary"
                 type="submit"
@@ -186,9 +180,9 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
             {error}
           </p>
         ) : null}
-      </Card>
+      </div>
 
-      <p className="mt-6 text-center text-[12px] text-fg-3">
+      <p className="mt-3 text-center text-[12px] text-fg-3">
         By continuing you agree to the Terms and the Privacy policy.
       </p>
     </div>
