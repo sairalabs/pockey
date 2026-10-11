@@ -77,7 +77,8 @@ export function ScreenLayout({
   );
 }
 
-export function IconTile({
+/** The mark at the top of a screen. Flat brand: the icon stands on its own, no tile behind it. */
+export function ScreenIcon({
   children,
   tone = 'neutral',
   size = 48,
@@ -90,10 +91,10 @@ export function IconTile({
     <div
       className={clsx(
         'flex items-center justify-center',
-        size === 64 ? 'size-16 rounded-[20px]' : 'size-12 rounded-2xl',
-        tone === 'neutral' && 'bg-surface-2 text-fg',
-        tone === 'accent' && 'bg-accent text-accent-fg',
-        tone === 'danger' && 'bg-surface-2 text-danger',
+        size === 64 ? 'size-16' : 'size-12',
+        tone === 'neutral' && 'text-fg',
+        tone === 'accent' && 'text-accent',
+        tone === 'danger' && 'text-danger',
       )}
     >
       {children}

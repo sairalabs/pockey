@@ -4,7 +4,7 @@ import { Button } from '../components/Button';
 import { CopyButton } from '../components/CopyButton';
 import { DetailList, DetailRow, WalletAddress } from '../components/Details';
 import { HoldButton } from '../components/HoldButton';
-import { ErrorText, IconTile, ScreenLayout } from '../components/ScreenLayout';
+import { ErrorText, ScreenIcon, ScreenLayout } from '../components/ScreenLayout';
 import type { ScreenProps } from './types';
 
 const SWAP_EASE = [0.2, 0, 0, 1] as const;
@@ -15,7 +15,7 @@ export function SuccessScreen({ screen, titleId }: ScreenProps<'success'>) {
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile tone="accent" size={64}>
+        <ScreenIcon tone="accent" size={64}>
           <m.span
             className="flex"
             initial={
@@ -35,9 +35,9 @@ export function SuccessScreen({ screen, titleId }: ScreenProps<'success'>) {
             }
             transition={{ duration: 0.3, ease: SWAP_EASE }}
           >
-            <Check size={30} aria-hidden="true" />
+            <Check size={44} aria-hidden="true" />
           </m.span>
-        </IconTile>
+        </ScreenIcon>
       }
       title={screen.title}
     />
@@ -51,9 +51,9 @@ export function ExportScreen({ screen, actions, titleId }: ScreenProps<'export'>
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile tone="danger">
-          <TriangleAlert size={24} aria-hidden="true" />
-        </IconTile>
+        <ScreenIcon tone="danger">
+          <TriangleAlert size={32} aria-hidden="true" />
+        </ScreenIcon>
       }
       title="Export private key"
       subtitle="Anyone with this key has full control of this wallet. Never share it."
@@ -105,9 +105,9 @@ export function ErrorScreen({ screen, actions, titleId }: ScreenProps<'error'>) 
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile tone="danger">
-          <CircleAlert size={24} aria-hidden="true" />
-        </IconTile>
+        <ScreenIcon tone="danger">
+          <CircleAlert size={32} aria-hidden="true" />
+        </ScreenIcon>
       }
       title="Something went wrong"
       subtitle={screen.error.message}

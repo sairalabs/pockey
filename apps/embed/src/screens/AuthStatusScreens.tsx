@@ -1,7 +1,7 @@
 import { KeyRound, Wallet } from '../components/icons';
 import { Button } from '../components/Button';
 import { AppleIcon, GoogleIcon } from '../components/icons';
-import { IconTile, ScreenLayout } from '../components/ScreenLayout';
+import { ScreenIcon, ScreenLayout } from '../components/ScreenLayout';
 import { Spinner } from '../components/Spinner';
 import type { WalletOption } from '../lib/state';
 import type { ScreenProps } from './types';
@@ -32,9 +32,9 @@ export function PasskeyScreen({ screen, actions, titleId }: ScreenProps<'passkey
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile size={64}>
-          <KeyRound size={30} aria-hidden="true" />
-        </IconTile>
+        <ScreenIcon size={64}>
+          <KeyRound size={44} aria-hidden="true" />
+        </ScreenIcon>
       }
       title={title}
       subtitle={failed ? (screen.message ?? 'You can try again.') : 'Follow your device prompt'}
@@ -67,9 +67,9 @@ export function OAuthScreen({ screen, actions, titleId }: ScreenProps<'oauth'>) 
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile>
-          {screen.provider === 'google' ? <GoogleIcon size={24} /> : <AppleIcon size={24} />}
-        </IconTile>
+        <ScreenIcon>
+          {screen.provider === 'google' ? <GoogleIcon size={32} /> : <AppleIcon size={32} />}
+        </ScreenIcon>
       }
       title="Continue in the popup"
       subtitle={subtitle}
@@ -103,13 +103,13 @@ export function WalletIcon({ wallet, size = 32 }: { wallet: WalletOption; size?:
         alt=""
         width={size}
         height={size}
-        className={`pk-img-outline shrink-0 object-cover ${box}`}
+        className={`shrink-0 object-cover ${box}`}
       />
     );
   }
   return (
-    <span className={`flex shrink-0 items-center justify-center bg-surface-3 text-fg ${box}`}>
-      <Wallet size={size === 56 ? 26 : 16} aria-hidden="true" />
+    <span className={`flex shrink-0 items-center justify-center text-fg-2 ${box}`}>
+      <Wallet size={size === 56 ? 32 : 22} aria-hidden="true" />
     </span>
   );
 }
@@ -122,9 +122,9 @@ export function WalletsScreen({ screen, actions, titleId }: ScreenProps<'wallets
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile>
-          <Wallet size={24} aria-hidden="true" />
-        </IconTile>
+        <ScreenIcon>
+          <Wallet size={32} aria-hidden="true" />
+        </ScreenIcon>
       }
       title={empty ? 'No wallet found in this browser' : 'Connect a wallet'}
       subtitle={

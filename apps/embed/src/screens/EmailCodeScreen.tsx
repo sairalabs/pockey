@@ -1,7 +1,7 @@
 import { Mail } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { OtpInput } from '../components/OtpInput';
-import { IconTile, ScreenLayout } from '../components/ScreenLayout';
+import { ScreenIcon, ScreenLayout } from '../components/ScreenLayout';
 import { Spinner } from '../components/Spinner';
 import { formatCountdown } from '../lib/format';
 import type { ScreenProps } from './types';
@@ -31,9 +31,9 @@ export function EmailCodeScreen({ screen, actions, titleId }: ScreenProps<'email
     <ScreenLayout
       titleId={titleId}
       media={
-        <IconTile>
-          <Mail size={24} aria-hidden="true" />
-        </IconTile>
+        <ScreenIcon>
+          <Mail size={32} aria-hidden="true" />
+        </ScreenIcon>
       }
       title="Check your email"
       subtitle={
