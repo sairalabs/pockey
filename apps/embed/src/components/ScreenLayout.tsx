@@ -95,7 +95,8 @@ export function ScreenLayout({
               media && bar ? 'pt-3' : null,
             )}
           >
-            {media ? <div className="mb-3">{media}</div> : null}
+            {/* A mark with only a title under it sits closer to it than one heading a form. */}
+            {media ? <div className={settled ? 'mb-1.5' : 'mb-3'}>{media}</div> : null}
             {media ? (
               <h2
                 id={titleId}
