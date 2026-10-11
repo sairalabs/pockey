@@ -39,10 +39,6 @@ export function HomeView({ app, usage: initial, sponsor }: HomeViewProps) {
 
   return (
     <div className="stagger flex flex-col gap-6">
-      <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em]">
-        Welcome, {app.app.name}
-      </h1>
-
       <div className="flex items-center justify-between gap-3">
         <PillSelect
           aria-label="Time range"

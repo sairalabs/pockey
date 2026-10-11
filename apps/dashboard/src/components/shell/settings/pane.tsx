@@ -13,8 +13,8 @@ export interface PaneProps {
 export function Pane({ title, badge, actions, children }: PaneProps) {
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col">
-      <div className="flex h-[72px] shrink-0 items-center justify-between gap-4 px-8">
-        <h2 className="flex items-center gap-3 text-xl font-semibold tracking-[-0.01em]">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-4 px-6">
+        <h2 className="flex items-center gap-3 text-base font-semibold tracking-[-0.01em]">
           {title}
           {badge}
         </h2>
@@ -23,7 +23,7 @@ export function Pane({ title, badge, actions, children }: PaneProps) {
           <DialogClose className="-me-2" />
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
         <div className="max-w-[640px]">{children}</div>
       </div>
     </div>
