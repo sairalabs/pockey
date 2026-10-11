@@ -28,8 +28,8 @@ export function AppNav({ appId }: { appId: string }) {
             className={cn(
               'relative flex h-10 items-center text-[13px] font-medium text-fg-2',
               'transition-[color] duration-150 ease-out hover:text-fg',
-              'after:absolute after:inset-x-0 after:-bottom-px after:h-px after:bg-transparent',
-              active && 'text-fg after:bg-fg',
+              'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-transparent',
+              active && 'text-fg after:bg-accent',
             )}
           >
             {item.label}

@@ -7,7 +7,6 @@
   --surface-2: #f4f4f5;
   --text: #0a0a0a;
   --text-2: #52525b;
-  --ring: oklch(0 0 0 / 0.08);
   --accent: #4132ec;
   --danger: #dc2626;
   --ok: #16a34a;
@@ -20,7 +19,6 @@
     --surface-2: #1a1a1d;
     --text: #fafafa;
     --text-2: #a1a1aa;
-    --ring: oklch(1 0 0 / 0.08);
     --danger: #f87171;
     --ok: #4ade80;
   }
@@ -35,7 +33,6 @@
   --color-accent: var(--accent);
   --color-danger: var(--danger);
   --color-ok: var(--ok);
-  --shadow-ring: 0 0 0 1px var(--ring);
 }
 
 body {

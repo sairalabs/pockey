@@ -22,8 +22,7 @@ const variants: Record<ButtonVariant, string> = {
   primary: 'bg-white text-black font-medium hover:bg-[#e6e6e6]',
   secondary: 'bg-surface-2 text-fg font-medium hover:bg-surface-3',
   ghost: 'bg-transparent text-fg-2 hover:bg-surface-2 hover:text-fg',
-  danger:
-    'bg-transparent text-danger font-medium shadow-[0_0_0_1px_var(--danger)] hover:bg-danger/10',
+  danger: 'bg-danger/15 text-danger font-medium hover:bg-danger/25',
 };
 
 interface SizeSpec {

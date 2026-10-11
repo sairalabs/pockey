@@ -21,7 +21,7 @@ export function Card({ accent = false, flush = false, className, children, ...pr
         'transition-[box-shadow] duration-150 ease-out',
         !flush && 'p-5',
         accent &&
-          'overflow-hidden after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-accent',
+          'overflow-hidden after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-accent',
         className,
       )}
       {...props}

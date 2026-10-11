@@ -39,7 +39,7 @@ function Card({
   testId?: string;
 }) {
   return (
-    <section data-testid={testId} className="rounded-2xl bg-surface p-5 shadow-ring">
+    <section data-testid={testId} className="rounded-2xl bg-surface p-5">
       <h2 className="mb-4 text-sm font-semibold text-fg-2">{title}</h2>
       <div className="flex flex-col gap-3">{children}</div>
     </section>
@@ -133,10 +133,7 @@ export default function Playground() {
             Every hook of @pockey/react against the local API and embed.
           </p>
         </div>
-        <span
-          data-testid="status"
-          className="rounded-full bg-surface px-3 py-1 text-xs shadow-ring"
-        >
+        <span data-testid="status" className="rounded-full bg-surface-2 px-3 py-1 text-xs">
           {!ready ? 'Loading' : authenticated ? 'Signed in' : 'Signed out'}
         </span>
       </header>
@@ -319,7 +316,7 @@ export default function Playground() {
         </Card>
       </div>
 
-      <section className="rounded-2xl bg-surface p-5 shadow-ring">
+      <section className="rounded-2xl bg-surface p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-fg-2">Results</h2>
           <button
