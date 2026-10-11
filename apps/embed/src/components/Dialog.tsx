@@ -120,7 +120,9 @@ export function DialogPanel({
       onKeyDown={onKeyDown}
       className={clsx(
         'relative flex flex-col overflow-hidden bg-surface text-fg shadow-[var(--shadow-panel)] outline-none',
-        variant === 'dialog' ? 'w-[380px] max-w-full rounded-[24px]' : 'w-full rounded-t-[24px]',
+        variant === 'dialog'
+          ? 'w-[380px] max-w-full rounded-[var(--pk-radius-panel)]'
+          : 'w-full rounded-t-[var(--pk-radius-panel)]',
       )}
     >
       <ScreenStack nav={nav} reduced={reduced}>

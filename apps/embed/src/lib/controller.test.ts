@@ -198,8 +198,8 @@ describe('controller', () => {
     })) as { user: EndUser | null; config: PublicAppConfig };
     expect(narrowed.user).toBeNull();
     expect(narrowed.config.loginMethods).toEqual(['email', 'passkey']);
-    // Zod fills `theme: 'system'` on parse; the server theme must survive.
-    expect(narrowed.config.appearance).toEqual({ theme: 'dark', accent: '#16a34a' });
+    // Zod fills the defaults on parse; the server theme must survive the host override.
+    expect(narrowed.config.appearance).toMatchObject({ theme: 'dark', accent: '#16a34a' });
 
     const widened = (await handle({ type: 'init', loginMethods: ['wallet', 'apple'] })) as {
       config: PublicAppConfig;

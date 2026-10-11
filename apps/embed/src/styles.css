@@ -13,13 +13,30 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-hover: var(--accent-hover);
-  --font-sans:
-    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  --font-sans: var(
+    --pk-font,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Inter,
+    Roboto,
+    sans-serif
+  );
 }
 
 /* Component classes sit in a layer so Tailwind utilities can still override them. */
 @layer components {
   .pk-theme {
+    --pk-font:
+      ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+
+    /* Radius scale, swapped as a set by data-radius. */
+    --pk-radius-panel: 24px;
+    --pk-radius-row: 16px;
+    --pk-radius-control: 12px;
+    --pk-radius-mark: 11px;
+
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
     --ease-swap: cubic-bezier(0.2, 0, 0, 1);
@@ -33,7 +50,6 @@
     --ring: oklch(0 0 0 / 0.08);
     --danger: #dc2626;
     --backdrop: oklch(0 0 0 / 0.4);
-    --image-outline: oklch(0 0 0 / 0.1);
     --shadow-panel:
       0px 0px 0px 1px oklch(0 0 0 / 0.06), 0px 1px 2px -1px oklch(0 0 0 / 0.06),
       0px 2px 4px 0px oklch(0 0 0 / 0.04);
@@ -66,9 +82,29 @@
     --ring: oklch(1 0 0 / 0.08);
     --danger: #f87171;
     --backdrop: oklch(0 0 0 / 0.6);
-    --image-outline: oklch(1 0 0 / 0.1);
-    --shadow-panel: 0 0 0 1px oklch(1 0 0 / 0.08);
+    --shadow-panel: 0px 12px 32px -8px oklch(0 0 0 / 0.6), 0px 2px 8px -2px oklch(0 0 0 / 0.5);
     color-scheme: dark;
+  }
+
+  .pk-theme[data-radius='sharp'] {
+    --pk-radius-panel: 4px;
+    --pk-radius-row: 2px;
+    --pk-radius-control: 2px;
+    --pk-radius-mark: 2px;
+  }
+
+  .pk-theme[data-radius='round'] {
+    --pk-radius-panel: 32px;
+    --pk-radius-row: 20px;
+    --pk-radius-control: 16px;
+    --pk-radius-mark: 14px;
+  }
+
+  .pk-theme[data-radius='pill'] {
+    --pk-radius-panel: 32px;
+    --pk-radius-row: 9999px;
+    --pk-radius-control: 9999px;
+    --pk-radius-mark: 9999px;
   }
 
   .pk-theme [data-variant='sheet'] {
@@ -108,6 +144,12 @@
     /* 20px + 4px padding = 24px under the header; the 4px keeps focus rings unclipped. */
     margin: 20px calc(-1 * var(--pk-pad)) -4px;
     padding: 4px var(--pk-pad);
+    /* The list runs under the footer rather than beside a scrollbar. */
+    scrollbar-width: none;
+  }
+
+  .pk-screen-body::-webkit-scrollbar {
+    display: none;
   }
 
   /* Press feedback: scale(0.96), 150ms ease-out, transform only. */
@@ -188,11 +230,6 @@
 
   .pk-theme[data-theme='dark'] .pk-hold-fill {
     color: #0a0a0a;
-  }
-
-  .pk-img-outline {
-    outline: 1px solid var(--image-outline);
-    outline-offset: -1px;
   }
 
   .pk-spinner {

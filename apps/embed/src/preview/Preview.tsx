@@ -8,6 +8,7 @@ import { ThemeScope } from '../components/ThemeScope';
 import { noopActions, type Nav } from '../lib/state';
 import { ScreenView } from '../screens/ScreenView';
 import type { AppInfo } from '../screens/types';
+import { DEFAULT_APPEARANCE, type Radius } from '../lib/theme';
 import { ACCENT_PRESETS, AccentPicker } from './AccentPicker';
 import { DevFeedback } from './DevFeedback';
 import { PREVIEW_METHODS, PREVIEW_ORIGIN, previewCards, type PreviewCard } from './mocks';
@@ -117,6 +118,7 @@ function Card({ card, app, mobile }: { card: PreviewCard; app: AppInfo; mobile: 
 export function Preview({ appId }: { appId: string }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [accent, setAccent] = useState<string>(ACCENT_PRESETS[0]);
+  const [radius, setRadius] = useState<Radius>('soft');
   const [mobile, setMobile] = useState(false);
   const [cards] = useState(() => previewCards(Date.now()));
   const app: AppInfo = {
@@ -127,7 +129,10 @@ export function Preview({ appId }: { appId: string }) {
 
   return (
     <LazyMotion features={loadMotionFeatures} strict>
-      <ThemeScope theme={theme} accent={accent} className="min-h-dvh bg-surface">
+      <ThemeScope
+        appearance={{ ...DEFAULT_APPEARANCE, theme, accent, radius }}
+        className="min-h-dvh bg-surface"
+      >
         <header className="sticky top-0 z-10 bg-surface/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="min-w-0">
@@ -158,6 +163,29 @@ export function Preview({ appId }: { appId: string }) {
                 </Segment>
               </div>
               <AccentPicker value={accent} mode={theme} onChange={setAccent} />
+              <div className="flex rounded-xl bg-surface-2 p-0.5">
+                {(['sharp', 'soft', 'round', 'pill'] as const).map((value) => (
+                  <Segment
+                    key={value}
+                    pressed={radius === value}
+                    onClick={() => {
+                      setRadius(value);
+                    }}
+                    label={value.charAt(0).toUpperCase() + value.slice(1)}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={clsx(
+                        'size-3.5 bg-current',
+                        value === 'sharp' && 'rounded-none',
+                        value === 'soft' && 'rounded-[3px]',
+                        value === 'round' && 'rounded-[5px]',
+                        value === 'pill' && 'rounded-full',
+                      )}
+                    />
+                  </Segment>
+                ))}
+              </div>
               <div className="flex rounded-xl bg-surface-2 p-0.5">
                 <Segment
                   pressed={mobile}

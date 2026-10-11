@@ -1,5 +1,6 @@
-import { KeyRound, Wallet } from '../components/icons';
+import { KeyRound, RotateCcw, Wallet } from '../components/icons';
 import { Button } from '../components/Button';
+import { Row } from '../components/Row';
 import { AppleIcon, GoogleIcon } from '../components/icons';
 import { ScreenIcon, ScreenLayout } from '../components/ScreenLayout';
 import { Spinner } from '../components/Spinner';
@@ -36,6 +37,7 @@ export function PasskeyScreen({ screen, actions, titleId }: ScreenProps<'passkey
           <KeyRound size={44} aria-hidden="true" />
         </ScreenIcon>
       }
+      label="Passkey"
       title={title}
       subtitle={failed ? (screen.message ?? 'You can try again.') : 'Follow your device prompt'}
       onBack={register ? undefined : actions.back}
@@ -71,6 +73,7 @@ export function OAuthScreen({ screen, actions, titleId }: ScreenProps<'oauth'>) 
           {screen.provider === 'google' ? <GoogleIcon size={32} /> : <AppleIcon size={32} />}
         </ScreenIcon>
       }
+      label={name}
       title="Continue in the popup"
       subtitle={subtitle}
       onBack={actions.back}
@@ -94,8 +97,13 @@ export function OAuthScreen({ screen, actions, titleId }: ScreenProps<'oauth'>) 
   );
 }
 
-export function WalletIcon({ wallet, size = 32 }: { wallet: WalletOption; size?: 32 | 56 }) {
-  const box = size === 56 ? 'size-14 rounded-2xl' : 'size-8 rounded-lg';
+const WALLET_BOX = {
+  40: 'size-10 rounded-[var(--pk-radius-mark)]',
+  80: 'size-20 rounded-[calc(var(--pk-radius-mark)*2)]',
+} as const;
+
+export function WalletIcon({ wallet, size = 40 }: { wallet: WalletOption; size?: 40 | 80 }) {
+  const box = WALLET_BOX[size];
   if (wallet.icon) {
     return (
       <img
@@ -108,8 +116,31 @@ export function WalletIcon({ wallet, size = 32 }: { wallet: WalletOption; size?:
     );
   }
   return (
-    <span className={`flex shrink-0 items-center justify-center text-fg-2 ${box}`}>
-      <Wallet size={size === 56 ? 32 : 22} aria-hidden="true" />
+    <span className={`flex shrink-0 items-center justify-center bg-surface-2 text-fg-2 ${box}`}>
+      <Wallet size={size === 80 ? 40 : 22} aria-hidden="true" />
+    </span>
+  );
+}
+
+/** The wallet mark on a status screen, ringed in danger when the request failed. */
+function WalletMark({ wallet, failed }: { wallet: WalletOption; failed: boolean }) {
+  return (
+    <span className="relative inline-flex">
+      <WalletIcon wallet={wallet} size={80} />
+      {failed ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="absolute -inset-1.5 rounded-[28px] shadow-[inset_0_0_0_3px_var(--danger)]"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full bg-surface text-fg shadow-[var(--shadow-panel)]"
+          >
+            <RotateCcw size={18} />
+          </span>
+        </>
+      ) : null}
     </span>
   );
 }
@@ -126,6 +157,7 @@ export function WalletsScreen({ screen, actions, titleId }: ScreenProps<'wallets
           <Wallet size={32} aria-hidden="true" />
         </ScreenIcon>
       }
+      label="Connect a wallet"
       title={empty ? 'No wallet found in this browser' : 'Connect a wallet'}
       subtitle={
         empty
@@ -150,20 +182,16 @@ export function WalletsScreen({ screen, actions, titleId }: ScreenProps<'wallets
         <ul className="flex flex-col gap-2">
           {screen.options.map((option, index) => (
             <li key={option.id}>
-              <button
-                type="button"
+              <Row
                 data-autofocus={index === 0 ? '' : undefined}
+                note={FAMILY_LABEL[option.family]}
+                mark={<WalletIcon wallet={option} />}
                 onClick={() => {
                   actions.chooseWallet(option.id);
                 }}
-                className="pk-press flex h-14 w-full items-center gap-3 rounded-xl bg-surface-2 px-3 text-left hover:bg-surface-3"
               >
-                <WalletIcon wallet={option} />
-                <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-fg">
-                  {option.name}
-                </span>
-                <span className="text-[13px] text-fg-2">{FAMILY_LABEL[option.family]}</span>
-              </button>
+                {option.name}
+              </Row>
             </li>
           ))}
         </ul>
@@ -173,17 +201,19 @@ export function WalletsScreen({ screen, actions, titleId }: ScreenProps<'wallets
 }
 
 export function WalletConfirmScreen({ screen, actions, titleId }: ScreenProps<'walletConfirm'>) {
+  const failed = screen.status === 'cancelled' || screen.status === 'error';
   const subtitle =
     screen.status === 'cancelled'
-      ? 'The request was cancelled in your wallet.'
+      ? 'You cancelled the request. Try again above.'
       : screen.status === 'error'
         ? (screen.message ?? 'Something went wrong.')
         : 'Sign the message in your wallet to log in.';
   return (
     <ScreenLayout
       titleId={titleId}
-      media={<WalletIcon wallet={screen.wallet} size={56} />}
-      title={`Confirm in ${screen.wallet.name}`}
+      media={<WalletMark wallet={screen.wallet} failed={failed} />}
+      label={screen.wallet.name}
+      title={screen.status === 'cancelled' ? 'Request cancelled' : 'Requesting connection'}
       subtitle={subtitle}
       onBack={actions.back}
       onClose={actions.dismiss}

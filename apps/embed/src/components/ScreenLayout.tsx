@@ -1,72 +1,107 @@
 import { clsx } from 'clsx';
-import { ChevronLeft, X } from './icons';
 import type { ReactNode } from 'react';
 import { IconButton } from './Button';
+import { ChevronLeft, Info, X } from './icons';
 
 interface ScreenLayoutProps {
   titleId: string;
+  /**
+   * What the screen is about. It sits big in the body under the mark, or, when a
+   * screen has no mark to carry it, alone in the header bar between the buttons.
+   */
   title: ReactNode;
+  /** Header bar name for a screen whose body already carries the title. */
+  label?: ReactNode;
   subtitle?: ReactNode;
-  /** Logo or icon tile above the title. */
+  /** Logo or icon above the title. */
   media?: ReactNode;
   /** Extra header content under the subtitle (origin chip). */
   meta?: ReactNode;
   onBack?: (() => void) | undefined;
   onClose?: (() => void) | undefined;
+  /** Shows the help button on the left when there is nothing to go back to. */
+  onHelp?: (() => void) | undefined;
   children?: ReactNode;
   footer?: ReactNode;
   /** Live region content under the body (errors). */
   status?: ReactNode;
 }
 
-/** Header and footer stay put, the body scrolls when the dialog hits its max height. */
+/**
+ * Header bar, body, footer. The bar keeps its two corner buttons and a centred
+ * screen name; the body carries the mark, the heading and whatever the screen
+ * asks of the user. Only the body scrolls when the dialog hits its max height.
+ */
 export function ScreenLayout({
   titleId,
   title,
+  label,
   subtitle,
   media,
   meta,
   onBack,
   onClose,
+  onHelp,
   children,
   footer,
   status,
 }: ScreenLayoutProps) {
+  // A screen with a mark carries its title under it; one without puts the title in the bar.
+  const titleInBar = !media;
   return (
     <div className="pk-screen">
-      <header className="relative shrink-0">
-        <div className="absolute -top-3 -right-3 -left-3 flex items-center justify-between">
+      <header className="shrink-0">
+        <div className="-mx-1 flex h-10 items-center justify-between gap-2">
           {onBack ? (
             <IconButton label="Back" onClick={onBack}>
               <ChevronLeft size={20} aria-hidden="true" />
             </IconButton>
+          ) : onHelp ? (
+            <IconButton label="What is a wallet?" onClick={onHelp}>
+              <Info size={18} aria-hidden="true" />
+            </IconButton>
           ) : (
-            <span />
+            <span className="size-10 shrink-0" />
+          )}
+          {titleInBar ? (
+            <h2
+              id={titleId}
+              className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg"
+            >
+              {title}
+            </h2>
+          ) : (
+            <span className="min-w-0 flex-1 truncate text-center text-[16px] font-semibold text-fg">
+              {label}
+            </span>
           )}
           {onClose ? (
             <IconButton label="Close" onClick={onClose}>
               <X size={18} aria-hidden="true" />
             </IconButton>
-          ) : null}
+          ) : (
+            <span className="size-10 shrink-0" />
+          )}
         </div>
-        <div className="flex flex-col items-center px-2 pt-2 text-center">
-          {media ? <div className="mb-4">{media}</div> : null}
-          {/* Without media the title shares the first row with the corner buttons; the subtitle
-              starts below them and can use the full width. */}
-          <h2
-            id={titleId}
-            className={clsx(
-              'text-[20px] leading-7 font-semibold tracking-[-0.01em] text-balance text-fg',
-              !media && 'px-8',
-            )}
+        {media || subtitle || meta ? (
+          <div
+            className={clsx('flex flex-col items-center px-2 text-center', media ? 'pt-3' : null)}
           >
-            {title}
-          </h2>
-          {subtitle ? (
-            <p className="mt-1 text-[15px] leading-[22px] text-pretty text-fg-2">{subtitle}</p>
-          ) : null}
-          {meta ? <div className="mt-3">{meta}</div> : null}
-        </div>
+            {media ? <div className="mb-5">{media}</div> : null}
+            {media ? (
+              <h2
+                id={titleId}
+                className="text-[20px] leading-7 font-semibold tracking-[-0.01em] text-balance text-fg"
+              >
+                {title}
+              </h2>
+            ) : null}
+            {subtitle ? (
+              <p className="mt-1.5 text-[15px] leading-[22px] text-pretty text-fg-2">{subtitle}</p>
+            ) : null}
+            {meta ? <div className="mt-3">{meta}</div> : null}
+          </div>
+        ) : null}
       </header>
       {children ? <div className="pk-screen-body">{children}</div> : null}
       <div aria-live="polite" className="shrink-0">

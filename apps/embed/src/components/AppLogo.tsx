@@ -31,7 +31,7 @@ export function AppLogo({
         alt=""
         width={40}
         height={40}
-        className="pk-img-outline size-10 rounded-xl object-cover"
+        className="size-10 rounded-xl object-cover"
         onError={() => {
           setFailedSrc(src);
         }}

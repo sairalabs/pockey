@@ -6,12 +6,16 @@
 export {
   contrastRatio,
   DEFAULT_ACCENT,
+  DEFAULT_APPEARANCE,
   isHexColor,
   normalizeHexColor,
   resolveAccentColors,
   textOnColor,
   type AccentColors,
+  type Appearance,
   type ColorMode,
+  type Palette,
+  type Radius,
 } from '@pockey/types';
 
 export function resolveTheme(

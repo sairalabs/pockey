@@ -41,7 +41,7 @@ export function Button({
       aria-busy={pending || undefined}
       aria-disabled={pending || undefined}
       className={clsx(
-        'relative inline-flex h-12 w-full items-center justify-center rounded-xl px-4 text-[15px] font-medium select-none',
+        'relative inline-flex h-12 w-full items-center justify-center rounded-[var(--pk-radius-control)] px-4 text-[15px] font-medium select-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
         !isStatic && 'pk-press',
         variants[variant],

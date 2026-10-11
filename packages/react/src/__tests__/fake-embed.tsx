@@ -1,5 +1,12 @@
 import { render, act, type RenderResult } from '@testing-library/react';
-import type { EndUser, HostRequest, HostRequestType, PublicAppConfig, Wallet } from '@pockey/types';
+import {
+  DEFAULT_APPEARANCE,
+  type EndUser,
+  type HostRequest,
+  type HostRequestType,
+  type PublicAppConfig,
+  type Wallet,
+} from '@pockey/types';
 import { StrictMode, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { PockeyConfig } from '../config.js';
@@ -50,7 +57,7 @@ export function makeServerConfig(overrides: Partial<PublicAppConfig> = {}): Publ
     name: 'Test app',
     loginMethods: ['email', 'passkey'],
     chains: { evm: [8453], solana: ['devnet'] },
-    appearance: { theme: 'system', accent: '#d2042d' },
+    appearance: DEFAULT_APPEARANCE,
     embeddedWallets: { createOnLogin: 'all' },
     allowedOrigins: ['https://app.example.com'],
     keyProvider: {

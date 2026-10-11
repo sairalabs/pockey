@@ -5,7 +5,7 @@ import { useMediaQuery, useStore } from './components/hooks';
 import { loadMotionFeatures } from './components/motion';
 import { ThemeScope } from './components/ThemeScope';
 import { appDisplayName } from './lib/config';
-import { DEFAULT_ACCENT } from './lib/theme';
+import { DEFAULT_APPEARANCE } from './lib/theme';
 import type { EmbedStore, ScreenActions } from './lib/state';
 import { ErrorScreen } from './screens/OutcomeScreens';
 import { ScreenView, titleIdFor } from './screens/ScreenView';
@@ -50,10 +50,7 @@ export function App({ store, actions }: { store: EmbedStore; actions: ScreenActi
 
   return (
     <LazyMotion features={loadMotionFeatures} strict>
-      <ThemeScope
-        theme={config?.appearance.theme ?? 'system'}
-        accent={config?.appearance.accent ?? DEFAULT_ACCENT}
-      >
+      <ThemeScope appearance={config?.appearance ?? DEFAULT_APPEARANCE}>
         <EmbedDialog
           open={state.phase === 'open' && screen !== null && app !== null}
           variant={narrow ? 'sheet' : 'dialog'}

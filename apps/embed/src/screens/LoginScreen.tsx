@@ -2,7 +2,7 @@ import type { LoginMethod } from '@pockey/types';
 import { KeyRound, Lock, Wallet } from '../components/icons';
 import { useState, type ReactNode } from 'react';
 import { AppLogo } from '../components/AppLogo';
-import { Button } from '../components/Button';
+import { Row } from '../components/Row';
 import { AppleIcon, GoogleIcon } from '../components/icons';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { PLAUSIBLE_EMAIL } from '../lib/format';
@@ -10,22 +10,22 @@ import type { ScreenActions } from '../lib/state';
 import type { ScreenProps } from './types';
 
 const METHOD_LABELS: Record<Exclude<LoginMethod, 'email'>, string> = {
-  google: 'Continue with Google',
-  apple: 'Continue with Apple',
-  passkey: 'Continue with a passkey',
-  wallet: 'Continue with a wallet',
+  google: 'Google',
+  apple: 'Apple',
+  passkey: 'Passkey',
+  wallet: 'Wallet',
 };
 
 function methodIcon(method: Exclude<LoginMethod, 'email'>): ReactNode {
   switch (method) {
     case 'google':
-      return <GoogleIcon size={20} />;
+      return <GoogleIcon size={24} />;
     case 'apple':
-      return <AppleIcon size={20} />;
+      return <AppleIcon size={24} />;
     case 'passkey':
-      return <KeyRound size={20} aria-hidden="true" />;
+      return <KeyRound size={24} aria-hidden="true" />;
     case 'wallet':
-      return <Wallet size={20} aria-hidden="true" />;
+      return <Wallet size={24} aria-hidden="true" />;
   }
 }
 
@@ -64,7 +64,7 @@ export function EmailField({ onSubmit }: { onSubmit: (email: string) => void }) 
           onChange={(event) => {
             setEmail(event.currentTarget.value);
           }}
-          className="h-12 w-full rounded-xl bg-surface-2 pr-[116px] pl-4 text-[15px] text-fg placeholder:text-fg-3"
+          className="h-12 w-full rounded-[var(--pk-radius-control)] bg-surface-2 pr-[116px] pl-4 text-[15px] text-fg placeholder:text-fg-3"
         />
         <span
           className="pk-reveal absolute top-1 right-1 bottom-1 flex"
@@ -94,6 +94,7 @@ export function LoginScreen({ actions, app, titleId }: ScreenProps<'login'>) {
     <ScreenLayout
       titleId={titleId}
       media={<AppLogo name={app.name} logo={app.logo} hostOrigin={app.hostOrigin} />}
+      label={app.name}
       title="Log in or sign up"
       subtitle={`to ${app.name}`}
       onClose={actions.dismiss}
@@ -106,25 +107,23 @@ export function LoginScreen({ actions, app, titleId }: ScreenProps<'login'>) {
     >
       {hasEmail ? <EmailField onSubmit={actions.submitEmail} /> : null}
       {hasEmail && others.length > 0 ? (
-        <div className="my-4 flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-ring" />
-          <span className="text-[13px] leading-5 text-fg-3">or</span>
-          <span className="h-px flex-1 bg-ring" />
-        </div>
+        <p className="my-4 text-center text-[13px] leading-5 text-fg-3" aria-hidden="true">
+          or pick a way to sign in
+        </p>
       ) : null}
       {others.length > 0 ? (
         <div className="flex flex-col gap-2">
           {others.map((method, index) => (
-            <Button
+            <Row
               key={method}
-              icon={methodIcon(method)}
+              mark={methodIcon(method)}
               data-autofocus={!hasEmail && index === 0 ? '' : undefined}
               onClick={() => {
                 runMethod(actions, method);
               }}
             >
               {METHOD_LABELS[method]}
-            </Button>
+            </Row>
           ))}
         </div>
       ) : null}
