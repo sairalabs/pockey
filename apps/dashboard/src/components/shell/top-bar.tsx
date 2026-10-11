@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp, Developer } from '@pockey/types';
-import { Inbox, Settings } from '../ui/icons';
+import { Inbox } from '../ui/icons';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { AccountMenu } from '@/components/shell/account-menu';
@@ -54,18 +54,10 @@ export function TopBar({ developer, apps }: TopBarProps) {
             </IconButton>
           }
         />
-        <IconButton
-          aria-label="Settings"
-          onClick={() => {
-            openSettings(current ? 'app-information' : 'account-information');
-          }}
-        >
-          <Settings />
-        </IconButton>
         <AccountMenu
           developer={developer}
-          onManageAccount={() => {
-            openSettings('account-information');
+          onOpenSettings={() => {
+            openSettings(current ? 'app-information' : 'account-information');
           }}
         />
       </div>

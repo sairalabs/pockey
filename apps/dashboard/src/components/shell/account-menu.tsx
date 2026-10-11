@@ -1,22 +1,20 @@
 'use client';
 
 import type { Developer } from '@pockey/types';
-import { Check, Copy, LogOut, UserCog } from '../ui/icons';
+import { LogOut, Settings } from '../ui/icons';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
-import { IconButton } from '@/components/ui/icon-button';
-import { Menu, MenuItem, MenuSeparator } from '@/components/ui/menu';
+import { Menu, MenuItem } from '@/components/ui/menu';
 import { signOut } from '@/lib/api';
 
 export interface AccountMenuProps {
   developer: Developer;
-  onManageAccount: () => void;
+  onOpenSettings: () => void;
 }
 
-export function AccountMenu({ developer, onManageAccount }: AccountMenuProps) {
+/** Avatar and email in the bar, two things in the menu: settings and the way out. */
+export function AccountMenu({ developer, onOpenSettings }: AccountMenuProps) {
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
 
   const leave = async () => {
     // A failed sign out still sends the developer to the login screen: the next
@@ -28,32 +26,20 @@ export function AccountMenu({ developer, onManageAccount }: AccountMenuProps) {
 
   return (
     <Menu
-      className="min-w-56"
+      className="min-w-48"
       trigger={
-        <IconButton aria-label="Account" className="ms-1">
+        <button
+          type="button"
+          aria-label="Account"
+          className="ms-1 flex items-center gap-2 rounded-pill py-1 pe-3 ps-1 text-[13px] text-fg-2 transition-[background-color,color] duration-150 ease-out hover:bg-surface-2 hover:text-fg"
+        >
           <Avatar seed={developer.email} size={28} />
-        </IconButton>
+          <span className="max-w-48 truncate num">{developer.email}</span>
+        </button>
       }
     >
-      <MenuItem
-        closeOnClick={false}
-        icon={copied ? <Check /> : <Copy />}
-        onClick={() => {
-          void navigator.clipboard.writeText(developer.email).then(() => {
-            setCopied(true);
-            setTimeout(() => {
-              setCopied(false);
-            }, 1500);
-          });
-        }}
-      >
-        <span className="block truncate text-[13px] num">
-          {copied ? 'Copied' : developer.email}
-        </span>
-      </MenuItem>
-      <MenuSeparator />
-      <MenuItem icon={<UserCog />} onClick={onManageAccount}>
-        Manage account
+      <MenuItem icon={<Settings />} onClick={onOpenSettings}>
+        Settings
       </MenuItem>
       <MenuItem
         icon={<LogOut />}
