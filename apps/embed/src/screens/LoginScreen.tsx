@@ -2,6 +2,7 @@ import type { LoginMethod } from '@pockey/types';
 import { KeyRound, Lock, Wallet } from '../components/icons';
 import { useState, type ReactNode } from 'react';
 import { AppLogo } from '../components/AppLogo';
+import { Lockup } from '../components/Logo';
 import { Row } from '../components/Row';
 import { AppleIcon, GoogleIcon } from '../components/icons';
 import { ScreenLayout } from '../components/ScreenLayout';
@@ -101,7 +102,8 @@ export function LoginScreen({ actions, app, titleId }: ScreenProps<'login'>) {
       footer={
         <p className="flex items-center justify-center gap-1.5 text-[13px] leading-5 text-fg-2">
           <Lock size={13} aria-hidden="true" className="text-fg-3" />
-          Protected by Pockey
+          Protected by
+          <Lockup height={13} aria-label="Pockey" className="text-fg" />
         </p>
       }
     >

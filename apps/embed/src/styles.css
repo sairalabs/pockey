@@ -73,9 +73,9 @@
   }
 
   .pk-theme[data-theme='dark'] {
-    --surface: #111111;
-    --surface-2: #1a1a1a;
-    --surface-3: #242424;
+    --surface: #101010;
+    --surface-2: #1b1b1b;
+    --surface-3: #262626;
     --text: #fafafa;
     --text-2: #a3a3a3;
     --text-3: #525252;
@@ -87,10 +87,10 @@
   }
 
   .pk-theme[data-radius='sharp'] {
-    --pk-radius-panel: 4px;
-    --pk-radius-row: 2px;
-    --pk-radius-control: 2px;
-    --pk-radius-mark: 2px;
+    --pk-radius-panel: 0px;
+    --pk-radius-row: 0px;
+    --pk-radius-control: 0px;
+    --pk-radius-mark: 0px;
   }
 
   .pk-theme[data-radius='round'] {

@@ -3,6 +3,7 @@ import {
   AllowedOrigin,
   AppConfig,
   AppId,
+  DEFAULT_ACCENT,
   Duration,
   durationToSeconds,
   HostRequest,
@@ -33,7 +34,7 @@ describe('AppConfig', () => {
     const config = AppConfig.parse({});
     expect(config.loginMethods).toEqual(['email', 'google', 'passkey']);
     expect(config.chains.evm).toEqual([8453]);
-    expect(config.appearance.accent).toBe('#d2042d');
+    expect(config.appearance.accent).toBe(DEFAULT_ACCENT);
     expect(config.embeddedWallets.createOnLogin).toBe('all');
     expect(config.gasSponsoring.evm).toBe(false);
   });

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_ACCENT, resolveAccentColors, resolveTheme, textOnColor } from './theme';
 
 describe('theme', () => {
-  it('defaults to cherry with white text', () => {
-    expect(DEFAULT_ACCENT).toBe('#d2042d');
+  it('defaults to the brand violet with white text', () => {
+    expect(DEFAULT_ACCENT).toBe('#4132ec');
     expect(textOnColor(DEFAULT_ACCENT)).toBe('#ffffff');
   });
 

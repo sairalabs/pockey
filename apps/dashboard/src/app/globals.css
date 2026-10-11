@@ -8,16 +8,16 @@
 :root {
   color-scheme: dark;
 
-  --bg: #000000;
-  --surface: #0f0f0f;
-  --surface-2: #171717;
-  --surface-3: #212121;
+  --bg: #101010;
+  --surface: #181818;
+  --surface-2: #202020;
+  --surface-3: #2a2a2a;
   --border: oklch(1 0 0 / 0.08);
   --border-strong: oklch(1 0 0 / 0.13);
   --text: #ffffff;
   --text-2: #a1a1a1;
   --text-3: #6b6b6b;
-  --accent: #0052ff;
+  --accent: #4132ec;
   --danger: #ff4d4f;
 
   --radius-card: 16px;

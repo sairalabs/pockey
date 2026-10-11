@@ -4,6 +4,7 @@ import {
   type AdminApp,
   AppConfig,
   type CreateOnLogin,
+  DEFAULT_ACCENT,
   type EvmChainId,
   type LoginMethod,
   normalizeHexColor,
@@ -58,13 +59,13 @@ const themeOptions = [
 ] as const;
 
 const accentSwatches = [
+  '#4132ec',
   '#d2042d',
-  '#0052ff',
   '#059669',
   '#db2777',
   '#ea580c',
   '#0891b2',
-  '#111111',
+  '#101010',
 ] as const;
 
 type Theme = (typeof themeOptions)[number]['value'];
@@ -271,7 +272,7 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
                     style={{
                       background: isCustomAccent
                         ? (normalizeHexColor(draft.appearance.accent) ?? 'transparent')
-                        : 'conic-gradient(from 90deg, #d2042d, #f59e0b, #16a34a, #0891b2, #0052ff, #db2777, #d2042d)',
+                        : 'conic-gradient(from 90deg, #4132ec, #d2042d, #f59e0b, #16a34a, #0891b2, #db2777, #4132ec)',
                     }}
                   >
                     <Pipette
@@ -285,7 +286,7 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
                       id={`${id}-accent-native`}
                       type="color"
                       aria-label="Custom accent color"
-                      value={normalizeHexColor(draft.appearance.accent) ?? '#d2042d'}
+                      value={normalizeHexColor(draft.appearance.accent) ?? DEFAULT_ACCENT}
                       className="absolute inset-0 cursor-pointer opacity-0"
                       onChange={(event) => {
                         const accent = event.target.value;

@@ -10,12 +10,12 @@
  *    so primary buttons stay visible: white buttons on dark, black on light.
  */
 
-export const DEFAULT_ACCENT = '#d2042d';
+export const DEFAULT_ACCENT = '#4132ec';
 
 export type ColorMode = 'light' | 'dark';
 
 /** Modal surfaces and text per theme. Keep in sync with `apps/embed/src/styles.css`. */
-export const THEME_SURFACE: Record<ColorMode, string> = { light: '#ffffff', dark: '#111111' };
+export const THEME_SURFACE: Record<ColorMode, string> = { light: '#ffffff', dark: '#101010' };
 export const THEME_TEXT: Record<ColorMode, string> = { light: '#0a0a0a', dark: '#fafafa' };
 
 export const WHITE_TEXT = '#ffffff';

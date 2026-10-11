@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowLeft, ArrowRight } from '../ui/icons';
+import { Lockup } from '../ui/logo';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { OtpInput } from '@/components/auth/otp-input';
@@ -80,7 +81,7 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
   return (
     <div className="stagger w-full max-w-[400px]">
       <div className="mb-6 text-center">
-        <p className="text-sm font-semibold tracking-tight">Pockey</p>
+        <Lockup height={20} aria-label="Pockey" className="mx-auto" />
         <h1 className="mt-3 text-[28px] font-medium leading-tight tracking-[-0.02em]">
           {step === 'email' ? 'Sign in' : 'Check your email'}
         </h1>

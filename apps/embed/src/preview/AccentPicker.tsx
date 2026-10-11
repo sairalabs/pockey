@@ -1,7 +1,12 @@
 import { clsx } from 'clsx';
 import { Pipette } from '../components/icons';
-import { useId, useState } from 'react';
-import { normalizeHexColor, resolveAccentColors, type ColorMode } from '../lib/theme';
+import { useEffect, useId, useRef, useState } from 'react';
+import {
+  DEFAULT_ACCENT,
+  normalizeHexColor,
+  resolveAccentColors,
+  type ColorMode,
+} from '../lib/theme';
 
 function accentLabel(resolved: { foreground: string; inverted: boolean }, mode: ColorMode): string {
   const text = resolved.foreground === '#ffffff' ? 'white text' : 'dark text';
@@ -10,7 +15,11 @@ function accentLabel(resolved: { foreground: string; inverted: boolean }, mode: 
   return mode === 'dark' ? `White buttons, ${text}` : `Black buttons, ${text}`;
 }
 
-export const ACCENT_PRESETS = ['#d2042d', '#0052ff', '#16a34a', '#0a0a0a'] as const;
+/** The brand: accent, black and white. Anything else is a custom colour. */
+export const ACCENT_PRESETS = [DEFAULT_ACCENT, '#101010', '#FFFFFF'] as const;
+
+/** Typing a hex or dragging the native picker should not repaint on every keystroke. */
+const COMMIT_DELAY_MS = 350;
 
 /**
  * Preset swatches plus a custom color: native picker and a hex field that
@@ -34,9 +43,29 @@ export function AccentPicker({
   const invalid = editing && normalizeHexColor(draft) === null;
   const resolved = resolveAccentColors(value, mode);
 
-  const commit = (raw: string) => {
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  /** Waits for the typing or the dragging to settle before repainting every screen. */
+  const commitLater = (raw: string) => {
     const color = normalizeHexColor(raw);
-    if (color) onChange(color);
+    if (!color) return;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      onChange(color);
+    }, COMMIT_DELAY_MS);
+  };
+
+  const commitNow = (raw: string) => {
+    const color = normalizeHexColor(raw);
+    if (!color) return;
+    clearTimeout(timer.current);
+    onChange(color);
   };
 
   return (
@@ -49,7 +78,7 @@ export function AccentPicker({
             aria-label={`Accent ${swatch}`}
             aria-pressed={value === swatch}
             onClick={() => {
-              onChange(swatch);
+              commitNow(swatch);
             }}
             className="pk-press flex size-10 items-center justify-center rounded-full"
           >
@@ -75,7 +104,7 @@ export function AccentPicker({
             )}
             style={{
               background: isPreset
-                ? 'conic-gradient(from 90deg, #d2042d, #f59e0b, #16a34a, #0891b2, #0052ff, #db2777, #d2042d)'
+                ? 'conic-gradient(from 90deg, #4132ec, #d2042d, #f59e0b, #16a34a, #0891b2, #db2777, #4132ec)'
                 : value,
             }}
           >
@@ -84,9 +113,9 @@ export function AccentPicker({
           <input
             id={`${id}-native`}
             type="color"
-            value={normalizeHexColor(value) ?? '#d2042d'}
+            value={normalizeHexColor(value) ?? DEFAULT_ACCENT}
             onChange={(event) => {
-              onChange(event.target.value);
+              commitLater(event.target.value);
             }}
             aria-label="Custom accent color"
             className="absolute inset-0 cursor-pointer opacity-0"
@@ -111,10 +140,11 @@ export function AccentPicker({
         }}
         onChange={(event) => {
           setDraft(event.target.value);
-          commit(event.target.value);
+          commitLater(event.target.value);
         }}
-        onBlur={() => {
+        onBlur={(event) => {
           setEditing(false);
+          commitNow(event.target.value);
         }}
         onKeyDown={(event) => {
           if (event.key === 'Enter') event.currentTarget.blur();
