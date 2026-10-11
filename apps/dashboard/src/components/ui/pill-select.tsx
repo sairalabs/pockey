@@ -45,7 +45,7 @@ export function PillSelect<T extends string>({
       <Select.Trigger
         aria-label={ariaLabel}
         className={cn(
-          'inline-flex select-none items-center gap-1.5 rounded-pill bg-surface-2 font-medium text-fg',
+          'inline-flex select-none items-center gap-1.5 rounded-control bg-surface-2 font-medium text-fg',
           'transition-[transform,background-color,box-shadow] duration-150 ease-out',
           'hover:bg-surface-3 active:scale-[0.96] data-popup-open:bg-surface-3',
           size === 'sm' ? 'h-8 ps-3 pe-2.5 text-[13px]' : 'h-10 ps-4 pe-3 text-sm',

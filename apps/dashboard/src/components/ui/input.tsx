@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
   on hover and shows an accent ring only while focused, which keyboard users need.
 */
 const control =
-  'w-full rounded-pill bg-surface-2 text-sm text-fg placeholder:text-fg-3 ' +
+  'w-full rounded-control bg-surface-2 text-sm text-fg placeholder:text-fg-3 ' +
   'transition-[background-color,box-shadow] duration-150 ease-out hover:bg-surface-3 ' +
   'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-none ' +
   'disabled:cursor-not-allowed disabled:opacity-50';
@@ -18,11 +18,7 @@ export function Input({ className, ...props }: ComponentPropsWithRef<'input'>) {
 export function Textarea({ className, ...props }: ComponentPropsWithRef<'textarea'>) {
   return (
     <textarea
-      className={cn(
-        control,
-        'min-h-24 resize-y rounded-[18px] px-4 py-3 leading-relaxed',
-        className,
-      )}
+      className={cn(control, 'min-h-24 resize-y px-4 py-3 leading-relaxed', className)}
       {...props}
     />
   );

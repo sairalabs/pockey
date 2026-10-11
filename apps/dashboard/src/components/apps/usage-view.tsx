@@ -39,7 +39,7 @@ function ChartCard({
   formatTick?: (value: number) => string;
 }) {
   return (
-    <Card accent className="flex flex-col">
+    <Card className="flex flex-col">
       <p className="text-[13px] text-fg-2">{label}</p>
       <p className="mt-1.5 flex items-baseline gap-1.5 leading-none">
         <span className="text-2xl font-medium tracking-[-0.01em]">{value}</span>

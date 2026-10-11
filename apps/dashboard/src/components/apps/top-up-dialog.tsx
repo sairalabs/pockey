@@ -75,7 +75,7 @@ export function TopUpDialog({ appId, open, onOpenChange }: TopUpDialogProps) {
                   setCustom('');
                 }}
                 className={cn(
-                  'h-10 rounded-pill px-4 text-sm font-medium num',
+                  'h-10 rounded-control px-4 text-sm font-medium num',
                   'transition-[transform,background-color,box-shadow,color] duration-150 ease-out active:scale-[0.96]',
                   selected ? 'bg-white text-black' : 'bg-surface-2 text-fg hover:bg-surface-3',
                 )}

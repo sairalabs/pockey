@@ -74,7 +74,7 @@ export function SponsoringView({ app, balance }: SponsoringViewProps) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card accent>
+        <Card>
           <p className="text-[13px] text-fg-2">Balance</p>
           <p className="mt-1.5 text-2xl font-medium leading-none">
             {formatCents(balance.balanceCents)}
@@ -83,7 +83,7 @@ export function SponsoringView({ app, balance }: SponsoringViewProps) {
             Real cost plus 15 percent. Sponsoring stops at zero, users keep signing.
           </p>
         </Card>
-        <Card accent>
+        <Card>
           <p className="text-[13px] text-fg-2">Sponsored this month</p>
           <p className="mt-1.5 flex items-baseline gap-1.5 leading-none">
             <span className="text-2xl font-medium num">{formatEth(app.usage.gasSponsoredWei)}</span>

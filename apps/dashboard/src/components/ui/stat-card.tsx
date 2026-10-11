@@ -16,7 +16,7 @@ export interface StatCardProps {
 
 export function StatCard({ label, value, unit, series, children, className }: StatCardProps) {
   return (
-    <Card accent className={cn('flex flex-col', className)}>
+    <Card className={cn('flex flex-col', className)}>
       <p className="text-[13px] text-fg-2">{label}</p>
       <p className="mt-1.5 flex items-baseline gap-1.5 leading-none">
         <span className="text-2xl font-medium tracking-[-0.01em] num">{value}</span>

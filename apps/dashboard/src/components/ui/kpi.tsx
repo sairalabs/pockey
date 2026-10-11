@@ -9,11 +9,10 @@ export interface KpiProps {
   className?: string;
 }
 
-/** Headline metric: a short accent bar, a muted label with its info icon, a big tabular number. */
+/** Headline metric: a muted label with its info icon, then a big tabular number. */
 export function Kpi({ label, value, info, className }: KpiProps) {
   return (
     <section className={cn('pb-5', className)}>
-      <span aria-hidden="true" className="mb-3 block h-1 w-8 rounded-full bg-accent" />
       <div className="flex items-center gap-1.5 text-[13px] text-fg-2">
         <span>{label}</span>
         {info ? (

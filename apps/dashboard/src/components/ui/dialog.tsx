@@ -57,7 +57,7 @@ export function Dialog({
             'rounded-dialog bg-surface text-fg outline-none',
             size === 'sm' && 'w-[min(480px,calc(100vw-32px))] p-6',
             size === 'settings' &&
-              'flex h-[min(92vh,880px)] w-[min(1300px,calc(100vw-48px))] overflow-hidden',
+              'flex h-[min(86vh,720px)] w-[min(960px,calc(100vw-48px))] overflow-hidden',
             className,
           )}
         >

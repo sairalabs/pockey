@@ -23,6 +23,7 @@
 
   --radius-card: 16px;
   --radius-dialog: 24px;
+  --radius-control: 12px;
   --radius-pill: 9999px;
 
   /* Flat brand: surfaces are told apart by their fill, never by a 1px ring. */
@@ -49,6 +50,7 @@
 
   --radius-card: var(--radius-card);
   --radius-dialog: var(--radius-dialog);
+  --radius-control: var(--radius-control);
   --radius-pill: var(--radius-pill);
 
   --ease-out-strong: var(--ease-out-strong);
@@ -102,12 +104,6 @@
   from {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
   }
 }
 

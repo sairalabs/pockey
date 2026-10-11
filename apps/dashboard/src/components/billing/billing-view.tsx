@@ -93,7 +93,7 @@ export function BillingView({ billing }: { billing: BillingSummary }) {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card accent>
+        <Card>
           <p className="text-[13px] text-fg-2">Estimated this month</p>
           <p className="mt-1.5 text-2xl font-medium leading-none">
             {formatCents(billing.estimatedCents)}
@@ -102,7 +102,7 @@ export function BillingView({ billing }: { billing: BillingSummary }) {
             What the current month would cost if it ended now.
           </p>
         </Card>
-        <Card accent>
+        <Card>
           <p className="text-[13px] text-fg-2">Prepaid gas balance</p>
           <p className="mt-1.5 text-2xl font-medium leading-none">
             {formatCents(billing.sponsorBalanceCents)}

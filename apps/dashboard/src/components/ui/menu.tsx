@@ -84,9 +84,5 @@ export function MenuSeparator() {
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return (
-    <div className="px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-fg-3">
-      {children}
-    </div>
-  );
+  return <div className="px-2.5 pb-1 pt-2 text-[12px] font-medium text-fg-3">{children}</div>;
 }

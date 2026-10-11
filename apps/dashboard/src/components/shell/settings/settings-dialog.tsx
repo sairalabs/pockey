@@ -43,13 +43,11 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange} title="Settings" titleHidden size="settings">
       <nav
         aria-label="Settings sections"
-        className="flex w-[360px] shrink-0 flex-col overflow-y-auto bg-surface-2 p-3"
+        className="flex w-[268px] shrink-0 flex-col overflow-y-auto bg-surface-2 p-3"
       >
         {groups.map((group) => (
           <div key={group.label} className="mb-2">
-            <p className="px-4 pb-1.5 pt-4 text-[11px] font-medium uppercase tracking-wider text-fg-3">
-              {group.label}
-            </p>
+            <p className="px-3 pb-1.5 pt-4 text-[12px] font-medium text-fg-3">{group.label}</p>
             <ul className="flex flex-col gap-0.5">
               {group.items.map((item) => {
                 const selected = item.id === current;
@@ -63,14 +61,14 @@ export function SettingsDialog({
                         onSectionChange(item.id);
                       }}
                       className={cn(
-                        'flex h-12 w-full items-center gap-3.5 rounded-[12px] px-4 text-left text-[22px] leading-none tracking-[-0.01em]',
+                        'flex h-11 w-full items-center gap-3 rounded-[12px] px-3 text-left text-[15px] font-medium leading-none',
                         'transition-[background-color,color] duration-150 ease-out',
                         selected
                           ? 'bg-surface-3 text-fg'
                           : 'text-fg-2 hover:bg-surface-2 hover:text-fg',
                       )}
                     >
-                      <Icon className="size-5 shrink-0" strokeWidth={1.5} />
+                      <Icon className="size-[18px] shrink-0" />
                       <span className="truncate">{item.label}</span>
                     </button>
                   </li>
