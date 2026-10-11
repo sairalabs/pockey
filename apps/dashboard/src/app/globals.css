@@ -83,9 +83,9 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Visible focus ring on the accent for every focusable element. */
+  /* Visible focus ring, white on every focusable element. */
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--color-white);
     outline-offset: 2px;
   }
 

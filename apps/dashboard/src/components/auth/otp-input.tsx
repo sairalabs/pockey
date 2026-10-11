@@ -157,7 +157,7 @@ export function OtpInput({
           className={cn(
             'h-12 w-full min-w-0 rounded-[12px] bg-surface-2 text-center text-[20px] font-medium num caret-accent',
             'transition-[background-color,box-shadow] duration-150 ease-out',
-            'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-none disabled:opacity-60',
+            'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--color-white)] focus-visible:outline-none disabled:opacity-60',
             invalid ? 'shadow-[0_0_0_2px_var(--danger)]' : 'hover:bg-surface-3',
           )}
         />

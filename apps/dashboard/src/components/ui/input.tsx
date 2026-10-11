@@ -8,7 +8,7 @@ import { cn } from '@/lib/cn';
 const control =
   'w-full rounded-control bg-surface-2 text-sm text-fg placeholder:text-fg-3 ' +
   'transition-[background-color,box-shadow] duration-150 ease-out hover:bg-surface-3 ' +
-  'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-none ' +
+  'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--color-white)] focus-visible:outline-none ' +
   'disabled:cursor-not-allowed disabled:opacity-50';
 
 export function Input({ className, ...props }: ComponentPropsWithRef<'input'>) {
