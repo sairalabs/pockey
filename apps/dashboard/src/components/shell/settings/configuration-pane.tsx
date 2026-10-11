@@ -10,7 +10,7 @@ import {
   type SolanaCluster,
   textOnColor,
 } from '@pockey/types';
-import { Check, Pipette } from 'lucide-react';
+import { Check, Pipette } from '../../ui/icons';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -252,13 +252,11 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
                         className={cn(
                           'flex size-8 items-center justify-center rounded-full',
                           'transition-[transform,box-shadow] duration-150 ease-out active:scale-[0.96]',
-                          selected
-                            ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]'
-                            : 'shadow-border hover:shadow-border-hover',
+                          selected ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]' : '',
                         )}
                         style={{ background: swatch, color: textOnColor(swatch) }}
                       >
-                        {selected ? <Check className="size-4" strokeWidth={2} /> : null}
+                        {selected ? <Check className="size-4" /> : null}
                       </button>
                     );
                   })}
@@ -268,9 +266,7 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
                     className={cn(
                       'relative flex size-8 cursor-pointer items-center justify-center rounded-full',
                       'transition-[transform,box-shadow] duration-150 ease-out active:scale-[0.96]',
-                      isCustomAccent
-                        ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]'
-                        : 'shadow-border hover:shadow-border-hover',
+                      isCustomAccent ? 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--text)]' : '',
                     )}
                     style={{
                       background: isCustomAccent
@@ -280,7 +276,6 @@ export function ConfigurationPane({ app }: { app: AdminApp }) {
                   >
                     <Pipette
                       className="size-3.5"
-                      strokeWidth={2}
                       style={{
                         color: isCustomAccent ? textOnColor(draft.appearance.accent) : '#ffffff',
                       }}

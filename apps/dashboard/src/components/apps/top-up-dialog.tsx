@@ -77,9 +77,7 @@ export function TopUpDialog({ appId, open, onOpenChange }: TopUpDialogProps) {
                 className={cn(
                   'h-10 rounded-pill px-4 text-sm font-medium num',
                   'transition-[transform,background-color,box-shadow,color] duration-150 ease-out active:scale-[0.96]',
-                  selected
-                    ? 'bg-white text-black'
-                    : 'bg-surface-2 text-fg shadow-border hover:bg-surface-3 hover:shadow-border-hover',
+                  selected ? 'bg-white text-black' : 'bg-surface-2 text-fg hover:bg-surface-3',
                 )}
               >
                 {formatCents(preset).replace('.00', '')}

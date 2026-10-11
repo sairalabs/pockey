@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Pipette } from 'lucide-react';
+import { Pipette } from '../components/icons';
 import { useId, useState } from 'react';
 import { normalizeHexColor, resolveAccentColors, type ColorMode } from '../lib/theme';
 
@@ -79,9 +79,7 @@ export function AccentPicker({
                 : value,
             }}
           >
-            {isPreset && (
-              <Pipette size={12} strokeWidth={2} className="text-white" aria-hidden="true" />
-            )}
+            {isPreset && <Pipette size={12} className="text-white" aria-hidden="true" />}
           </span>
           <input
             id={`${id}-native`}
@@ -123,7 +121,7 @@ export function AccentPicker({
         }}
         className={clsx(
           'h-9 w-[92px] rounded-[10px] bg-surface-2 px-2.5 text-[13px] text-fg tabular-nums uppercase outline-none',
-          'shadow-[inset_0_0_0_1px_var(--ring)] transition-[box-shadow] duration-150 ease-out',
+          'transition-[box-shadow] duration-150 ease-out',
           invalid && 'shadow-[inset_0_0_0_1px_var(--danger)]',
         )}
       />

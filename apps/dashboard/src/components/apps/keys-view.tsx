@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp, ApiKeySummary } from '@pockey/types';
-import { Plus } from 'lucide-react';
+import { Plus } from '../ui/icons';
 import { useState } from 'react';
 import { ApiKeysList, NewApiKeyDialog, useApiKeys } from '@/components/apps/api-keys-manager';
 import { PageHeader } from '@/components/shell/page-header';
@@ -29,7 +29,7 @@ export function KeysView({ app, initialKeys }: KeysViewProps) {
         actions={
           <Button
             variant="primary"
-            iconStart={<Plus strokeWidth={2} />}
+            iconStart={<Plus />}
             onClick={() => {
               setCreating(true);
             }}
@@ -62,7 +62,7 @@ export function KeysView({ app, initialKeys }: KeysViewProps) {
             {app.app.allowedOrigins.map((origin) => (
               <li
                 key={origin}
-                className="rounded-pill bg-surface-2 px-2.5 py-1 tabular-nums text-[12px] text-fg-2 shadow-border"
+                className="rounded-pill bg-surface-2 px-2.5 py-1 tabular-nums text-[12px] text-fg-2"
               >
                 {origin}
               </li>

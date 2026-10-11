@@ -11,7 +11,7 @@ export function Badge({ tone = 'neutral', className, children, ...props }: Badge
     <span
       className={cn(
         'inline-flex h-6 shrink-0 items-center rounded-pill px-2.5 text-xs font-medium num',
-        tone === 'neutral' && 'bg-surface-2 text-fg-2 shadow-border',
+        tone === 'neutral' && 'bg-surface-2 text-fg-2',
         tone === 'accent' && 'bg-accent/15 text-[#7ea3ff]',
         tone === 'danger' && 'bg-danger/10 text-danger',
         className,

@@ -7,8 +7,8 @@ import {
   SlidersHorizontal,
   UserRound,
   Users,
-  type LucideIcon,
-} from 'lucide-react';
+  type IconComponent,
+} from '../../ui/icons';
 
 export type SettingsSectionId =
   | 'app-information'
@@ -23,7 +23,7 @@ export type SettingsSectionId =
 export interface SettingsItem {
   id: SettingsSectionId;
   label: string;
-  icon: LucideIcon;
+  icon: IconComponent;
 }
 
 export interface SettingsGroup {

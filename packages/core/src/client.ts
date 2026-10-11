@@ -1032,10 +1032,7 @@ export function createPockey(options: PockeyOptions): PockeyClient {
       },
       async verifyOtp(code) {
         if (pendingEmail === null) {
-          throw new PockeyError(
-            'bad_request',
-            'Call loginWithEmail(email) before verifyOtp(code)',
-          );
+          throw new PockeyError('bad_request', 'Call loginWithEmail(email) before verifyOtp(code)');
         }
         return verifyEmailCode(pendingEmail, code);
       },

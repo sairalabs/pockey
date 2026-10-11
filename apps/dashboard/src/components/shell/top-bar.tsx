@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp, Developer } from '@pockey/types';
-import { Inbox, Settings } from 'lucide-react';
+import { Inbox, Settings } from '../ui/icons';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { AccountMenu } from '@/components/shell/account-menu';
@@ -50,7 +50,7 @@ export function TopBar({ developer, apps }: TopBarProps) {
         <NotificationsPopover
           trigger={
             <IconButton aria-label="Notifications">
-              <Inbox strokeWidth={1.5} />
+              <Inbox />
             </IconButton>
           }
         />
@@ -60,7 +60,7 @@ export function TopBar({ developer, apps }: TopBarProps) {
             openSettings(current ? 'app-information' : 'account-information');
           }}
         >
-          <Settings strokeWidth={1.5} />
+          <Settings />
         </IconButton>
         <AccountMenu
           developer={developer}

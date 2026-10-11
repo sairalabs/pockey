@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy } from './icons';
 import { useEffect, useRef, useState } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/cn';
@@ -48,10 +48,10 @@ export function CopyButton({ value, label = 'Copy', size = 'sm', className }: Co
       }}
     >
       <span aria-hidden="true" className={cn(iconBase, copied ? hidden : shown)}>
-        <Copy strokeWidth={1.5} />
+        <Copy />
       </span>
       <span aria-hidden="true" className={cn(iconBase, copied ? shown : hidden)}>
-        <Check strokeWidth={2} />
+        <Check />
       </span>
     </IconButton>
   );

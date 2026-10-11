@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp } from '@pockey/types';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from '../ui/icons';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui/avatar';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@/components/ui/menu';
@@ -33,7 +33,7 @@ export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
             initial={label.charAt(0)}
           />
           <span className="max-w-40 truncate">{label}</span>
-          <ChevronsUpDown className="size-4 text-fg-2" strokeWidth={2} />
+          <ChevronsUpDown className="size-4 text-fg-2" />
         </button>
       }
     >
@@ -58,13 +58,13 @@ export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
           >
             <span className="flex items-center justify-between gap-3">
               <span className="truncate">{entry.app.name}</span>
-              {selected ? <Check className="size-4 text-fg-2" strokeWidth={1.5} /> : null}
+              {selected ? <Check className="size-4 text-fg-2" /> : null}
             </span>
           </MenuItem>
         );
       })}
       {apps.length > 0 ? <MenuSeparator /> : null}
-      <MenuItem icon={<Plus strokeWidth={1.5} />} onClick={onCreateApp}>
+      <MenuItem icon={<Plus />} onClick={onCreateApp}>
         Create app
       </MenuItem>
     </Menu>

@@ -45,7 +45,7 @@ export function Popover({
         >
           <BasePopover.Popup
             data-no-motion={noMotion ? '' : undefined}
-            className={cn('popup rounded-card bg-surface shadow-border outline-none', className)}
+            className={cn('popup rounded-card bg-surface outline-none', className)}
           >
             {children}
           </BasePopover.Popup>

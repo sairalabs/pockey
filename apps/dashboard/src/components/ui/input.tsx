@@ -2,13 +2,14 @@ import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 /*
-  Inputs keep a real 1px border: better-ui reserves shadow-borders for depth
-  and keeps borders where they communicate structure (form outlines).
+  Flat brand: a field is a filled surface, not an outlined box. It lifts one step
+  on hover and shows an accent ring only while focused, which keyboard users need.
 */
 const control =
-  'w-full rounded-[10px] border border-border bg-surface-2 text-sm text-fg placeholder:text-fg-3 ' +
-  'transition-[border-color,background-color] duration-150 ease-out hover:border-border-strong ' +
-  'focus-visible:border-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50';
+  'w-full rounded-[10px] bg-surface-2 text-sm text-fg placeholder:text-fg-3 ' +
+  'transition-[background-color,box-shadow] duration-150 ease-out hover:bg-surface-3 ' +
+  'focus-visible:bg-surface-3 focus-visible:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-none ' +
+  'disabled:cursor-not-allowed disabled:opacity-50';
 
 export function Input({ className, ...props }: ComponentPropsWithRef<'input'>) {
   return <input className={cn(control, 'h-10 px-3', className)} {...props} />;

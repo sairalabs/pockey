@@ -37,10 +37,7 @@ export function Segmented<T extends string>({
         const match = options.find((option) => option.value === first);
         if (match) onValueChange(match.value);
       }}
-      className={cn(
-        'inline-flex items-center gap-0.5 rounded-pill bg-surface-2 p-1 shadow-border',
-        className,
-      )}
+      className={cn('inline-flex items-center gap-0.5 rounded-pill bg-surface-2 p-1', className)}
     >
       {options.map((option) => (
         <Toggle

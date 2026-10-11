@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from '../ui/icons';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { OtpInput } from '@/components/auth/otp-input';
@@ -121,7 +121,7 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
               <Button
                 variant="primary"
                 type="submit"
-                iconEnd={<ArrowRight strokeWidth={2} />}
+                iconEnd={<ArrowRight />}
                 disabled={pending || email.trim().length === 0}
               >
                 {pending ? 'Sending the code' : 'Continue with email'}
@@ -161,7 +161,7 @@ export function LoginForm({ githubEnabled, next = '/apps' }: LoginFormProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                iconStart={<ArrowLeft strokeWidth={2} />}
+                iconStart={<ArrowLeft />}
                 disabled={pending}
                 onClick={() => {
                   setStep('email');

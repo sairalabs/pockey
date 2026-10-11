@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft, X } from './icons';
 import type { ReactNode } from 'react';
 import { IconButton } from './Button';
 
@@ -38,14 +38,14 @@ export function ScreenLayout({
         <div className="absolute -top-3 -right-3 -left-3 flex items-center justify-between">
           {onBack ? (
             <IconButton label="Back" onClick={onBack}>
-              <ChevronLeft size={20} strokeWidth={2} aria-hidden="true" />
+              <ChevronLeft size={20} aria-hidden="true" />
             </IconButton>
           ) : (
             <span />
           )}
           {onClose ? (
             <IconButton label="Close" onClick={onClose}>
-              <X size={18} strokeWidth={2} aria-hidden="true" />
+              <X size={18} aria-hidden="true" />
             </IconButton>
           ) : null}
         </div>

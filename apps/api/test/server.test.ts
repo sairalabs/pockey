@@ -9,12 +9,7 @@ import {
   sha256Hex,
   usageEvents,
 } from '@pockey/db';
-import {
-  ApiErrorBody,
-  ServerUserList,
-  SessionSignOutput,
-  type AuthResponse,
-} from '@pockey/types';
+import { ApiErrorBody, ServerUserList, SessionSignOutput, type AuthResponse } from '@pockey/types';
 import { base58 } from '@scure/base';
 import { and, eq } from 'drizzle-orm';
 import { recoverTransactionAddress, verifyMessage, type Address, type Hex } from 'viem';

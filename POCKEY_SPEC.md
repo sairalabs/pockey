@@ -38,7 +38,7 @@
 | Billing            | Stripe usage-based (metered)                                                          |                                                               |
 | Monorepo           | pnpm + Turborepo                                                                      |                                                               |
 | Open source        | `packages/sdk-*` et `packages/types` en MIT. `apps/api` et `apps/dashboard` privés    |                                                               |
-| Nom de travail     | Pockey (pockey.xyz, pockey.xyz libres au 15/09/2026)                          |                                                               |
+| Nom de travail     | Pockey (pockey.xyz, pockey.xyz libres au 15/09/2026)                                  |                                                               |
 
 ## 4. Architecture
 

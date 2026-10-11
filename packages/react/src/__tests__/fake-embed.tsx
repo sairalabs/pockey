@@ -1,11 +1,5 @@
 import { render, act, type RenderResult } from '@testing-library/react';
-import type {
-  EndUser,
-  HostRequest,
-  HostRequestType,
-  PublicAppConfig,
-  Wallet,
-} from '@pockey/types';
+import type { EndUser, HostRequest, HostRequestType, PublicAppConfig, Wallet } from '@pockey/types';
 import { StrictMode, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { PockeyConfig } from '../config.js';

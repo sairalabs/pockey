@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+import { Mail } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { OtpInput } from '../components/OtpInput';
 import { IconTile, ScreenLayout } from '../components/ScreenLayout';
@@ -32,7 +32,7 @@ export function EmailCodeScreen({ screen, actions, titleId }: ScreenProps<'email
       titleId={titleId}
       media={
         <IconTile>
-          <Mail size={24} strokeWidth={2} aria-hidden="true" />
+          <Mail size={24} aria-hidden="true" />
         </IconTile>
       }
       title="Check your email"

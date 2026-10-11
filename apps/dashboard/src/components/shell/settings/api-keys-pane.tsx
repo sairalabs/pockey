@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus } from '../../ui/icons';
 import { useEffect, useState } from 'react';
 import { ApiKeysList, NewApiKeyDialog, useApiKeys } from '@/components/apps/api-keys-manager';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ export function ApiKeysPane({ appId }: { appId: string }) {
         <Button
           variant="primary"
           size="sm"
-          iconStart={<Plus strokeWidth={2} />}
+          iconStart={<Plus />}
           onClick={() => {
             setCreating(true);
           }}

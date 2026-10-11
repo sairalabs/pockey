@@ -6,11 +6,7 @@ import { EthereumIcon, SolanaIcon } from './icons';
 
 /** Grouped key/value rows on surface-2, hairline dividers between rows. */
 export function DetailList({ children }: { children: ReactNode }) {
-  return (
-    <dl className="divide-y divide-ring rounded-xl bg-surface-2 px-4 shadow-[inset_0_0_0_1px_var(--ring)]">
-      {children}
-    </dl>
-  );
+  return <dl className="rounded-xl bg-surface-2 px-4">{children}</dl>;
 }
 
 export function DetailRow({

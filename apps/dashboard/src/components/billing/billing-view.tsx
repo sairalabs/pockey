@@ -1,7 +1,7 @@
 'use client';
 
 import type { BillingSummary } from '@pockey/types';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink } from '../ui/icons';
 import { useState } from 'react';
 import { PageHeader } from '@/components/shell/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ export function BillingView({ billing }: { billing: BillingSummary }) {
         description="Usage based, no flat plan. You pay for what your users do."
         actions={
           <Button
-            iconEnd={<ExternalLink strokeWidth={2} />}
+            iconEnd={<ExternalLink />}
             disabled={pending || !billing.portalAvailable}
             onClick={() => {
               void openPortal();

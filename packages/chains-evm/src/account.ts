@@ -16,10 +16,7 @@ import { normalizeSignature, type SignHash } from './signing.js';
  * Lets the API reuse viem wallet actions without ever holding a private key.
  * `publicKey` is not known here and is left unset.
  */
-export function toPockeyAccount(options: {
-  address: Address;
-  signHash: SignHash;
-}): LocalAccount {
+export function toPockeyAccount(options: { address: Address; signHash: SignHash }): LocalAccount {
   const { address, signHash } = options;
   const signDigest = async (hash: `0x${string}`) => normalizeSignature(await signHash(hash));
 

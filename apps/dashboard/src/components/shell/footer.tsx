@@ -1,4 +1,4 @@
-import { AtSign, Globe, MessageCircle } from 'lucide-react';
+import { AtSign, Globe, MessageCircle } from '../ui/icons';
 import Link from 'next/link';
 import { IconButton } from '@/components/ui/icon-button';
 
@@ -13,7 +13,7 @@ const links = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-border">
+    <footer className="mt-auto">
       <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-6">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="text-sm font-semibold tracking-tight text-fg">Pockey</span>
@@ -31,13 +31,13 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-1">
           <IconButton aria-label="Website" size="sm">
-            <Globe strokeWidth={1.5} />
+            <Globe />
           </IconButton>
           <IconButton aria-label="Community" size="sm">
-            <MessageCircle strokeWidth={1.5} />
+            <MessageCircle />
           </IconButton>
           <IconButton aria-label="Follow on X" size="sm">
-            <AtSign strokeWidth={1.5} />
+            <AtSign />
           </IconButton>
         </div>
       </div>

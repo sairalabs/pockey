@@ -1,4 +1,4 @@
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy } from './icons';
 import { useEffect, useState } from 'react';
 import { IconButton } from './Button';
 import { Swap } from './Swap';
@@ -30,8 +30,8 @@ export function CopyButton({ value, label = 'Copy' }: { value: string; label?: s
     >
       <Swap
         swapped={copied}
-        from={<Copy size={16} strokeWidth={1.5} aria-hidden="true" />}
-        to={<Check size={16} strokeWidth={1.5} aria-hidden="true" />}
+        from={<Copy size={16} aria-hidden="true" />}
+        to={<Check size={16} aria-hidden="true" />}
       />
     </IconButton>
   );

@@ -6,11 +6,7 @@ import {
   type PockeyClient,
   type TokenStorage,
 } from '@pockey/core';
-import {
-  createTurnkeyKeyClient,
-  memoryKeyStore,
-  type KeyStore,
-} from '@pockey/key-provider/client';
+import { createTurnkeyKeyClient, memoryKeyStore, type KeyStore } from '@pockey/key-provider/client';
 import { encryptOtpForTests } from '@pockey/key-provider/testing';
 import { KeySession } from '@pockey/types';
 import { base58, base64 } from '@scure/base';

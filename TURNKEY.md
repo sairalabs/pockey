@@ -6,10 +6,10 @@ Pockey runs on Turnkey, non-custodial (decision of 2026-09-19, see `DECISIONS.md
 
 Three credentials, three kinds of power:
 
-| Credential                                                  | Who holds it                    | What it can do                                                                                                                               |
-| ----------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Credential                                                  | Who holds it                 | What it can do                                                                                                                               |
+| ----------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Parent API key (`TURNKEY_API_*`)                            | Pockey API (Wrangler secret) | Create sub-organizations, run login ceremonies (OTP, OAuth). Nothing inside a user sub-organization.                                         |
-| Session key (P-256, non-extractable)                        | The embed iframe, IndexedDB     | Everything the user can do: sign, export, add a passkey, create session policies. Expires with the Pockey session (30 days).              |
+| Session key (P-256, non-extractable)                        | The embed iframe, IndexedDB  | Everything the user can do: sign, export, add a passkey, create session policies. Expires with the Pockey session (30 days).                 |
 | Signer key (`TURNKEY_SIGNER_*`, defaults to the parent key) | Pockey API                   | Only what a user policy allows (session signers), and deleting those policies. Sole owner of the per-app Solana fee payer sub-organizations. |
 
 Every request touching a user key is stamped in the iframe and relayed by the API, which checks it matches the route (`packages/key-provider/src/turnkey/provider.ts`, `relay`) and cannot change it.

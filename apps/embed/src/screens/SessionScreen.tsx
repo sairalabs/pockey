@@ -1,6 +1,6 @@
 import type { ChainFamily } from '@pockey/types';
 import { clsx } from 'clsx';
-import { ChevronDown, TriangleAlert } from 'lucide-react';
+import { ChevronDown, TriangleAlert } from '../components/icons';
 import { useId, useState } from 'react';
 import { DetailList, DetailRow, WalletAddress } from '../components/Details';
 import { ErrorText, OriginChip, ScreenLayout } from '../components/ScreenLayout';
@@ -65,7 +65,6 @@ function AllowlistRow({
             {expanded ? 'Show less' : `Show ${String(hidden)} more`}
             <ChevronDown
               size={14}
-              strokeWidth={2}
               aria-hidden="true"
               className={clsx('text-fg-2', expanded && 'rotate-180')}
             />
@@ -159,12 +158,7 @@ export function SessionScreen({ screen, actions, app, titleId }: ScreenProps<'se
       </DetailList>
       {perTx === null && total === null ? (
         <div className="mt-3 flex items-start gap-3 rounded-xl bg-danger/8 px-4 py-3">
-          <TriangleAlert
-            size={16}
-            strokeWidth={2}
-            aria-hidden="true"
-            className="mt-0.5 shrink-0 text-danger"
-          />
+          <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-danger" />
           <p className="text-[13px] leading-5 text-pretty text-fg-2">
             <span className="font-medium text-danger">No spending limit.</span> Only allow apps you
             trust.

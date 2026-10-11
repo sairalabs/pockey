@@ -264,9 +264,7 @@ export class PockeyClient {
   ): Promise<HostResponseDataMap[T]> {
     const bridge = this.#bridge;
     if (!bridge) {
-      return Promise.reject(
-        new PockeyEmbedError('not_ready', 'PockeyProvider is not mounted.'),
-      );
+      return Promise.reject(new PockeyEmbedError('not_ready', 'PockeyProvider is not mounted.'));
     }
     return bridge.request(type, payload);
   }
@@ -454,10 +452,7 @@ export class PockeyClient {
     const chainId = input.chainId ?? this.getChainId();
     const parsed = EvmChainId.safeParse(chainId);
     if (!parsed.success) {
-      throw new PockeyEmbedError(
-        'unsupported',
-        `Chain ${chainId} is not supported by Pockey.`,
-      );
+      throw new PockeyEmbedError('unsupported', `Chain ${chainId} is not supported by Pockey.`);
     }
     return { ...input, chainId: parsed.data };
   }

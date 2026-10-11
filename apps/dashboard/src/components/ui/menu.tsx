@@ -44,10 +44,7 @@ export function Menu({
         >
           <BaseMenu.Popup
             data-no-motion={noMotion ? '' : undefined}
-            className={cn(
-              'popup min-w-52 rounded-[12px] bg-surface p-1 shadow-border outline-none',
-              className,
-            )}
+            className={cn('popup min-w-52 rounded-[12px] bg-surface p-1 outline-none', className)}
           >
             {children}
           </BaseMenu.Popup>

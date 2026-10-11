@@ -9,11 +9,11 @@ export interface PaneProps {
   children: ReactNode;
 }
 
-/** Right pane of the settings dialog: title row with close, divider, content. */
+/** Right pane of the settings dialog: title row with close, then content. */
 export function Pane({ title, badge, actions, children }: PaneProps) {
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col">
-      <div className="flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-border px-8">
+      <div className="flex h-[72px] shrink-0 items-center justify-between gap-4 px-8">
         <h2 className="flex items-center gap-3 text-xl font-semibold tracking-[-0.01em]">
           {title}
           {badge}

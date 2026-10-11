@@ -1,6 +1,6 @@
 'use client';
 
-import { Inbox } from 'lucide-react';
+import { Inbox } from '../ui/icons';
 import type { ReactElement } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -41,7 +41,7 @@ export function NotificationsPopover({
         <TabPanel value="unread">
           {unread.length === 0 ? (
             <EmptyState
-              icon={<Inbox strokeWidth={1.5} />}
+              icon={<Inbox />}
               title="You're all caught up."
               description="New notifications will show up here."
             />
@@ -59,7 +59,7 @@ export function NotificationsPopover({
         <TabPanel value="completed">
           {completed.length === 0 ? (
             <EmptyState
-              icon={<Inbox strokeWidth={1.5} />}
+              icon={<Inbox />}
               title="Nothing completed yet."
               description="Notifications you mark as done land here."
             />

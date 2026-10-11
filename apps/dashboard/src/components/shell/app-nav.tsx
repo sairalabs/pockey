@@ -17,7 +17,7 @@ export function AppNav({ appId }: { appId: string }) {
   ];
 
   return (
-    <nav aria-label="App sections" className="mb-8 flex gap-5 border-b border-border">
+    <nav aria-label="App sections" className="mb-8 flex gap-5">
       {items.map((item) => {
         const active = pathname === item.href;
         return (

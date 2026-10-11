@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp, AdminUsage, SponsorBalance } from '@pockey/types';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '../ui/icons';
 import { rangeOptions, useUsage } from '@/components/apps/use-usage';
 import { countSeries, gasSeries, numbers, sumCounts, sumWei } from '@/components/apps/usage-series';
 import { ButtonLink } from '@/components/ui/button';
@@ -50,11 +50,7 @@ export function HomeView({ app, usage: initial, sponsor }: HomeViewProps) {
           options={rangeOptions}
           onValueChange={setRange}
         />
-        <ButtonLink
-          size="sm"
-          href={`/apps/${app.app.id}/usage`}
-          iconEnd={<ChevronRight strokeWidth={2} />}
-        >
+        <ButtonLink size="sm" href={`/apps/${app.app.id}/usage`} iconEnd={<ChevronRight />}>
           Usage details
         </ButtonLink>
       </div>

@@ -6,19 +6,14 @@ import { cn } from '@/lib/cn';
 
 /*
   Underline tabs. No sliding indicator: better-ui asks for nothing beyond a
-  150ms color transition on tabs. The hairline is a pseudo element on the
-  active tab; the list bottom border is a divider, so it stays a border.
+  150ms color transition on tabs. Flat brand: only the active tab carries its
+  accent bar, the full width rule under the list is gone.
 */
 
 export const Tabs = BaseTabs.Root;
 
 export function TabsList({ className, ...props }: ComponentProps<typeof BaseTabs.List>) {
-  return (
-    <BaseTabs.List
-      className={cn('relative flex gap-5 border-b border-border', className)}
-      {...props}
-    />
-  );
+  return <BaseTabs.List className={cn('relative flex gap-5', className)} {...props} />;
 }
 
 export function Tab({ className, ...props }: ComponentProps<typeof BaseTabs.Tab>) {

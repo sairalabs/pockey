@@ -1,7 +1,7 @@
 'use client';
 
 import type { Developer } from '@pockey/types';
-import { Check, Copy, LogOut, UserCog } from 'lucide-react';
+import { Check, Copy, LogOut, UserCog } from '../ui/icons';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
@@ -37,7 +37,7 @@ export function AccountMenu({ developer, onManageAccount }: AccountMenuProps) {
     >
       <MenuItem
         closeOnClick={false}
-        icon={copied ? <Check strokeWidth={1.5} /> : <Copy strokeWidth={1.5} />}
+        icon={copied ? <Check /> : <Copy />}
         onClick={() => {
           void navigator.clipboard.writeText(developer.email).then(() => {
             setCopied(true);
@@ -52,11 +52,11 @@ export function AccountMenu({ developer, onManageAccount }: AccountMenuProps) {
         </span>
       </MenuItem>
       <MenuSeparator />
-      <MenuItem icon={<UserCog strokeWidth={1.5} />} onClick={onManageAccount}>
+      <MenuItem icon={<UserCog />} onClick={onManageAccount}>
         Manage account
       </MenuItem>
       <MenuItem
-        icon={<LogOut strokeWidth={1.5} />}
+        icon={<LogOut />}
         onClick={() => {
           void leave();
         }}

@@ -54,18 +54,9 @@ pnpm --filter @pockey/dashboard dev    # http://localhost:3800
 ## Using the SDK
 
 ```tsx
-import {
-  PockeyProvider,
-  usePockey,
-  useSessionSigners,
-  useSign,
-  useWallet,
-} from '@pockey/react';
+import { PockeyProvider, usePockey, useSessionSigners, useSign, useWallet } from '@pockey/react';
 
-<PockeyProvider
-  appId="pk_app_..."
-  config={{ chains: { evm: [8453], solana: ['mainnet-beta'] } }}
->
+<PockeyProvider appId="pk_app_..." config={{ chains: { evm: [8453], solana: ['mainnet-beta'] } }}>
   <App />
 </PockeyProvider>;
 

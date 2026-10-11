@@ -9,7 +9,7 @@ export interface CardProps extends ComponentPropsWithRef<'div'> {
 }
 
 /**
- * Surface with a shadow-border ring instead of a border (better-ui surfaces).
+ * Surface with a ring instead of a border (better-ui surfaces).
  * Radius 16px. Nested rounded rows inside use 10px and are treated as their own
  * surface: with 20px padding the concentric formula would give a negative radius.
  */
@@ -17,8 +17,8 @@ export function Card({ accent = false, flush = false, className, children, ...pr
   return (
     <div
       className={cn(
-        'relative rounded-card bg-surface shadow-border',
-        'transition-[box-shadow] duration-150 ease-out hover:shadow-border-hover',
+        'relative rounded-card bg-surface',
+        'transition-[box-shadow] duration-150 ease-out',
         !flush && 'p-5',
         accent &&
           'overflow-hidden after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-accent',

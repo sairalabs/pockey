@@ -24,9 +24,7 @@
   --radius-dialog: 24px;
   --radius-pill: 9999px;
 
-  /* better-ui: one white ring in dark mode, layered shadows are invisible on black. */
-  --shadow-border: 0 0 0 1px oklch(1 0 0 / 0.08);
-  --shadow-border-hover: 0 0 0 1px oklch(1 0 0 / 0.13);
+  /* Flat brand: surfaces are told apart by their fill, never by a 1px ring. */
   --image-outline: oklch(1 0 0 / 0.1);
 
   /* emil-design-eng: custom curves, built-in easings are too weak. */
@@ -54,9 +52,6 @@
   --radius-card: var(--radius-card);
   --radius-dialog: var(--radius-dialog);
   --radius-pill: var(--radius-pill);
-
-  --shadow-border: var(--shadow-border);
-  --shadow-border-hover: var(--shadow-border-hover);
 
   --ease-out-strong: var(--ease-out-strong);
   --ease-in-out-strong: var(--ease-in-out-strong);

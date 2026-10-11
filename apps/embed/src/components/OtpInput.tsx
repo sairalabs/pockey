@@ -158,7 +158,7 @@ export function OtpInput({
           }}
           className={clsx(
             'h-12 w-full min-w-0 rounded-xl bg-surface-2 text-center text-[20px] font-semibold text-fg tabular-nums caret-accent',
-            'shadow-[inset_0_0_0_1px_var(--ring)] disabled:opacity-60',
+            'disabled:opacity-60',
           )}
         />
       ))}

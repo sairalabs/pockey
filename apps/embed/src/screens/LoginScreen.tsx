@@ -1,5 +1,5 @@
 import type { LoginMethod } from '@pockey/types';
-import { KeyRound, Lock, Wallet } from 'lucide-react';
+import { KeyRound, Lock, Wallet } from '../components/icons';
 import { useState, type ReactNode } from 'react';
 import { AppLogo } from '../components/AppLogo';
 import { Button } from '../components/Button';
@@ -23,9 +23,9 @@ function methodIcon(method: Exclude<LoginMethod, 'email'>): ReactNode {
     case 'apple':
       return <AppleIcon size={20} />;
     case 'passkey':
-      return <KeyRound size={20} strokeWidth={2} aria-hidden="true" />;
+      return <KeyRound size={20} aria-hidden="true" />;
     case 'wallet':
-      return <Wallet size={20} strokeWidth={2} aria-hidden="true" />;
+      return <Wallet size={20} aria-hidden="true" />;
   }
 }
 
@@ -64,7 +64,7 @@ export function EmailField({ onSubmit }: { onSubmit: (email: string) => void }) 
           onChange={(event) => {
             setEmail(event.currentTarget.value);
           }}
-          className="h-12 w-full rounded-xl bg-surface-2 pr-[116px] pl-4 text-[15px] text-fg shadow-[inset_0_0_0_1px_var(--ring)] placeholder:text-fg-3"
+          className="h-12 w-full rounded-xl bg-surface-2 pr-[116px] pl-4 text-[15px] text-fg placeholder:text-fg-3"
         />
         <span
           className="pk-reveal absolute top-1 right-1 bottom-1 flex"
@@ -99,7 +99,7 @@ export function LoginScreen({ actions, app, titleId }: ScreenProps<'login'>) {
       onClose={actions.dismiss}
       footer={
         <p className="flex items-center justify-center gap-1.5 text-[13px] leading-5 text-fg-2">
-          <Lock size={13} strokeWidth={1.5} aria-hidden="true" className="text-fg-3" />
+          <Lock size={13} aria-hidden="true" className="text-fg-3" />
           Protected by Pockey
         </p>
       }

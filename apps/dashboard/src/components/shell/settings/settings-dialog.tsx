@@ -43,7 +43,7 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange} title="Settings" titleHidden size="settings">
       <nav
         aria-label="Settings sections"
-        className="flex w-[360px] shrink-0 flex-col overflow-y-auto border-r border-border p-3"
+        className="flex w-[360px] shrink-0 flex-col overflow-y-auto bg-surface-2 p-3"
       >
         {groups.map((group) => (
           <div key={group.label} className="mb-2">

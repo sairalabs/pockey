@@ -1,4 +1,4 @@
-import { Check, CircleAlert, Info, TriangleAlert } from 'lucide-react';
+import { Check, CircleAlert, Info, TriangleAlert } from '../components/icons';
 import { m, useReducedMotion } from 'motion/react';
 import { Button } from '../components/Button';
 import { CopyButton } from '../components/CopyButton';
@@ -35,7 +35,7 @@ export function SuccessScreen({ screen, titleId }: ScreenProps<'success'>) {
             }
             transition={{ duration: 0.3, ease: SWAP_EASE }}
           >
-            <Check size={30} strokeWidth={2.5} aria-hidden="true" />
+            <Check size={30} aria-hidden="true" />
           </m.span>
         </IconTile>
       }
@@ -52,7 +52,7 @@ export function ExportScreen({ screen, actions, titleId }: ScreenProps<'export'>
       titleId={titleId}
       media={
         <IconTile tone="danger">
-          <TriangleAlert size={24} strokeWidth={2} aria-hidden="true" />
+          <TriangleAlert size={24} aria-hidden="true" />
         </IconTile>
       }
       title="Export private key"
@@ -83,7 +83,7 @@ export function ExportScreen({ screen, actions, titleId }: ScreenProps<'export'>
         </DetailRow>
       </DetailList>
       {status === 'revealed' && screen.privateKey ? (
-        <div className="mt-3 flex items-start gap-1 rounded-xl bg-surface-2 py-2 pr-2 pl-4 shadow-[inset_0_0_0_1px_var(--ring)]">
+        <div className="mt-3 flex items-start gap-1 rounded-xl bg-surface-2 py-2 pr-2 pl-4">
           <p className="min-w-0 flex-1 py-2 text-[13px] leading-5 break-all text-fg">
             {screen.privateKey}
           </p>
@@ -91,13 +91,8 @@ export function ExportScreen({ screen, actions, titleId }: ScreenProps<'export'>
         </div>
       ) : null}
       {status === 'simulated' ? (
-        <div className="mt-3 flex items-start gap-3 rounded-xl bg-surface-2 px-4 py-3 shadow-[inset_0_0_0_1px_var(--ring)]">
-          <Info
-            size={16}
-            strokeWidth={1.5}
-            aria-hidden="true"
-            className="mt-0.5 shrink-0 text-fg-2"
-          />
+        <div className="mt-3 flex items-start gap-3 rounded-xl bg-surface-2 px-4 py-3">
+          <Info size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-fg-2" />
           <p className="text-[13px] leading-5 text-fg-2">Development build: export is simulated</p>
         </div>
       ) : null}
@@ -111,7 +106,7 @@ export function ErrorScreen({ screen, actions, titleId }: ScreenProps<'error'>) 
       titleId={titleId}
       media={
         <IconTile tone="danger">
-          <CircleAlert size={24} strokeWidth={2} aria-hidden="true" />
+          <CircleAlert size={24} aria-hidden="true" />
         </IconTile>
       }
       title="Something went wrong"

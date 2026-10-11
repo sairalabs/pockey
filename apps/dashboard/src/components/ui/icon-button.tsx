@@ -28,7 +28,7 @@ export function IconButton({
         'hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50',
         '[&_svg]:shrink-0',
         size === 'sm' ? 'size-8 [&_svg]:size-4' : 'size-9 [&_svg]:size-5',
-        variant === 'outline' && 'bg-surface-2 shadow-border hover:shadow-border-hover',
+        variant === 'outline' && 'bg-surface-2',
         !isStatic && 'active:not-disabled:scale-[0.96]',
         className,
       )}

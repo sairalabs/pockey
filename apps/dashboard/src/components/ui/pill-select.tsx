@@ -1,7 +1,7 @@
 'use client';
 
 import { Select } from '@base-ui-components/react/select';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from './icons';
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
 import { isKeyboardEvent } from '@/lib/motion';
@@ -45,16 +45,16 @@ export function PillSelect<T extends string>({
       <Select.Trigger
         aria-label={ariaLabel}
         className={cn(
-          'inline-flex select-none items-center gap-1.5 rounded-pill bg-surface-2 font-medium text-fg shadow-border',
+          'inline-flex select-none items-center gap-1.5 rounded-pill bg-surface-2 font-medium text-fg',
           'transition-[transform,background-color,box-shadow] duration-150 ease-out',
-          'hover:bg-surface-3 hover:shadow-border-hover active:scale-[0.96] data-popup-open:bg-surface-3',
+          'hover:bg-surface-3 active:scale-[0.96] data-popup-open:bg-surface-3',
           size === 'sm' ? 'h-8 ps-3 pe-2.5 text-[13px]' : 'h-10 ps-4 pe-3 text-sm',
           className,
         )}
       >
         <Select.Value />
         <Select.Icon className="flex text-fg-2">
-          <ChevronDown className="size-4" strokeWidth={2} />
+          <ChevronDown className="size-4" />
         </Select.Icon>
       </Select.Trigger>
       <Select.Portal>
@@ -66,7 +66,7 @@ export function PillSelect<T extends string>({
         >
           <Select.Popup
             data-no-motion={noMotion ? '' : undefined}
-            className="popup min-w-(--anchor-width) rounded-[12px] bg-surface p-1 shadow-border outline-none"
+            className="popup min-w-(--anchor-width) rounded-[12px] bg-surface p-1 outline-none"
           >
             <Select.List>
               {options.map((option) => (
@@ -81,7 +81,7 @@ export function PillSelect<T extends string>({
                 >
                   <Select.ItemText className="flex-1">{option.label}</Select.ItemText>
                   <Select.ItemIndicator className="flex">
-                    <Check className="size-3.5" strokeWidth={2} />
+                    <Check className="size-3.5" />
                   </Select.ItemIndicator>
                 </Select.Item>
               ))}

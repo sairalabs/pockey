@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminEndUserList, EndUser, Identity, IdentityType } from '@pockey/types';
-import { Search, Users } from 'lucide-react';
+import { Search, Users } from '../ui/icons';
 import { useId, useState } from 'react';
 import { PageHeader } from '@/components/shell/page-header';
 import { Avatar } from '@/components/ui/avatar';
@@ -78,10 +78,7 @@ export function UsersView({ appId, initial }: UsersViewProps) {
         <label htmlFor={`${id}-search`} className="sr-only">
           Search loaded users
         </label>
-        <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-3"
-          strokeWidth={1.5}
-        />
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-3" />
         <Input
           id={`${id}-search`}
           type="search"
@@ -97,7 +94,7 @@ export function UsersView({ appId, initial }: UsersViewProps) {
       <Card flush>
         {filtered.length === 0 ? (
           <EmptyState
-            icon={<Users strokeWidth={1.5} />}
+            icon={<Users />}
             title={users.length === 0 ? 'No users yet' : 'No user matches'}
             description={
               users.length === 0
@@ -141,7 +138,7 @@ export function UsersView({ appId, initial }: UsersViewProps) {
                           {user.wallets.map((wallet) => (
                             <span
                               key={wallet.id}
-                              className="inline-flex h-6 items-center gap-1.5 rounded-pill bg-surface-2 ps-2 pe-2.5 tabular-nums text-[12px] text-fg-2 shadow-border"
+                              className="inline-flex h-6 items-center gap-1.5 rounded-pill bg-surface-2 ps-2 pe-2.5 tabular-nums text-[12px] text-fg-2"
                             >
                               <span
                                 aria-hidden="true"

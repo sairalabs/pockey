@@ -101,8 +101,7 @@ describe('embed protocol', () => {
     });
     expect(ok.success).toBe(true);
     expect(
-      HostRequest.safeParse({ source: 'pockey', pk: 2, requestId: 'r1', type: 'logout' })
-        .success,
+      HostRequest.safeParse({ source: 'pockey', pk: 2, requestId: 'r1', type: 'logout' }).success,
     ).toBe(false);
     expect(
       HostRequest.safeParse({ source: 'other', pk: 1, requestId: 'r1', type: 'logout' }).success,

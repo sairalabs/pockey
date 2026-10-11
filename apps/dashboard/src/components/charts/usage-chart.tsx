@@ -167,7 +167,7 @@ export function UsageChart({
             aria-live="polite"
             className="pointer-events-none absolute -top-1 left-0 right-0 flex justify-center"
           >
-            <span className="flex items-baseline gap-2 rounded-[8px] bg-surface-3 px-2.5 py-1 shadow-border">
+            <span className="flex items-baseline gap-2 rounded-[8px] bg-surface-3 px-2.5 py-1">
               <span className="text-[13px] font-medium num">{current.display}</span>
               <span className="text-[12px] text-fg-2">{current.label}</span>
             </span>

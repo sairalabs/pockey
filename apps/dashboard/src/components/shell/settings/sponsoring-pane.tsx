@@ -89,7 +89,7 @@ export function SponsoringPane({ app }: { app: AdminApp }) {
 
       <div className="divide-y divide-border">
         <PaneSection title="Balance" description="Prepaid balance used to pay gas for your users.">
-          <div className="flex items-center justify-between gap-4 rounded-[12px] bg-surface-2 px-4 py-3.5 shadow-border">
+          <div className="flex items-center justify-between gap-4 rounded-[12px] bg-surface-2 px-4 py-3.5">
             <div>
               <p className="text-2xl font-medium leading-none">
                 {balance ? formatCents(balance.balanceCents) : '...'}

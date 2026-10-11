@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminApp } from '@pockey/types';
-import { ArrowUpRight, LayoutGrid, Plus } from 'lucide-react';
+import { ArrowUpRight, LayoutGrid, Plus } from '../ui/icons';
 import Link from 'next/link';
 import { useState } from 'react';
 import { NewAppDialog } from '@/components/shell/new-app-dialog';
@@ -24,7 +24,7 @@ export function AppsList({ apps }: { apps: readonly AdminApp[] }) {
         actions={
           <Button
             variant="primary"
-            iconStart={<Plus strokeWidth={2} />}
+            iconStart={<Plus />}
             onClick={() => {
               setOpen(true);
             }}
@@ -37,13 +37,13 @@ export function AppsList({ apps }: { apps: readonly AdminApp[] }) {
       {apps.length === 0 ? (
         <Card flush>
           <EmptyState
-            icon={<LayoutGrid strokeWidth={1.5} />}
+            icon={<LayoutGrid />}
             title="No app yet"
             description="An app holds your login methods, chains, keys and end users."
             action={
               <Button
                 variant="primary"
-                iconStart={<Plus strokeWidth={2} />}
+                iconStart={<Plus />}
                 onClick={() => {
                   setOpen(true);
                 }}
@@ -71,10 +71,7 @@ export function AppsList({ apps }: { apps: readonly AdminApp[] }) {
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1 text-sm font-medium">
                     <span className="truncate">{entry.app.name}</span>
-                    <ArrowUpRight
-                      className="size-4 text-fg-3 transition-[color] duration-150 ease-out group-hover:text-fg"
-                      strokeWidth={2}
-                    />
+                    <ArrowUpRight className="size-4 text-fg-3 transition-[color] duration-150 ease-out group-hover:text-fg" />
                   </span>
                   <span className="block truncate text-[13px] text-fg-2 num">
                     {formatInt(entry.endUserCount)} {entry.endUserCount === 1 ? 'user' : 'users'},{' '}

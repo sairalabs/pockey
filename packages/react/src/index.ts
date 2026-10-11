@@ -32,12 +32,7 @@ export {
   type UseSignResult,
   type UseWalletResult,
 } from './hooks.js';
-export {
-  DEFAULT_EMBED_URL,
-  PUBLIC_RPC_URLS,
-  type ChainLike,
-  type PockeyConfig,
-} from './config.js';
+export { DEFAULT_EMBED_URL, PUBLIC_RPC_URLS, type ChainLike, type PockeyConfig } from './config.js';
 /** `PockeyEmbedError` for every embed call, `ProviderRpcError` from the EIP-1193 provider. */
 export { PockeyEmbedError, ProviderRpcError } from './errors.js';
 /** Framework-free bridge to the embed iframe, for non React hosts. */

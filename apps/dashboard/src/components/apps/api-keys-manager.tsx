@@ -1,7 +1,7 @@
 'use client';
 
 import type { ApiKeySummary } from '@pockey/types';
-import { KeyRound, TriangleAlert } from 'lucide-react';
+import { KeyRound, TriangleAlert } from '../ui/icons';
 import { useId, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -161,9 +161,9 @@ export function ApiKeysList({
   return (
     <div className="flex flex-col gap-4">
       {revealed !== null ? (
-        <div className="rounded-[12px] bg-surface-2 p-4 shadow-border">
+        <div className="rounded-[12px] bg-surface-2 p-4">
           <p className="flex items-center gap-2 text-sm font-medium">
-            <TriangleAlert className="size-4 text-danger" strokeWidth={2} />
+            <TriangleAlert className="size-4 text-danger" />
             Copy your new secret key now
           </p>
           <p className="mt-0.5 text-[13px] text-fg-2">
@@ -190,7 +190,7 @@ export function ApiKeysList({
 
       {keys.length === 0 ? (
         <EmptyState
-          icon={<KeyRound strokeWidth={1.5} />}
+          icon={<KeyRound />}
           title="No API keys"
           description="Create a key to call the API from your server."
         />
@@ -247,7 +247,7 @@ export function ApiKeysList({
       >
         <div className="flex flex-col gap-5">
           {confirming ? (
-            <div className="rounded-[10px] bg-surface-2 px-3 py-2 text-[13px] tabular-nums shadow-border">
+            <div className="rounded-[10px] bg-surface-2 px-3 py-2 text-[13px] tabular-nums">
               {confirming.name ?? 'Untitled key'} ({confirming.prefix}...)
             </div>
           ) : null}

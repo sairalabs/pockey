@@ -117,9 +117,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      lucide-react:
-        specifier: ^1.46.0
-        version: 1.46.0(react@19.3.0)
+      hashvatar:
+        specifier: ^0.1.2
+        version: 0.1.2(react@19.3.0)
       motion:
         specifier: ^13.3.0
         version: 13.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -196,9 +196,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      lucide-react:
-        specifier: ^1.46.0
-        version: 1.46.0(react@19.3.0)
       motion:
         specifier: ^13.3.0
         version: 13.3.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -4017,6 +4014,14 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
 
+  hashvatar@0.1.2:
+    resolution: {integrity: sha512-RdGvT8Ct0qTzDwAFkJACurTiCJ+Pv7YBwvq4YCKX6ZPNFvOPsb9nCc7Leh3jgxZCgutnCjaWEkYm7p4lVQaq1g==}
+    peerDependencies:
+      react: '>=17'
+    peerDependenciesMeta:
+      react:
+        optional: true
+
   hasown@2.0.4:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
@@ -4431,11 +4436,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  lucide-react@1.46.0:
-    resolution: {integrity: sha512-Bv+FZXgZPrxc/NCl1e7JJVQFLdiCxYgxNVhqoV7X0p6I8ADJo8DxBnK1auH0fZz4AmqOJ3jgneL4f1i8LJQRAA==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -8294,6 +8294,10 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
+  hashvatar@0.1.2(react@19.3.0):
+    optionalDependencies:
+      react: 19.3.0
+
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
@@ -8655,10 +8659,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-react@1.46.0(react@19.3.0):
-    dependencies:
-      react: 19.3.0
 
   lz-string@1.5.0: {}
 

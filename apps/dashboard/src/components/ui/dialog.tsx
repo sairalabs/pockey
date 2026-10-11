@@ -1,7 +1,7 @@
 'use client';
 
 import { Dialog as BaseDialog } from '@base-ui-components/react/dialog';
-import { X } from 'lucide-react';
+import { X } from './icons';
 import { useState, type ReactNode } from 'react';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/cn';
@@ -54,7 +54,7 @@ export function Dialog({
           data-no-motion={noMotion ? '' : undefined}
           className={cn(
             'dialog-popup fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-            'rounded-dialog bg-surface text-fg shadow-border outline-none',
+            'rounded-dialog bg-surface text-fg outline-none',
             size === 'sm' && 'w-[min(480px,calc(100vw-32px))] p-6',
             size === 'settings' &&
               'flex h-[min(92vh,880px)] w-[min(1300px,calc(100vw-48px))] overflow-hidden',
@@ -78,7 +78,7 @@ export function Dialog({
               <BaseDialog.Close
                 render={<IconButton aria-label="Close" size="sm" className="-me-1.5 -mt-1" />}
               >
-                <X strokeWidth={1.5} />
+                <X />
               </BaseDialog.Close>
             </div>
           )}
@@ -93,7 +93,7 @@ export function Dialog({
 export function DialogClose({ className }: { className?: string }) {
   return (
     <BaseDialog.Close render={<IconButton aria-label="Close" size="sm" className={className} />}>
-      <X strokeWidth={1.5} />
+      <X />
     </BaseDialog.Close>
   );
 }

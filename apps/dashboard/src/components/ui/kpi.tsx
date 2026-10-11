@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info } from './icons';
 import { cn } from '@/lib/cn';
 
 export interface KpiProps {
@@ -22,7 +22,7 @@ export function Kpi({ label, value, info, className }: KpiProps) {
             title={info}
             className="inline-flex size-4 items-center justify-center text-fg-3"
           >
-            <Info className="size-3.5" strokeWidth={1.5} />
+            <Info className="size-3.5" />
           </span>
         ) : null}
       </div>

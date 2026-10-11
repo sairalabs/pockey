@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Moon, RotateCcw, Smartphone, Sun } from 'lucide-react';
+import { Moon, RotateCcw, Smartphone, Sun } from '../components/icons';
 import { LazyMotion, useReducedMotion } from 'motion/react';
 import { useState, type ReactNode } from 'react';
 import { DialogPanel } from '../components/Dialog';
@@ -81,7 +81,7 @@ function Card({ card, app, mobile }: { card: PreviewCard; app: AppInfo; mobile: 
           }}
           className="pk-press -my-2 inline-flex h-10 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-fg-2 hover:text-fg"
         >
-          <RotateCcw size={14} strokeWidth={1.5} aria-hidden="true" />
+          <RotateCcw size={14} aria-hidden="true" />
           Replay
         </button>
       </div>
@@ -128,7 +128,7 @@ export function Preview({ appId }: { appId: string }) {
   return (
     <LazyMotion features={loadMotionFeatures} strict>
       <ThemeScope theme={theme} accent={accent} className="min-h-dvh bg-surface">
-        <header className="sticky top-0 z-10 border-b border-ring bg-surface/90 backdrop-blur-md">
+        <header className="sticky top-0 z-10 bg-surface/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="min-w-0">
               <h1 className="text-[15px] font-semibold text-fg">Pockey embed preview</h1>
@@ -145,7 +145,7 @@ export function Preview({ appId }: { appId: string }) {
                   }}
                   label="Light"
                 >
-                  <Sun size={14} strokeWidth={2} aria-hidden="true" />
+                  <Sun size={14} aria-hidden="true" />
                 </Segment>
                 <Segment
                   pressed={theme === 'dark'}
@@ -154,7 +154,7 @@ export function Preview({ appId }: { appId: string }) {
                   }}
                   label="Dark"
                 >
-                  <Moon size={14} strokeWidth={2} aria-hidden="true" />
+                  <Moon size={14} aria-hidden="true" />
                 </Segment>
               </div>
               <AccentPicker value={accent} mode={theme} onChange={setAccent} />
@@ -166,7 +166,7 @@ export function Preview({ appId }: { appId: string }) {
                   }}
                   label="Mobile"
                 >
-                  <Smartphone size={14} strokeWidth={2} aria-hidden="true" />
+                  <Smartphone size={14} aria-hidden="true" />
                 </Segment>
               </div>
             </div>

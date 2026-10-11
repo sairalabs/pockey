@@ -1,4 +1,4 @@
-import { KeyRound, Wallet } from 'lucide-react';
+import { KeyRound, Wallet } from '../components/icons';
 import { Button } from '../components/Button';
 import { AppleIcon, GoogleIcon } from '../components/icons';
 import { IconTile, ScreenLayout } from '../components/ScreenLayout';
@@ -33,7 +33,7 @@ export function PasskeyScreen({ screen, actions, titleId }: ScreenProps<'passkey
       titleId={titleId}
       media={
         <IconTile size={64}>
-          <KeyRound size={30} strokeWidth={2} aria-hidden="true" />
+          <KeyRound size={30} aria-hidden="true" />
         </IconTile>
       }
       title={title}
@@ -109,7 +109,7 @@ export function WalletIcon({ wallet, size = 32 }: { wallet: WalletOption; size?:
   }
   return (
     <span className={`flex shrink-0 items-center justify-center bg-surface-3 text-fg ${box}`}>
-      <Wallet size={size === 56 ? 26 : 16} strokeWidth={2} aria-hidden="true" />
+      <Wallet size={size === 56 ? 26 : 16} aria-hidden="true" />
     </span>
   );
 }
@@ -123,7 +123,7 @@ export function WalletsScreen({ screen, actions, titleId }: ScreenProps<'wallets
       titleId={titleId}
       media={
         <IconTile>
-          <Wallet size={24} strokeWidth={2} aria-hidden="true" />
+          <Wallet size={24} aria-hidden="true" />
         </IconTile>
       }
       title={empty ? 'No wallet found in this browser' : 'Connect a wallet'}

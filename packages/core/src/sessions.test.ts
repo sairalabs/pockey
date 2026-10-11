@@ -142,9 +142,9 @@ describe('sessions', () => {
     await pk.sessions.create(input);
     expect(api.count('POST', '/v1/sessions/signer')).toBe(1);
     expect(keys.methods().slice(-2)).toEqual(['sessionPolicy', 'sessionPolicy']);
-    expect(
-      JSON.parse((await storage.get(`pockey:${APP_ID}:keySession`)) ?? 'null'),
-    ).toMatchObject({ signerUserId: 'tk_signer' });
+    expect(JSON.parse((await storage.get(`pockey:${APP_ID}:keySession`)) ?? 'null')).toMatchObject({
+      signerUserId: 'tk_signer',
+    });
   });
 
   it('create skips the signer setup when the key session already has one', async () => {

@@ -12,7 +12,7 @@ export function Switch({ className, ...props }: SwitchProps) {
     <BaseSwitch.Root
       className={cn(
         'relative inline-flex h-6 w-11 shrink-0 cursor-default items-center rounded-pill bg-surface-3 p-0.5',
-        'shadow-border transition-[background-color] duration-150 ease-out',
+        'transition-[background-color] duration-150 ease-out',
         'data-checked:bg-[oklch(1_0_0/0.28)] data-disabled:opacity-50',
         className,
       )}

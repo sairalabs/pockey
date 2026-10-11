@@ -205,8 +205,7 @@ export function createEmbedBridge(options: EmbedBridgeOptions): EmbedBridge {
         initListeners.emit(result);
       },
       (error: unknown) => {
-        if (error instanceof PockeyEmbedError && state !== 'destroyed')
-          errorListeners.emit(error);
+        if (error instanceof PockeyEmbedError && state !== 'destroyed') errorListeners.emit(error);
       },
     );
   };

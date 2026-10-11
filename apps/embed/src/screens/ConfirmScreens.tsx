@@ -1,6 +1,6 @@
 import type { EmbedError } from '@pockey/types';
 import { clsx } from 'clsx';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '../components/icons';
 import { useState, type ReactNode } from 'react';
 import { Button } from '../components/Button';
 import { CopyButton } from '../components/CopyButton';
@@ -79,7 +79,7 @@ function MessageBox({
         tabIndex={0}
         role="region"
         aria-label={label}
-        className="max-h-[200px] overflow-y-auto overscroll-contain rounded-xl bg-surface-2 px-4 py-3 text-[14px] leading-5 break-words whitespace-pre-wrap text-fg shadow-[inset_0_0_0_1px_var(--ring)]"
+        className="max-h-[200px] overflow-y-auto overscroll-contain rounded-xl bg-surface-2 px-4 py-3 text-[14px] leading-5 break-words whitespace-pre-wrap text-fg"
       >
         {children}
       </div>
@@ -194,7 +194,7 @@ function stringify(value: unknown): string {
 
 function TypedEntries({ entries, depth }: { entries: [string, unknown][]; depth: number }) {
   return (
-    <div className={clsx(depth > 0 && 'ml-1 border-l border-ring pl-3')}>
+    <div className={clsx(depth > 0 && 'ml-1 pl-3')}>
       {entries.map(([key, value]) => {
         const nested = depth === 0 && typeof value === 'object' && value !== null;
         return nested ? (
@@ -238,11 +238,8 @@ export function SignTypedDataScreen({ screen, actions, titleId }: ScreenProps<'s
           <WalletAddress wallet={screen.wallet} />
         </DetailRow>
       </DetailList>
-      <section
-        className="mt-3 rounded-xl bg-surface-2 px-4 py-3 shadow-[inset_0_0_0_1px_var(--ring)]"
-        aria-label="Typed data"
-      >
-        <div className="mb-2 flex items-baseline justify-between gap-3 border-b border-ring pb-2">
+      <section className="mt-3 rounded-xl bg-surface-2 px-4 py-3" aria-label="Typed data">
+        <div className="mb-2 flex items-baseline justify-between gap-3 pb-2">
           <span className="truncate text-[15px] font-medium text-fg">
             {domain.name ?? 'Unknown app'}
           </span>
@@ -279,7 +276,6 @@ function DataRow({ data }: { data: string }) {
           {bytes} bytes
           <ChevronDown
             size={16}
-            strokeWidth={1.5}
             aria-hidden="true"
             className={clsx('text-fg-2', open && 'rotate-180')}
           />
