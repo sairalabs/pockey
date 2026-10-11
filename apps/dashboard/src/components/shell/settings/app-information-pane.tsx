@@ -104,7 +104,7 @@ export function AppInformationPane({ app }: { app: AdminApp }) {
 
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-5">
-          <Avatar seed={app.app.id} size={80} shape="square" initial={name.charAt(0) || '?'} />
+          <Avatar seed={app.app.id} size={80} />
           <div>
             <p className="text-sm font-medium">App icon</p>
             <p className="mt-0.5 text-[13px] text-fg-2">

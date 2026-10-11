@@ -26,12 +26,7 @@ export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
           aria-label={`Switch app, current: ${label}`}
           className="flex h-9 items-center gap-2 rounded-[10px] ps-1.5 pe-2 text-sm font-medium text-fg transition-[background-color,transform] duration-150 ease-out hover:bg-surface-2 active:scale-[0.96] data-popup-open:bg-surface-2"
         >
-          <Avatar
-            seed={current?.app.id ?? 'pockey'}
-            size={20}
-            shape="square"
-            initial={label.charAt(0)}
-          />
+          <Avatar seed={current?.app.id ?? 'pockey'} size={20} />
           <span className="max-w-40 truncate">{label}</span>
           <ChevronsUpDown className="size-4 text-fg-2" />
         </button>
@@ -43,14 +38,7 @@ export function AppSwitcher({ apps, current, onCreateApp }: AppSwitcherProps) {
         return (
           <MenuItem
             key={entry.app.id}
-            icon={
-              <Avatar
-                seed={entry.app.id}
-                size={20}
-                shape="square"
-                initial={entry.app.name.charAt(0)}
-              />
-            }
+            icon={<Avatar seed={entry.app.id} size={20} />}
             onClick={() => {
               router.push(`/apps/${entry.app.id}`);
             }}

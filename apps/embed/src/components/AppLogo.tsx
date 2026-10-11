@@ -12,7 +12,11 @@ function resolveLogo(logo: string | undefined, hostOrigin: string | null): strin
   }
 }
 
-/** 40px, 12px radius, 1px image outline. Falls back to the first letter on the accent. */
+/**
+ * The developer's own mark, 40px, following the theme's corner scale. This slot
+ * belongs to the app, never to Pockey: it falls back to the first letter of the
+ * app name on the accent, not to our logo.
+ */
 export function AppLogo({
   name,
   logo,
@@ -31,7 +35,7 @@ export function AppLogo({
         alt=""
         width={40}
         height={40}
-        className="size-10 rounded-xl object-cover"
+        className="size-10 rounded-[var(--pk-radius-mark)] object-cover"
         onError={() => {
           setFailedSrc(src);
         }}
@@ -42,7 +46,7 @@ export function AppLogo({
   return (
     <div
       aria-hidden="true"
-      className="flex size-10 items-center justify-center rounded-xl bg-accent text-[18px] font-semibold text-accent-fg"
+      className="flex size-10 items-center justify-center rounded-[var(--pk-radius-mark)] bg-accent text-[18px] font-semibold text-accent-fg"
     >
       {letter}
     </div>

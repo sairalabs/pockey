@@ -61,13 +61,7 @@ export function AppsList({ apps }: { apps: readonly AdminApp[] }) {
                 href={`/apps/${entry.app.id}`}
                 className="group flex items-center gap-3 rounded-[8px] outline-offset-4"
               >
-                <Avatar
-                  seed={entry.app.id}
-                  size={40}
-                  shape="square"
-                  initial={entry.app.name.charAt(0)}
-                  className="rounded-[10px]"
-                />
+                <Avatar seed={entry.app.id} size={40} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1 text-sm font-medium">
                     <span className="truncate">{entry.app.name}</span>
