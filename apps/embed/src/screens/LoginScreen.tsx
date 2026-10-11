@@ -50,7 +50,7 @@ export function EmailField({ onSubmit }: { onSubmit: (email: string) => void }) 
       <label htmlFor="pk-email" className="sr-only">
         Email
       </label>
-      <div className="relative">
+      <div className="pk-field relative">
         <input
           id="pk-email"
           data-testid="pk-email-input"

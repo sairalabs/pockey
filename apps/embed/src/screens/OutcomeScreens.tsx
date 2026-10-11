@@ -1,4 +1,4 @@
-import { Check, CircleAlert, Info, TriangleAlert } from '../components/icons';
+import { CheckCircle, CircleAlert, Info, TriangleAlert } from '../components/icons';
 import { m, useReducedMotion } from 'motion/react';
 import { Button } from '../components/Button';
 import { CopyButton } from '../components/CopyButton';
@@ -15,7 +15,7 @@ export function SuccessScreen({ screen, titleId }: ScreenProps<'success'>) {
     <ScreenLayout
       titleId={titleId}
       media={
-        <ScreenIcon tone="accent" size={64}>
+        <ScreenIcon size={64}>
           <m.span
             className="flex"
             initial={
@@ -35,7 +35,7 @@ export function SuccessScreen({ screen, titleId }: ScreenProps<'success'>) {
             }
             transition={{ duration: 0.3, ease: SWAP_EASE }}
           >
-            <Check size={44} aria-hidden="true" />
+            <CheckCircle size={44} aria-hidden="true" />
           </m.span>
         </ScreenIcon>
       }

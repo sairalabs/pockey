@@ -17,8 +17,9 @@ export function Row({ mark, note, className, children, type = 'button', ...rest 
     <button
       type={type}
       className={clsx(
-        'pk-press flex h-[60px] w-full items-center gap-3 rounded-[var(--pk-radius-row)] bg-surface-2 px-4 text-left',
-        'hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50',
+        'pk-press pk-row flex h-[60px] w-full items-center gap-3 rounded-[var(--pk-radius-row)] bg-surface-2 px-4 text-left',
+        'transition-[background-color] duration-150 ease-out hover:bg-surface-3',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...rest}
@@ -26,7 +27,9 @@ export function Row({ mark, note, className, children, type = 'button', ...rest 
       <span className="min-w-0 flex-1 truncate text-[16px] font-semibold text-fg">{children}</span>
       {note ? <span className="shrink-0 text-[13px] text-fg-3">{note}</span> : null}
       {mark ? (
-        <span className="flex size-10 shrink-0 items-center justify-center">{mark}</span>
+        <span className="pk-row-mark flex size-10 shrink-0 items-center justify-center">
+          {mark}
+        </span>
       ) : null}
     </button>
   );

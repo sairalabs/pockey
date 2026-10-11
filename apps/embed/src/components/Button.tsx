@@ -82,7 +82,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={clsx(
-        'pk-press group inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg-2 hover:text-fg',
+        'pk-press pk-icon-btn group inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg-2 hover:text-fg',
         className,
       )}
       {...rest}

@@ -165,6 +165,60 @@
     transform: scale(0.96);
   }
 
+  /*
+    Micro motion. Transform and opacity only, every one under 250ms, and all of
+    it answers a gesture: nothing moves on its own.
+  */
+
+  /* A row lifts its brand mark as the pointer arrives. */
+  .pk-row-mark {
+    transition-property: transform;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .pk-row:hover .pk-row-mark {
+    transform: scale(1.08);
+  }
+
+  .pk-row:active .pk-row-mark {
+    transform: scale(1);
+  }
+
+  /* The glyph inside a corner button answers the pointer before the button does. */
+  .pk-icon-btn > * {
+    transition-property: transform;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .pk-icon-btn:hover > * {
+    transform: scale(1.12);
+  }
+
+  /* The mark at the top of a screen arrives with the screen. */
+  .pk-screen-mark {
+    animation: pk-mark-in 260ms var(--ease-out) both;
+  }
+
+  @keyframes pk-mark-in {
+    from {
+      opacity: 0;
+      transform: scale(0.82);
+    }
+  }
+
+  /* A field answers focus by lifting a hair. */
+  .pk-field {
+    transition-property: transform, background-color;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  .pk-field:focus-within {
+    transform: translateY(-1px);
+  }
+
   /* Contextual swaps (copy to check, label to spinner): both layers stay in the DOM. */
   .pk-swap {
     position: relative;
@@ -255,6 +309,16 @@
 
     .pk-spinner {
       animation-duration: 1400ms;
+    }
+
+    .pk-row:hover .pk-row-mark,
+    .pk-icon-btn:hover > *,
+    .pk-field:focus-within {
+      transform: none;
+    }
+
+    .pk-screen-mark {
+      animation: none;
     }
   }
 

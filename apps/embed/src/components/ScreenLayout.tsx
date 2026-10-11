@@ -125,7 +125,7 @@ export function ScreenIcon({
   return (
     <div
       className={clsx(
-        'flex items-center justify-center',
+        'pk-screen-mark flex items-center justify-center',
         size === 64 ? 'size-16' : 'size-12',
         tone === 'neutral' && 'text-fg',
         tone === 'accent' && 'text-accent',
