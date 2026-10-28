@@ -10,7 +10,7 @@ import { enforceRateLimit } from './rate-limit.js';
 const LAST_USED_RESOLUTION_MS = 60_000;
 
 /**
- * `/v1/server/*` routes (section 7.2). Requires `requireApp` first: the secret
+ * `/v1/server/*` routes. Requires `requireApp` first: the secret
  * key must belong to the app named in `X-Pockey-App-Id`. Keys are stored as
  * SHA-256 only. Sets `apiKeyId`.
  */
@@ -51,7 +51,7 @@ export const requireApiKey = createMiddleware<AppEnv>(async (c, next) => {
   }
 
   c.set('apiKeyId', key.id);
-  // T5.5, section 8.1: a stolen secret key is capped per key, not per app, so
+  // A stolen secret key is capped per key, not per app, so
   // revoking it is enough and the other keys of the app keep their budget.
   await enforceRateLimit(c, 'serverKey', key.id);
   await next();

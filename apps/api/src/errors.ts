@@ -6,7 +6,7 @@ import { ZodError } from 'zod';
 
 /**
  * Throw this anywhere in a handler. `onError` turns it into the documented
- * `{ error: { code, message, details?, requestId } }` body (section 7.2, types/errors.ts).
+ * `{ error: { code, message, details?, requestId } }` body.
  */
 export class ApiError extends Error {
   readonly status: ContentfulStatusCode;
@@ -27,7 +27,7 @@ function defaultMessage(code: ApiErrorCode): string {
   return code.replace(/_/g, ' ');
 }
 
-/** What a 429 says about itself (T5.5). */
+/** What a 429 says about itself. */
 export interface RateLimitDetails {
   /** Scope of `RATE_LIMIT_DEFAULTS` that refused the request. */
   scope: string;

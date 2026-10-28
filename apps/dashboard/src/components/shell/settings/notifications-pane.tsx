@@ -31,7 +31,7 @@ export function NotificationsPane() {
             description={row.description}
             checked={enabled[row.id]}
             onCheckedChange={(checked) => {
-              // TODO(T5.1): persist notification preferences.
+              // TODO: persist notification preferences.
               setEnabled((current) => ({ ...current, [row.id]: checked }));
             }}
           />

@@ -171,7 +171,7 @@ at once.
   it does not, and the limitations worth knowing
 - [docs/self-hosting.md](docs/self-hosting.md): deploying it
 - [TURNKEY.md](TURNKEY.md): the Turnkey integration and what was verified live
-- [DECISIONS.md](DECISIONS.md): why things are the way they are (in French)
+- [docs/decisions.md](docs/decisions.md): why the code is shaped the way it is
 - [CONTRIBUTING.md](CONTRIBUTING.md): what to expect if you open an issue
 
 ## Licence

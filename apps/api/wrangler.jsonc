@@ -5,15 +5,15 @@
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
-  // Hourly: usage aggregation (T2.5) and session signer expiry (T4.3).
-  // Nightly: monthly active wallets sent to Stripe Meters (T5.4, section 7.6).
+  // Hourly: usage aggregation and session signer expiry.
+  // Nightly: monthly active wallets sent to Stripe Meters.
   // Both expressions are mirrored in `src/cron.ts`, which `scheduled` switches on.
   "triggers": { "crons": ["0 * * * *", "20 2 * * *"] },
   "vars": {
     "ENVIRONMENT": "development",
-    // `mock` is refused outside development. Deployed environments set `turnkey` (T0.5).
+    // `mock` is refused outside development. Deployed environments set `turnkey`.
     "KEY_PROVIDER": "mock",
-    // T5.1: the dashboard origin allowed with credentials on /admin/*.
+    // The dashboard origin allowed with credentials on /admin/*.
     "DASHBOARD_ORIGIN": "http://localhost:3800",
   },
   "d1_databases": [
@@ -25,7 +25,7 @@
       "migrations_dir": "../../packages/db/migrations",
     },
   ],
-  // T5.5: one fixed window counter per rate limit key.
+  // One fixed window counter per rate limit key.
   "durable_objects": {
     "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }],
   },

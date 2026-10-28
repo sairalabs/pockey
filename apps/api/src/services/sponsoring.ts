@@ -18,7 +18,7 @@ import { ApiError } from '../errors.js';
 import { providerFailure } from './provider-failure.js';
 
 /**
- * Prepaid gas sponsoring balances (T4.6, section 7.5). Never on credit: a charge
+ * Prepaid gas sponsoring balances. Never on credit: a charge
  * is one conditional UPDATE that only succeeds when the balance covers it, and
  * every movement is written to `sponsor_ledger` with a unique reference.
  */

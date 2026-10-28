@@ -22,7 +22,7 @@ import {
 
 /**
  * postMessage protocol between the host page (`@pockey/react`) and the
- * iframe served from embed.pockey.xyz (section 4.1).
+ * iframe served from embed.pockey.xyz.
  *
  * - The host sends requests. Each carries a unique `requestId`.
  * - The embed answers every request with exactly one `response` carrying the
@@ -94,7 +94,7 @@ export const HostRequest = z.discriminatedUnion('type', [
   /** Opens the export screen. The key is revealed inside the iframe only. */
   request({ type: z.literal('exportWallet'), walletId: z.string() }),
   request({ type: z.literal('registerPasskey') }),
-  /** Session signers (T4.3). `createSession` shows a consent screen describing the policy. */
+  /** Session signers. `createSession` shows a consent screen describing the policy. */
   request({ type: z.literal('createSession'), input: CreateSessionInput }),
   request({ type: z.literal('listSessions') }),
   request({ type: z.literal('revokeSession'), sessionId: z.string() }),

@@ -14,7 +14,7 @@ async function errorCode(res: Response): Promise<string> {
   return ApiErrorBody.parse(await res.json()).error.code;
 }
 
-describe('sessions (T1.4)', () => {
+describe('sessions', () => {
   it('issues a 15 minute access token and a 30 day refresh token', async () => {
     const { body } = await loginWithEmail('ttl@test.dev');
     const now = Date.now();

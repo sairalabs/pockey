@@ -20,7 +20,7 @@ import {
 import { z, type ZodType } from 'zod';
 
 /**
- * Typed client for the admin API (T5.1 to T5.4).
+ * Typed client for the admin API.
  *
  * The browser only ever talks to the dashboard origin: every call goes to the
  * Next route handler of `app/api/admin/[...path]`, which forwards method, body,

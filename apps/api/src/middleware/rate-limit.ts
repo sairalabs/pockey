@@ -11,7 +11,7 @@ import type { RateLimitDecision } from '../rate-limit/protocol.js';
 import { APP_ID_HEADER } from './app.js';
 
 /**
- * Rate limiting of T5.5. Counters live in the `RateLimiter` Durable Object; this
+ * Rate limiting. Counters live in the `RateLimiter` Durable Object; this
  * decides which key a request is counted against and turns a refusal into the
  * documented 429 (`rate_limited`, `Retry-After`, `details`).
  *

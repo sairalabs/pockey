@@ -191,7 +191,7 @@ export interface PockeyClient {
     };
   };
   /**
-   * Session signers (section 7.4): the user allows the app to sign within a
+   * Session signers: the user allows the app to sign within a
    * policy without a confirmation each time. Policy refusals reject
    * `policy_violation` (HTTP 403) with `details.reason`, see `policyViolationReason`.
    */

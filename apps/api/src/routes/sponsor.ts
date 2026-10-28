@@ -10,7 +10,7 @@ import { ensureSolanaFeePayer } from '../services/sponsoring.js';
 export const FeePayerQuery = z.object({ cluster: SolanaCluster });
 
 /**
- * Public sponsoring details (T4.4). Clients build sponsored Solana transactions with
+ * Public sponsoring details. Clients build sponsored Solana transactions with
  * this fee payer as account 0. The address is public, nothing here signs.
  */
 export const sponsorRoutes = new Hono<AppEnv>()

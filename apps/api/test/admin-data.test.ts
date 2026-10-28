@@ -93,7 +93,7 @@ beforeAll(async () => {
   }
 });
 
-describe('usage graphs (T5.3)', () => {
+describe('usage graphs', () => {
   it('fills 7 daily points, zeros included', async () => {
     const res = await adminRequest(`/admin/apps/${metrics.app.id}/usage?range=7d`, owner);
     expect(res.status, await res.clone().text()).toBe(200);
@@ -197,7 +197,7 @@ describe('usage graphs (T5.3)', () => {
   });
 });
 
-describe('end users (T5.3)', () => {
+describe('end users', () => {
   it('paginates with a cursor and reports the total', async () => {
     const app = await createAdminApp(owner, { name: 'Users App' });
     for (let index = 0; index < 5; index++) {
@@ -230,7 +230,7 @@ describe('end users (T5.3)', () => {
   });
 });
 
-describe('sponsoring (T5.3)', () => {
+describe('sponsoring', () => {
   it('reads the balance and opens a top-up checkout', async () => {
     const app = await createAdminApp(owner, {
       name: 'Sponsored App',
@@ -274,7 +274,7 @@ describe('sponsoring (T5.3)', () => {
   });
 });
 
-describe('billing (section 11)', () => {
+describe('billing', () => {
   it('stays free under the included wallets and sums the sponsor balances', async () => {
     const res = await adminRequest('/admin/billing', owner);
     expect(res.status, await res.clone().text()).toBe(200);
@@ -286,7 +286,7 @@ describe('billing (section 11)', () => {
     expect(summary.activeWallets).toBe(2);
     expect(summary.estimatedCents).toBe(0);
     expect(summary.sponsorBalanceCents).toBe(2500);
-    // T5.4: the customer is created on demand, so the portal is offered as soon
+    // the customer is created on demand, so the portal is offered as soon
     // as billing is configured on the server, before any customer exists.
     expect(summary.portalAvailable).toBe(true);
   });
@@ -312,7 +312,7 @@ describe('billing (section 11)', () => {
     expect(summary.estimatedCents).toBe(over * PRICE_CENTS_PER_ACTIVE_WALLET);
   });
 
-  it('opens the billing portal, creating the Stripe customer on the way (T5.4)', async () => {
+  it('opens the billing portal, creating the Stripe customer on the way', async () => {
     const res = await adminRequest('/admin/billing/portal', owner);
     expect(res.status, await res.clone().text()).toBe(200);
     expect(BillingPortalOutput.parse(await res.json()).url).toContain('/mock/billing-portal/');

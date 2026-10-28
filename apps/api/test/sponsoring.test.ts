@@ -315,7 +315,7 @@ beforeEach(async () => {
   failNextSolana = false;
 });
 
-describe('top-ups (T4.6)', () => {
+describe('top-ups', () => {
   const stripe = createMockPayments();
   const webhook = (payload: string, signature: string | null) =>
     call('/webhooks/stripe', {
@@ -430,7 +430,7 @@ describe('server sponsoring routes', () => {
   });
 });
 
-describe('Solana sponsoring (T4.4)', () => {
+describe('Solana sponsoring', () => {
   it('creates the fee payer once per app and reuses it', async () => {
     const first = await feePayer();
     const second = await feePayer();
@@ -580,7 +580,7 @@ describe('Solana sponsoring (T4.4)', () => {
   });
 });
 
-describe('EVM sponsoring (T4.5)', () => {
+describe('EVM sponsoring', () => {
   it('returns the smart account address, or 400 when the server has no bundler', async () => {
     const res = await getUser(`/v1/wallets/${evm.id}/smart-account?chainId=8453`);
     expect(res.status, await res.clone().text()).toBe(200);

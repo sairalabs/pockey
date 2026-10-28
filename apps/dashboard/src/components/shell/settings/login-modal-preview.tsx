@@ -44,8 +44,8 @@ export interface LoginModalPreviewProps {
 
 /**
  * Small live preview of the embedded login modal. First version of the
- * "preview live du modal" from spec T5.2: theme + accent + enabled methods.
- * TODO(T5.2): render the real modal package instead of this mock.
+ * Live preview of the login modal: theme, accent and the enabled methods.
+ * TODO: render the real modal package instead of this mock.
  */
 export function LoginModalPreview({ name, appearance, loginMethods }: LoginModalPreviewProps) {
   const prefersDark = usePrefersDark();

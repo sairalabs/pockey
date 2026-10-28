@@ -33,7 +33,7 @@ function publicConfig(publicId: string): Promise<Response> {
   });
 }
 
-describe('apps CRUD (T5.1)', () => {
+describe('apps CRUD', () => {
   it('creates an app with a derived slug, defaults and a sponsor balance row', async () => {
     const created = await createAdminApp(owner, { name: 'My Great App' });
     expect(created.app.slug).toBe('my-great-app');
@@ -156,7 +156,7 @@ describe('apps CRUD (T5.1)', () => {
   });
 });
 
-describe('API keys (T5.1)', () => {
+describe('API keys', () => {
   it('returns the secret once, then only its prefix, and revokes it', async () => {
     const created = await createAdminApp(owner, { name: 'Keyed App' });
     const res = await adminRequest(`/admin/apps/${created.app.id}/api-keys`, owner, {
@@ -213,7 +213,7 @@ describe('API keys (T5.1)', () => {
   });
 });
 
-describe('ownership (T5.1)', () => {
+describe('ownership', () => {
   it('404s on every route of an app owned by another developer', async () => {
     const routes: [string, string, unknown][] = [
       ['GET', '', undefined],

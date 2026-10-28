@@ -12,7 +12,7 @@ import type { AppEnv } from '../context.js';
 import type { ParsedEnv } from '../env.js';
 
 /**
- * Gas sponsoring and payment ports (T4.4 to T4.6), one instance per isolate like
+ * Gas sponsoring and payment ports, one instance per isolate like
  * the key provider. Each getter has a test hook in the style of `setRpcFactory`.
  */
 
@@ -37,7 +37,7 @@ export function getPayments(config: ParsedEnv): Payments {
       payments = createStripePayments({
         secretKey: config.STRIPE_SECRET_KEY,
         webhookSecret: config.STRIPE_WEBHOOK_SECRET,
-        // T5.4. Absent outside production: the subscription and meter methods
+        // Absent outside production: the subscription and meter methods
         // then refuse, which `services/billing.ts` degrades into a 400.
         ...(config.STRIPE_ACTIVE_WALLET_PRICE_ID === undefined
           ? {}

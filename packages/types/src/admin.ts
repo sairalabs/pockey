@@ -6,7 +6,7 @@ import { UsageMonthly } from './usage.js';
 import { EndUser } from './user.js';
 
 /**
- * Dashboard API (`/admin/*`, spec section 7.2 and 10). Authenticated by a
+ * Dashboard API (`/admin/*`). Authenticated by a
  * developer session, never by an app id or a secret key. The dashboard calls
  * these through its own origin, which proxies to the API.
  */
@@ -121,7 +121,7 @@ export type AdminEndUserList = z.infer<typeof AdminEndUserList>;
 
 export { SponsorBalance };
 
-/* Billing (spec section 11) */
+/* Billing */
 
 export const FREE_MONTHLY_ACTIVE_WALLETS = 500;
 export const PRICE_CENTS_PER_ACTIVE_WALLET = 6;

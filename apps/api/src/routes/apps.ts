@@ -6,7 +6,7 @@ import { APP_CACHE_TTL_SECONDS } from '../lib/apps.js';
 import { requireApp } from '../middleware/app.js';
 
 /**
- * `GET /v1/apps/:appId/config` (section 7.2, T1.5). Public, no user session.
+ * `GET /v1/apps/:appId/config`. Public, no user session.
  * The app row comes from the edge cache in `requireApp`; browsers may keep the
  * response for 60 seconds. `Vary` keeps the per-origin CORS answer correct.
  */

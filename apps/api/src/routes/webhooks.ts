@@ -12,7 +12,7 @@ export const WebhookReceived = z.object({ received: z.literal(true) });
 const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 /**
- * Payment provider webhooks (T4.6). Mounted outside `/v1`: no app header, no CORS,
+ * Payment provider webhooks. Mounted outside `/v1`: no app header, no CORS,
  * authenticated by the `Stripe-Signature` HMAC only.
  */
 export const webhookRoutes = new Hono<AppEnv>().post('/stripe', async (c) => {

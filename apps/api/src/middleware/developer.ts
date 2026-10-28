@@ -9,7 +9,7 @@ import { ApiError } from '../errors.js';
 import { ensureDeveloper } from '../services/developers.js';
 
 /**
- * Every `/admin/*` route except `/admin/auth/*` (spec section 7.2). Resolves the
+ * Every `/admin/*` route except `/admin/auth/*`. Resolves the
  * Better Auth developer session to a `developers` row, creating it on first
  * sign-in, and sets `developer`. No session is a 401, never a redirect: the
  * dashboard decides what to show.

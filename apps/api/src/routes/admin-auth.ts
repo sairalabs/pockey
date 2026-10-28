@@ -11,7 +11,7 @@ import { ApiError } from '../errors.js';
 import { normalizeAuthError } from '../lib/auth-error.js';
 
 /**
- * Better Auth for developers, behind an allowlist (T5.1). Mounted at
+ * Better Auth for developers, behind an allowlist. Mounted at
  * `/admin/auth`, which is also the Better Auth `basePath`, so the GitHub
  * redirect URI is `<API_BASE_URL>/admin/auth/callback/github`.
  *

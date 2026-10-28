@@ -12,7 +12,7 @@ export const CURVE_BY_FAMILY = {
 export const Curve = z.enum(['secp256k1', 'ed25519']);
 export type Curve = z.infer<typeof Curve>;
 
-/** EVM chains supported at MVP (section 13, T2.1). Keyed by chainId. */
+/** EVM chains supported at MVP. Keyed by chainId. */
 export const EVM_CHAINS = {
   1: { id: 1, name: 'Ethereum', slug: 'ethereum' },
   8453: { id: 8453, name: 'Base', slug: 'base' },

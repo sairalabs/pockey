@@ -63,7 +63,7 @@ export function createApp() {
     }),
   );
 
-  // T5.5, after CORS so a preflight is never counted and never rate limited.
+  // After CORS so a preflight is never counted and never rate limited.
   // `/health`, `/webhooks/*` and `/admin/*` are deliberately left out.
   app.use('/v1/*', appRateLimit);
   app.use('/v1/auth/*', authRateLimit);
@@ -90,7 +90,7 @@ export function createApp() {
   app.route('/v1/sessions', sessionRoutes);
   app.route('/v1/server', serverRoutes);
   app.route('/v1/sponsor', sponsorRoutes);
-  // Dashboard (T5.1). /admin/auth is public (sign-in), the rest needs a session.
+  // Dashboard. /admin/auth is public (sign-in), the rest needs a session.
   app.route('/admin/auth', adminAuthRoutes);
   app.route('/admin', adminRoutes);
   // Provider webhooks: outside /v1, so no app header and no CORS.

@@ -4,7 +4,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { ApiError } from '../errors.js';
 
 /**
- * Developer accounts behind the dashboard (T5.1). A Better Auth user maps to one
+ * Developer accounts behind the dashboard. A Better Auth user maps to one
  * `developers` row through `auth_user_id`. The row is created on first sign-in,
  * so nothing has to be provisioned by hand and the local seed stays untouched.
  */
@@ -55,7 +55,7 @@ export function toDeveloper(row: DeveloperRow): Developer {
     email: row.email,
     name: row.name,
     createdAt: row.createdAt.toISOString(),
-    // T5.4 creates the Stripe customer; until then the portal cannot open.
+    // Creates the Stripe customer; until then the portal cannot open.
     billingReady: row.stripeCustomerId !== null,
   });
 }

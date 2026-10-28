@@ -132,7 +132,7 @@ function unsignedSolanaTransfer(payer: string, lamports: bigint): string {
   return base64.encode(Uint8Array.from([1, ...new Uint8Array(64), ...message]));
 }
 
-describe('wallet creation (T2.3)', () => {
+describe('wallet creation', () => {
   it('creates an EVM and a Solana wallet at login when createOnLogin is "all"', async () => {
     expect(evm.address).toMatch(/^0x[0-9a-fA-F]{40}$/);
     expect(base58.decode(solana.address)).toHaveLength(32);
@@ -183,7 +183,7 @@ describe('wallet creation (T2.3)', () => {
   });
 });
 
-describe('EVM signing (T2.1 + T2.3)', () => {
+describe('EVM signing', () => {
   it('signs a personal message that viem verifies against the wallet address', async () => {
     const res = await post(
       `/v1/wallets/${evm.id}/sign-message`,
@@ -503,7 +503,7 @@ describe('relayed requests must match the route', () => {
   });
 });
 
-describe('Solana signing (T2.2 + T2.3)', () => {
+describe('Solana signing', () => {
   it('prepares nothing for Solana', async () => {
     const transaction = unsignedSolanaTransfer(solana.address, 1n);
     const { res, prepared } = await device.prepare(solana, {
@@ -634,7 +634,7 @@ describe('ownership and export', () => {
     expect(res.status).toBeLessThan(500);
   });
 
-  it('relays an export bundle only the iframe key can open (T2.4)', async () => {
+  it('relays an export bundle only the iframe key can open', async () => {
     const config = await appConfig();
     for (const wallet of [evm, solana]) {
       const { body, exportKey } = await device.exportBody(wallet);

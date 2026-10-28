@@ -3,7 +3,7 @@ import type { SigningPolicy } from '@pockey/types';
 import { ACTIVITY } from './wire.js';
 
 /**
- * Maps a Pockey `SigningPolicy` to a Turnkey policy (T4.1, section 7.4).
+ * Maps a Pockey `SigningPolicy` to a Turnkey policy.
  * Pure: the iframe builds the policy it stamps with this function, and the API
  * rebuilds it to check that the relayed body is exactly what the user consented to.
  *

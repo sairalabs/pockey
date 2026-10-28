@@ -2,7 +2,7 @@ import { usageEvents, usageMonthly, type Db } from '@pockey/db';
 import { and, count, countDistinct, eq, gte, lt } from 'drizzle-orm';
 
 /**
- * Usage aggregation (T2.5, section 7.6). `usage_events` is append-only; this
+ * Usage aggregation. `usage_events` is append-only; this
  * folds it into `usage_monthly` per (app, month). It recomputes whole months,
  * so running it twice, late, or concurrently gives the same result.
  * The cron runs hourly. The previous month is recomputed too, so events that

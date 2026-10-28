@@ -1,7 +1,7 @@
 import type { ChainFamily, SigningPolicy } from '@pockey/types';
 
 /**
- * Section 7.3. The port every key management vendor must implement. The domain
+ * The port every key management vendor must implement. The domain
  * (apps/api) depends on this interface only.
  *
  * Non-custodial since 2026-09-19 (DECISIONS.md). Three kinds of authority exist:

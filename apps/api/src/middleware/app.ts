@@ -7,9 +7,9 @@ import { loadAppByPublicId } from '../lib/apps.js';
 export const APP_ID_HEADER = 'X-Pockey-App-Id';
 
 /**
- * Every `/v1/*` route (section 7.2). Resolves the public app id to its row and
+ * Every `/v1/*` route. Resolves the public app id to its row and
  * checks the browser `Origin` against the app allowlist plus the embed origin
- * (the iframe of section 4.1 calls the API from its own origin).
+ * (the iframe calls the API from its own origin).
  * Server-to-server calls carry no Origin and are gated by the API key instead.
  */
 export const requireApp = createMiddleware<AppEnv>(async (c, next) => {

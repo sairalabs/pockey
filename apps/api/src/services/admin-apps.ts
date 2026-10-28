@@ -5,7 +5,7 @@ import { ApiError } from '../errors.js';
 import { currentMonthTotals, currentMonthWindow, zeroMonth } from './admin-usage.js';
 
 /**
- * App rows as the dashboard reads them (T5.1, T5.3): the app itself plus the
+ * App rows as the dashboard reads them: the app itself plus the
  * four numbers every list row shows, so `/admin/apps` needs no extra call.
  */
 

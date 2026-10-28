@@ -47,7 +47,7 @@ function sessionIdParam(c: Context<AppEnv>): string {
 
 export const RevokeSessionOutput = z.object({ ok: z.literal(true) });
 
-/** Section 7.2 session signer routes (T4.2). Every route is end-user scoped. */
+/** Session signer routes. Every route is end-user scoped. */
 export const sessionRoutes = new Hono<AppEnv>()
   .use(requireApp, requireUser)
 
@@ -84,7 +84,7 @@ export const sessionRoutes = new Hono<AppEnv>()
 
   .post('/:id/sign', validate('json', SessionSignRequest), async (c) => {
     const request = c.req.valid('json');
-    // Same cap as an interactive send (section 8.1): a session signer must not
+    // Same cap as an interactive send: a session signer must not
     // be a way around the sponsored send limit.
     if (request.kind === 'transaction' && request.sponsored) {
       await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);

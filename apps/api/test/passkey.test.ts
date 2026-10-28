@@ -38,7 +38,7 @@ async function register(device: Device, authenticator: TestAuthenticator) {
   return postJson('/v1/auth/passkey/register', { request }, device.headers(), device.publicId);
 }
 
-describe('passkeys (T1.2, non-custodial)', () => {
+describe('passkeys (non-custodial)', () => {
   it('enrolls a passkey after an email login, then signs in with it on a fresh device', async () => {
     const device = await Device.loginWithEmail('passkey@test.dev');
     const authenticator = new TestAuthenticator();

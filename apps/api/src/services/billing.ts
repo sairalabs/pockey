@@ -4,7 +4,7 @@ import { and, countDistinct, eq, gte, isNotNull, lt } from 'drizzle-orm';
 import type { ParsedEnv } from '../env.js';
 
 /**
- * Usage based billing of section 11 (T5.4). The Stripe calls themselves live in
+ * Usage based billing. The Stripe calls themselves live in
  * `@pockey/payments`; this is the part that knows about developers, apps and
  * `usage_events`.
  *
@@ -86,8 +86,7 @@ export interface MeterActiveWalletsResult {
 }
 
 /**
- * Reports one day of monthly active wallets to Stripe (section 7.6, "envoi a
- * Stripe Meters chaque nuit"). A `user.active` event is written once per user
+ * Reports one day of monthly active wallets to Stripe. A `user.active` event is written once per user
  * and per month, so the count of a single day is exactly the wallets that
  * became active that day, and the month adds up without double counting.
  *

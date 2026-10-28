@@ -14,7 +14,7 @@ import {
 import { z } from 'zod';
 import { PockeyEmbedError } from './errors.js';
 
-/** Framework-free bridge to the embed iframe (section 4.1). Never talks to the API. */
+/** Framework-free bridge to the embed iframe. Never talks to the API. */
 
 type HostRequestInput = z.input<typeof HostRequest>;
 

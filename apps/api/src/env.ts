@@ -5,15 +5,15 @@ import { RateLimitOverrides } from './rate-limit/limits.js';
 /** Worker bindings and vars. Secrets come from Wrangler, never from a committed file. */
 export interface Env {
   DB: D1Database;
-  /** Fixed window counters of T5.5, one Durable Object per key. */
+  /** Fixed window counters, one Durable Object per key. */
   RATE_LIMITER: RateLimiterNamespace;
   ENVIRONMENT: string;
   KEY_PROVIDER: string;
   /** Public base URL of this API, used for OAuth callbacks. */
   API_BASE_URL?: string;
-  /** Origin of the embed iframe (section 4.1). Passkeys are bound to its host. */
+  /** Origin of the embed iframe. Passkeys are bound to its host. */
   EMBED_ORIGIN?: string;
-  /** Origin of the developer dashboard (T5.1). Only origin allowed on /admin/*. */
+  /** Origin of the developer dashboard. Only origin allowed on /admin/*. */
   DASHBOARD_ORIGIN?: string;
   MAILER?: string;
   MAIL_FROM?: string;
@@ -25,7 +25,7 @@ export interface Env {
   APPLE_CLIENT_ID?: string;
   APPLE_CLIENT_SECRET?: string;
   APPLE_APP_BUNDLE_IDENTIFIER?: string;
-  /** Dashboard sign-in with GitHub (T5.1). Without both, only email OTP is offered. */
+  /** Dashboard sign-in with GitHub. Without both, only email OTP is offered. */
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
   /* Turnkey (KEY_PROVIDER=turnkey). The API key is Pockey's parent credential. */
@@ -38,19 +38,19 @@ export interface Env {
   TURNKEY_SIGNER_PRIVATE_KEY?: string;
   /** JSON map of RPC endpoints (may embed provider keys, so set it as a secret). */
   RPC_URLS?: string;
-  /** Gas sponsoring top-ups (T4.6): `mock` or `stripe`. */
+  /** Gas sponsoring top-ups: `mock` or `stripe`. */
   PAYMENTS?: string;
   /** USD prices of native gas assets: `static` or `coingecko`. */
   PRICE_FEED?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
-  /** Metered price of the usage based plan (section 11, T5.4). */
+  /** Metered price of the usage based plan. */
   STRIPE_ACTIVE_WALLET_PRICE_ID?: string;
   /** `event_name` of the billing meter behind that price. */
   STRIPE_ACTIVE_WALLET_METER_NAME?: string;
-  /** EVM gas sponsoring (T4.5). Without it, EVM sponsored sends are refused. */
+  /** EVM gas sponsoring. Without it, EVM sponsored sends are refused. */
   PIMLICO_API_KEY?: string;
-  /** JSON overrides of `RATE_LIMIT_DEFAULTS` (T5.5), e.g. `{"authIdentity":10}`. */
+  /** JSON overrides of `RATE_LIMIT_DEFAULTS`, e.g. `{"authIdentity":10}`. */
   RATE_LIMITS?: string;
 }
 
@@ -108,7 +108,7 @@ export const EnvSchema = z
     STRIPE_SECRET_KEY: optionalString,
     STRIPE_WEBHOOK_SECRET: optionalString,
     /**
-     * Billing of section 11. Optional so a deployment without them keeps working:
+     * Billing. Optional so a deployment without them keeps working:
      * the portal answers 400 and the nightly meter cron reports nothing, instead
      * of the whole Worker refusing to boot.
      */

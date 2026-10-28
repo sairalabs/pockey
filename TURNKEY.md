@@ -1,6 +1,6 @@
-# Turnkey integration (T0.5)
+# Turnkey integration
 
-Pockey runs on Turnkey, non-custodial (decision of 2026-09-19, see `DECISIONS.md`). This file says how it works, what was verified against the real Turnkey API, and what is left to check by hand.
+Pockey runs on Turnkey, non-custodially. This file says how it works, what was verified against the real Turnkey API, and what is left to check by hand. The reasoning behind the model is in [docs/decisions.md](docs/decisions.md), and what it does and does not guarantee is in [SECURITY.md](SECURITY.md).
 
 ## How it works
 
@@ -21,7 +21,7 @@ Code map:
 - `apps/embed/src/lib/keys.ts`: IndexedDB key store, production builds pin Turnkey's enclave key.
 - `packages/core/src/keys.ts`: the provider-agnostic `KeyClient` the SDK uses.
 
-## Verified live (organization "Saira Labs", 2026-09-19)
+## Verified live, against a real organization
 
 `packages/key-provider/src/turnkey/live.test.ts` (run with `TURNKEY_LIVE=1`) and the two spikes behind the decision:
 

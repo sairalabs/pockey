@@ -8,7 +8,7 @@ beforeAll(async () => {
 
 const configPath = `/v1/apps/${SEED.app.publicId}/config`;
 
-describe('public config edge cache (T1.5)', () => {
+describe('public config edge cache', () => {
   it('serves the app from the edge cache on the second request', async () => {
     const first = await request(configPath, { headers: withApp() });
     const second = await request(configPath, { headers: withApp() });

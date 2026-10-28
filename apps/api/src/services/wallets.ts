@@ -64,7 +64,7 @@ import {
 export { providerFailure };
 
 /**
- * Wallet service (T2.3, non-custodial since 2026-09-19). Keys never leave the key
+ * Wallet service (non-custodial since 2026-09-19). Keys never leave the key
  * provider, and Pockey cannot sign with them: every signature here comes from a
  * request the iframe stamped with the user's session key. This code checks that the
  * request is exactly the operation of the route (same digest, same transaction),
@@ -149,7 +149,7 @@ export async function createWallet(
   return row;
 }
 
-/** `embeddedWallets.createOnLogin` (section 6.1). Idempotent. */
+/** `embeddedWallets.createOnLogin`. Idempotent. */
 export async function createWalletsOnLogin(deps: WalletDeps, endUserId: string): Promise<void> {
   const mode = AppConfig.parse(deps.app.config).embeddedWallets.createOnLogin;
   const families: ChainFamily[] = mode === 'all' ? ['evm', 'solana'] : mode === 'off' ? [] : [mode];
@@ -489,7 +489,7 @@ export async function sendTransaction(
   const owned = await loadOwnedWallet(deps, endUserId, walletId);
 
   if (input.sponsored) {
-    // T4.4 to T4.6: prepaid sponsoring, Solana fee payer or ERC-4337 smart account.
+    // Prepaid sponsoring, Solana fee payer or ERC-4337 smart account.
     assertSponsoringEnabled(deps.app, input.chain);
     assertChainEnabled(deps.app, input);
     assertFamily(owned.wallet, input.chain);
@@ -558,7 +558,7 @@ export function requireSponsor(deps: WalletDeps): SponsorRuntime {
 }
 
 /**
- * Kernel smart account owned by an EVM wallet (T4.5). Sponsored EVM sends come from
+ * Kernel smart account owned by an EVM wallet. Sponsored EVM sends come from
  * this address, not from the wallet EOA. Computing it signs nothing.
  */
 export async function smartAccountAddress(
@@ -587,7 +587,7 @@ export async function smartAccountAddress(
   }
 }
 
-/** Section 8.4: encrypted by the provider to a key that never leaves the iframe. */
+/** Encrypted by the provider to a key that never leaves the iframe. */
 export async function exportWallet(
   deps: WalletDeps,
   endUserId: string,

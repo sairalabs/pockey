@@ -4,10 +4,10 @@ import { KeySession } from './keys.js';
 import { EndUser } from './user.js';
 
 /**
- * Pockey session model (T1.4).
+ * Pockey session model.
  * - Access token: JWT HS256, 15 minutes, sent as `Authorization: Bearer`.
  * - Refresh token: opaque `pk_rt_...`, 30 days, rotated on every use.
- * Both live inside the embed iframe, never in the host page (section 4.1).
+ * Both live inside the embed iframe, never in the host page.
  */
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 export const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 3600;
@@ -40,7 +40,7 @@ export type RefreshInput = z.infer<typeof RefreshInput>;
 export const LogoutOutput = z.object({ ok: z.literal(true) });
 export type LogoutOutput = z.infer<typeof LogoutOutput>;
 
-/* External wallet login (T1.3): SIWE for EVM, SIWS for Solana. */
+/* External wallet login: SIWE for EVM, SIWS for Solana. */
 
 export const WalletNonceInput = z.object({ chainFamily: ChainFamily });
 export type WalletNonceInput = z.infer<typeof WalletNonceInput>;
@@ -69,6 +69,6 @@ export const WalletVerifyInput = z.discriminatedUnion('chainFamily', [
 ]);
 export type WalletVerifyInput = z.infer<typeof WalletVerifyInput>;
 
-/* Device binding for email OTP (section 8.1). Generated once per browser inside the iframe. */
+/* Device binding for email OTP. Generated once per browser inside the iframe. */
 export const DEVICE_ID_HEADER = 'X-Pockey-Device';
 export const DeviceId = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/, 'Expected a device id');

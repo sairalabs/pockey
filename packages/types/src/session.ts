@@ -38,7 +38,7 @@ export const MAX_MESSAGE_SESSION_SECONDS = 24 * 3600;
 
 /**
  * Constraints enforced by the key provider policy (source of truth) and
- * pre-checked by our API (fail fast). Section 7.4.
+ * pre-checked by our API (fail fast).
  */
 export const SigningPolicy = z
   .object({
@@ -97,7 +97,7 @@ export const SessionSigner = z.object({
 });
 export type SessionSigner = z.infer<typeof SessionSigner>;
 
-/* Session signing requests (T4.2). The same shape is used by the end user
+/* Session signing requests. The same shape is used by the end user
    (`POST /v1/sessions/:id/sign`, no confirmation screen) and by the developer
    backend (`POST /v1/server/users/:id/wallets/:wid/sign`, secret API key). */
 

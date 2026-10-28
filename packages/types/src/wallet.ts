@@ -124,7 +124,7 @@ export const SendTransactionOutput = z.object({
 });
 export type SendTransactionOutput = z.infer<typeof SendTransactionOutput>;
 
-/* Export (section 8.4) */
+/* Export */
 
 export const ExportWalletInput = z.object({
   /**

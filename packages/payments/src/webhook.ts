@@ -56,7 +56,7 @@ const COMPLETED_TYPES = new Set([
   'checkout.session.async_payment_succeeded',
 ]);
 
-/** Usage based plan lifecycle (section 11), mapped to `billing.updated`. */
+/** Usage based plan lifecycle, mapped to `billing.updated`. */
 const SUBSCRIPTION_TYPES = new Set([
   'customer.subscription.created',
   'customer.subscription.updated',

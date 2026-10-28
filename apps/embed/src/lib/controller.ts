@@ -442,7 +442,7 @@ export function createController(deps: ControllerDeps): Controller {
         task.locked = true;
         patch(key, 'export', (screen) => ({ ...screen, status: 'revealing', error: null }));
         // Encrypted by the key provider to a one-time key of this iframe, decrypted
-        // here: the API only ever relays ciphertext (section 8.4).
+        // here: the API only ever relays ciphertext.
         void (async (): Promise<string | null> => {
           const { privateKey } = await client.wallets.exportWallet(wallet.id);
           return privateKey;

@@ -1,7 +1,7 @@
 /**
  * @pockey/gas-sponsor (private, server side)
  *
- * Gas sponsoring port (section 7.5, T4.4 and T4.5). Solana: per-app fee payer
+ * Gas sponsoring port. Solana: per-app fee payer
  * co-signature with strict safety checks. EVM: ERC-4337 Kernel smart account with
  * a Pimlico bundler and paymaster. Pricing turns native costs into prepaid cents
  * (real cost plus `SPONSOR_MARGIN`). Runs on Workers: WebCrypto and fetch only.

@@ -62,7 +62,7 @@ import {
 } from './wallets.js';
 
 /**
- * Session signers (T4.2, section 7.4), non-custodial since 2026-09-19.
+ * Session signers, non-custodial since 2026-09-19.
  *
  * The end user adds the Pockey signer to their sub-organization (a non-root user
  * with no power), then creates each session policy themselves: the iframe stamps

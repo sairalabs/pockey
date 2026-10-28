@@ -60,7 +60,7 @@ afterAll(() => {
   setRateLimiterForTests(undefined);
 });
 
-describe('rate limiting (T5.5)', () => {
+describe('rate limiting', () => {
   it('caps an app at its window and recovers in the next one', async () => {
     await fill('app', SEED.app.publicId);
 

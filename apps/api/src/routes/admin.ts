@@ -56,7 +56,7 @@ import { countEndUsers, EndUserListQuery, listEndUsers } from '../services/end-u
 import { getBalance } from '../services/sponsoring.js';
 
 /**
- * Dashboard API (spec sections 7.2 and 10, T5.1 and T5.3). Authenticated by the
+ * Dashboard API. Authenticated by the
  * developer session of `/admin/auth`, never by an app id or a secret key.
  * The contracts are `packages/types/src/admin.ts` and are final.
  */
@@ -103,7 +103,7 @@ export const adminRoutes = new Hono<AppEnv>()
 
   .get('/session', (c) => c.json(AdminSession.parse({ developer: toDeveloper(c.var.developer) })))
 
-  /* Apps (T5.1) */
+  /* Apps */
 
   .get('/apps', async (c) => {
     const rows = await developerApps(c.var.db, c.var.developer.id);
@@ -200,7 +200,7 @@ export const adminRoutes = new Hono<AppEnv>()
     return c.json(OkOutput.parse({ ok: true }));
   })
 
-  /* API keys (T5.1) */
+  /* API keys */
 
   .get('/apps/:id/api-keys', async (c) => {
     const app = await loadOwnedApp(c);
@@ -250,7 +250,7 @@ export const adminRoutes = new Hono<AppEnv>()
     return c.json(OkOutput.parse({ ok: true }));
   })
 
-  /* Usage, users and sponsoring (T5.3) */
+  /* Usage, users and sponsoring */
 
   .get('/apps/:id/usage', validate('query', UsageQuery), async (c) => {
     const app = await loadOwnedApp(c);
@@ -287,7 +287,7 @@ export const adminRoutes = new Hono<AppEnv>()
     }
   })
 
-  /* Billing (section 11, T5.4 for the Stripe side) */
+  /* Billing */
 
   .get('/billing', async (c) => {
     const developer = c.var.developer;
@@ -328,7 +328,7 @@ export const adminRoutes = new Hono<AppEnv>()
     const returnUrl = c.req.valid('query').returnUrl ?? `${c.var.config.DASHBOARD_ORIGIN}/billing`;
     try {
       // Creates the Stripe customer and the metered subscription on first use,
-      // reuses them afterwards (T5.4).
+      // reuses them afterwards.
       const customerId = await ensureBilling(c.var.db, payments, c.var.developer, c.var.config);
       if (customerId === null) {
         throw new ApiError(

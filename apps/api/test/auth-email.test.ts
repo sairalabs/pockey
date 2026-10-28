@@ -61,7 +61,7 @@ async function signupBody(
   };
 }
 
-describe('email OTP login (T1.1, non-custodial)', () => {
+describe('email OTP login (non-custodial)', () => {
   it('signs up in three steps: start, verify a ciphertext, signed login', async () => {
     const email = 'ada@test.dev';
     const key = await generateSessionKey();

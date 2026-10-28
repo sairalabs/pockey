@@ -35,7 +35,7 @@ import {
 } from './sponsoring.js';
 
 /**
- * Sponsored sends (T4.4, T4.5), shared by `POST /v1/wallets/:id/send-transaction`
+ * Sponsored sends, shared by `POST /v1/wallets/:id/send-transaction`
  * and session signing. The balance is charged before anything reaches the network;
  * any failure after the charge refunds it in full.
  *

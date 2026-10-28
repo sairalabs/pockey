@@ -10,7 +10,7 @@ import { and, count, countDistinct, eq, gte, inArray, lt, sql } from 'drizzle-or
 import { monthKey } from './usage.js';
 
 /**
- * Numbers behind the dashboard graphs (T5.3, section 7.6).
+ * Numbers behind the dashboard graphs.
  *
  * `usage_monthly` is written by the hourly cron, so it always lags the current
  * month. Every current month figure here is recomputed live from `usage_events`

@@ -5,9 +5,9 @@ import { ApiError } from '../errors.js';
 import { enforceRateLimit } from './rate-limit.js';
 
 /**
- * End user routes (section 7.2). Requires `requireApp` first.
+ * End user routes. Requires `requireApp` first.
  * Sets `endUserId` and `sessionFamilyId`, and applies the per end user rate
- * limit of T5.5 once the token proves who is calling.
+ * limit once the token proves who is calling.
  */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   const header = c.req.header('Authorization');

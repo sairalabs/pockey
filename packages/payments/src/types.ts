@@ -9,7 +9,7 @@ export type PaymentEvent =
     }
   | {
       /**
-       * Subscription or invoice change on the usage based plan (section 11). The
+       * Subscription or invoice change on the usage based plan. The
        * caller mirrors `status` on the developer row; nothing is charged here.
        */
       type: 'billing.updated';
@@ -36,7 +36,7 @@ export interface BillingCustomer {
   email: string;
 }
 
-/** Usage based subscription of a developer, one metered item (section 11). */
+/** Usage based subscription of a developer, one metered item. */
 export interface BillingSubscription {
   subscriptionId: string;
   status: string;
@@ -69,7 +69,7 @@ export interface EnsureUsageSubscriptionInput {
   developerId?: string;
 }
 
-/** Payments port (T4.6 top-ups, T5.4 billing): prepaid gas sponsoring and usage based billing. */
+/** Payments port: prepaid gas sponsoring top-ups and usage based billing. */
 export interface Payments {
   createTopUpCheckout(input: TopUpCheckoutRequest): Promise<{ checkoutId: string; url: string }>;
   /** `now` is in milliseconds since the epoch (defaults to `Date.now()`). */

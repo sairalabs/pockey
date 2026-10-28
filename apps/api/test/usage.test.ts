@@ -9,7 +9,7 @@ beforeAll(async () => {
   await seedDb();
 });
 
-describe('usage aggregation (T2.5)', () => {
+describe('usage aggregation', () => {
   it('folds events into monthly totals and is idempotent', async () => {
     const alice = (await loginWithEmail('usage-a@test.dev')).body;
     await loginWithEmail('usage-a@test.dev'); // same user, same month: still one active user

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { EvmChainId, SolanaAddress, SolanaCluster } from './chains.js';
 
-/** Section 7.5 and T4.6. Prepaid, never on credit. */
+/** Prepaid, never on credit. */
 export const SPONSOR_MARGIN = 0.15;
 
 export const SponsorBalance = z.object({

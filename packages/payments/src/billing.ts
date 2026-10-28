@@ -9,7 +9,7 @@ import type {
 
 /**
  * Billing shared by the Stripe and mock implementations: price math, request
- * bodies and response mapping for the usage based plan of section 11.
+ * bodies and response mapping for the usage based plan.
  */
 
 /** Subscription statuses that count as a live usage based plan, so no new one is created. */
@@ -27,7 +27,7 @@ function nonNegative(value: number): number {
 
 /**
  * What a month of `activeWallets` costs, in cents: the free allowance is deducted
- * first, the rest is billed per wallet (section 11, 500 included then 6 cents).
+ * first, the rest is billed per wallet.
  * Single source of truth for the API and the dashboard. Never negative.
  */
 export function estimateMonthlyCents(

@@ -65,7 +65,7 @@ import { providerFailure } from '../services/provider-failure.js';
 import { createWalletsOnLogin } from '../services/wallets.js';
 
 /**
- * End user authentication (section 4, non-custodial since 2026-09-19).
+ * End user authentication.
  *
  * The key provider runs every ceremony that grants access to keys: it sends and
  * checks email codes, verifies OIDC tokens, passkey and wallet signatures, and
@@ -100,7 +100,7 @@ async function completeLogin(
   isNewUser: boolean,
 ): Promise<AuthResponse> {
   await markActive(c.var.db, app, endUserId);
-  // T2.3: embedded wallets exist before the SDK receives the user.
+  // Embedded wallets exist before the SDK receives the user.
   await createWalletsOnLogin(
     { db: c.var.db, keyProvider: c.var.keyProvider, rpc: getRpcFactory(c.var.config), app },
     endUserId,

@@ -7,7 +7,7 @@ import type { BetterAuthOptions, DBAdapter, DBTransactionAdapter, Where } from '
 import type { ParsedEnv } from '../env.js';
 
 /**
- * Developer authentication for the dashboard (T5.1, spec section 10).
+ * Developer authentication for the dashboard.
  *
  * A second Better Auth instance, separate from the end user one of
  * `better-auth.ts`. Both share the `ba_*` tables: end users carry an `app_id`,
@@ -17,7 +17,7 @@ import type { ParsedEnv } from '../env.js';
  * and no cookie bridge.
  */
 
-/** Same OTP rules as end users (section 8.1): 6 digits, 10 minutes, 5 attempts. */
+/** Same OTP rules as end users: 6 digits, 10 minutes, 5 attempts. */
 export const DEVELOPER_OTP_LENGTH = 6;
 export const DEVELOPER_OTP_TTL_SECONDS = 10 * 60;
 export const DEVELOPER_OTP_ATTEMPTS = 5;
@@ -221,7 +221,7 @@ export function createDeveloperAuth(input: DeveloperAuthInput) {
       ...(github ? { github } : {}),
     },
     trustedOrigins: [config.DASHBOARD_ORIGIN, apiOrigin],
-    // Rate limiting is T5.5 (per app and per developer, KV or Durable Objects).
+    // Rate limiting is (per app and per developer, KV or Durable Objects).
     rateLimit: { enabled: false },
     telemetry: { enabled: false },
     advanced: {

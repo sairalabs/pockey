@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Rate limits of T5.5 (section 8.1: stolen developer key, OTP phishing, gas
+ * Rate limits (stolen developer key, OTP phishing, gas
  * sponsoring abuse). One fixed window per scope and per key, one minute wide.
  *
  * This object is the documentation: every scope below is enforced somewhere in
@@ -18,7 +18,7 @@ export const RATE_LIMIT_DEFAULTS = {
   authIdentity: { limit: 5, windowSeconds: 60 },
   /** `/v1/server/*`, keyed by the secret API key id. */
   serverKey: { limit: 300, windowSeconds: 60 },
-  /** Sponsored sends, keyed by the end user id (section 8.1). */
+  /** Sponsored sends, keyed by the end user id. */
   sponsoredSend: { limit: 10, windowSeconds: 60 },
 } as const satisfies Record<string, { limit: number; windowSeconds: number }>;
 

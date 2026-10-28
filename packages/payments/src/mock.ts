@@ -13,7 +13,7 @@ import { DEFAULT_TOLERANCE_SECONDS, verifyStripeWebhook } from './webhook.js';
 /** Public on purpose: the mock is for tests and local development only, never production. */
 export const MOCK_WEBHOOK_SECRET = 'whsec_pockey_mock';
 
-/** Stand-in for the meter behind the metered price of section 11. */
+/** Stand-in for the meter behind the metered price. */
 export const MOCK_ACTIVE_WALLET_METER_ID = 'mtr_mock_active_wallets';
 
 const encoder = new TextEncoder();

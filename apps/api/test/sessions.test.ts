@@ -273,7 +273,7 @@ describe('session signer setup', () => {
   });
 });
 
-describe('session CRUD (T4.2)', () => {
+describe('session CRUD', () => {
   it('creates, lists newest first, and revokes idempotently', async () => {
     await device.ensureSigner();
     const policiesBefore = policiesOf(device);

@@ -20,7 +20,7 @@ const nullableTimestamp = (name: string) => integer(name, { mode: 'timestamp_ms'
 
 const json = <T>(name: string) => text(name, { mode: 'json' }).$type<T>();
 
-/* Section 9: Pockey tables */
+/* Pockey tables */
 
 export const developers = sqliteTable(
   'developers',
@@ -29,7 +29,7 @@ export const developers = sqliteTable(
     email: text('email').notNull(),
     name: text('name'),
     /**
-     * Better Auth user behind the dashboard login (T5.1). Null until the first
+     * Better Auth user behind the dashboard login. Null until the first
      * sign-in, so rows created by the seed or by support stay valid.
      */
     authUserId: text('auth_user_id'),
@@ -117,7 +117,7 @@ export const endUsers = sqliteTable(
 );
 
 /**
- * Refresh tokens (T1.4). Opaque, stored as SHA-256. Each use rotates the token
+ * Refresh tokens. Opaque, stored as SHA-256. Each use rotates the token
  * inside the same family; presenting an already rotated token revokes the
  * whole family (reuse detection).
  */
@@ -147,7 +147,7 @@ export const refreshTokens = sqliteTable(
 );
 
 /**
- * Single-use, short-lived values (section 8.1 replay protection).
+ * Single-use, short-lived values, for replay protection.
  * - `siwe` / `siws`: legacy login nonces (before 2026-09-19).
  * - `oauth_state`: maps a provider state to the app that started the flow,
  *   id = SHA-256 of the state, `payload` = PKCE verifier, provider and session key.
@@ -195,7 +195,7 @@ export const endUserIdentities = sqliteTable(
     createdAt: timestamp('created_at'),
   },
   (t) => [
-    // Same email in two apps = two end users (section 4.2), so uniqueness is per app.
+    // Same email in two apps = two end users, so uniqueness is per app.
     uniqueIndex('identities_app_type_identifier_idx').on(t.appId, t.type, t.identifier),
     index('identities_end_user_idx').on(t.endUserId),
   ],
@@ -215,7 +215,7 @@ export const wallets = sqliteTable(
     createdAt: timestamp('created_at'),
   },
   (t) => [
-    // One wallet per chain family per user at MVP (section 4.2).
+    // One wallet per chain family per user at MVP.
     uniqueIndex('wallets_user_family_idx').on(t.endUserId, t.chainFamily),
     index('wallets_address_idx').on(t.address),
   ],
@@ -286,7 +286,7 @@ export const sponsorBalances = sqliteTable('sponsor_balances', {
 });
 
 /**
- * Append-only audit of every balance movement (T4.6). `balance_cents` above is
+ * Append-only audit of every balance movement. `balance_cents` above is
  * the fast path; this ledger explains it. Top-ups are positive, charges negative.
  * `reference` is unique so a replayed webhook or a retried charge cannot count twice.
  */
@@ -310,7 +310,7 @@ export const sponsorLedger = sqliteTable(
 );
 
 /**
- * Wallets Pockey owns on behalf of an app (section 7.5): the Solana fee payer
+ * Wallets Pockey owns on behalf of an app: the Solana fee payer
  * lives in a system sub-organization at the key provider, one per app.
  */
 export const appSystemWallets = sqliteTable(
@@ -351,7 +351,7 @@ export const webhooks = sqliteTable(
   (t) => [index('webhooks_app_idx').on(t.appId)],
 );
 
-/* Better Auth tables, prefixed `ba_` (section 9). Shape follows the Better Auth
+/* Better Auth tables, prefixed `ba_`. Shape follows the Better Auth
    core schema plus the passkey plugin. `ba_user` doubles as the developer login
    for the dashboard and as the end-user login for apps; `app_id` scopes the latter. */
 
@@ -363,7 +363,7 @@ export const baUser = sqliteTable(
     email: text('email').notNull(),
     emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
     image: text('image'),
-    /** Null for developers, set for end users (multi-tenant, T1.1). */
+    /** Null for developers, set for end users (multi-tenant). */
     appId: text('app_id'),
     createdAt: timestamp('created_at'),
     updatedAt: timestamp('updated_at'),
@@ -449,7 +449,7 @@ export const baPasskey = sqliteTable(
   ],
 );
 
-/** Map handed to Better Auth's drizzle adapter (`schema` option) in T1.1. */
+/** Map handed to Better Auth's drizzle adapter (`schema` option). */
 export const authSchema = {
   user: baUser,
   session: baSession,

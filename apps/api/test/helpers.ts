@@ -115,7 +115,7 @@ export function bearer(token: string, publicId?: string): Record<string, string>
 
 export { env, SEED };
 
-/* Dashboard (T5.1). Developer sessions are real cookies, no bridge header. */
+/* Dashboard. Developer sessions are real cookies, no bridge header. */
 
 export const DASHBOARD_ORIGIN = 'http://localhost:3800';
 

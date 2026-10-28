@@ -50,7 +50,7 @@ const deps = (c: Context<AppEnv>): WalletDeps => ({
 export const SmartAccountQuery = z.object({ chainId: z.coerce.number().pipe(EvmChainId) });
 
 /**
- * Section 7.2 wallet routes. Every route is end-user scoped, and every signature
+ * Wallet routes. Every route is end-user scoped, and every signature
  * comes with the request the iframe stamped (`request`): the API relays it and
  * cannot sign anything on its own.
  */
@@ -82,7 +82,7 @@ export const walletRoutes = new Hono<AppEnv>()
   /** Nonce, gas and fees (EVM) or the sponsored user operation, for the iframe to sign. */
   .post('/:id/prepare', validate('json', PrepareTransactionInput), async (c) => {
     const { input } = c.req.valid('json');
-    // Section 8.1: gas sponsoring abuse is capped per end user, before anything
+    // Gas sponsoring abuse is capped per end user, before anything
     // talks to a bundler.
     if (input.sponsored) await enforceRateLimit(c, 'sponsoredSend', c.var.endUserId);
     const out = await prepareOperation(deps(c), c.var.endUserId, c.req.param('id'), input);

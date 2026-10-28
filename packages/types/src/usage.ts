@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Section 7.6. Append-only, aggregated hourly into `usage_monthly`. */
+/** Append-only, aggregated hourly into `usage_monthly`. */
 export const UsageEventType = z.enum([
   'wallet.created',
   'user.active',

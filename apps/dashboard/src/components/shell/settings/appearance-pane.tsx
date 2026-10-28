@@ -40,7 +40,7 @@ export function AppearancePane() {
             description={row.description}
             checked={enabled[row.id]}
             onCheckedChange={(checked) => {
-              // TODO(T5.1): persist preferences per developer.
+              // TODO: persist preferences per developer.
               setEnabled((current) => ({ ...current, [row.id]: checked }));
             }}
           />

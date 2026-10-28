@@ -286,7 +286,7 @@ export function oidcNonce(publicKey: string): string {
   return bytesToHex(sha256(new TextEncoder().encode(publicKey)));
 }
 
-/* Export (section 8.4) */
+/* Export */
 
 export interface ExportKey {
   /** Uncompressed P-256 public key, hex: the provider encrypts to it. */

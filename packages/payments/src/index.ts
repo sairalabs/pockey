@@ -2,9 +2,9 @@
  * @pockey/payments (private, server side)
  *
  * Payments port over fetch and WebCrypto, no SDK, so it runs on Workers:
- * prepaid gas sponsoring top-ups through Stripe Checkout (section 7.5, T4.6) and
- * the usage based billing of section 11 (customer, metered subscription, billing
- * meter events, billing portal, T5.4), plus webhook verification for both.
+ * prepaid gas sponsoring top-ups through Stripe Checkout and
+ * the usage based billing (customer, metered subscription, billing
+ * meter events and the billing portal), plus webhook verification for both.
  * `createMockPayments` for tests and local development.
  */
 export { PaymentsError, type PaymentsErrorCode } from './errors.js';

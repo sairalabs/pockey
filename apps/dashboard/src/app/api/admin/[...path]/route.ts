@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { API_URL } from '@/lib/api.server';
 
 /**
- * Same origin proxy for the admin API (T5.1).
+ * Same origin proxy for the admin API.
  *
  * The browser only ever talks to the dashboard: this handler forwards method,
  * query, body and cookies to `${POCKEY_API_URL}/admin/...` and hands the

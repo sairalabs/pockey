@@ -14,7 +14,7 @@ import { ApiError } from '../errors.js';
 import { toBase64Url } from '../lib/crypto.js';
 
 /**
- * Maps verified identities to Pockey end users (section 4.2). One end user per
+ * Maps verified identities to Pockey end users. One end user per
  * app per person. The key provider verifies every login ceremony; this module only
  * decides which end user a verified identity belongs to.
  */
@@ -51,7 +51,7 @@ async function upsertIdentities(
   }
 }
 
-/** Records `user.active` once per UTC month and bumps `last_active_at` (section 7.6). */
+/** Records `user.active` once per UTC month and bumps `last_active_at`. */
 export async function markActive(
   db: Db,
   app: AppRow,
@@ -76,7 +76,7 @@ export async function markActive(
 
 /**
  * Finds the end user behind a verified identity, or creates one. Identities are
- * unique per app (section 4.2): the same email in two apps is two end users.
+ * unique per app: the same email in two apps is two end users.
  * EVM addresses are stored lowercase, prefixed with the chain family.
  */
 export async function resolveFromIdentity(

@@ -84,7 +84,7 @@ afterAll(() => {
   setPaymentsForTests(undefined);
 });
 
-describe('Stripe customer and subscription (T5.4)', () => {
+describe('Stripe customer and subscription', () => {
   it('creates the customer once, persists it and reuses it', async () => {
     const config = parseEnv(env);
     const before = await developerRow(SEED.developer.id);
@@ -144,7 +144,7 @@ describe('Stripe customer and subscription (T5.4)', () => {
   });
 });
 
-describe('nightly active wallet metering (T5.4, section 7.6)', () => {
+describe('nightly active wallet metering', () => {
   it('sends one event per developer, with the day value and identifier', async () => {
     const customerId = (await developerRow(SEED.developer.id)).stripeCustomerId ?? '';
     const day = noon(1);

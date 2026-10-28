@@ -42,7 +42,7 @@ const ADMIN_ROUTES: [string, string][] = [
   ['GET', '/admin/billing/portal'],
 ];
 
-describe('developer authentication (T5.1)', () => {
+describe('developer authentication', () => {
   it('signs in with an email OTP and reuses the session cookie', async () => {
     const email = 'ada.dev@test.dev';
     const cookie = await loginAsDeveloper(email);

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ChainFamily, EvmChainId } from './chains.js';
 
 /**
- * Non-custodial key sessions (T0.5, DECISIONS.md 2026-09-19).
+ * Non-custodial key sessions (DECISIONS.md 2026-09-19).
  *
  * The iframe holds a P-256 session key registered at the key provider and stamps
  * every request that touches the user's keys. Pockey's API relays those requests

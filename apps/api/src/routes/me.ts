@@ -7,7 +7,7 @@ import { loadEndUser } from '../services/end-users.js';
 import { keySessionOf, loadEndUserRow } from '../services/key-session.js';
 
 /**
- * `GET /v1/me` (section 7.2): the signed-in end user with identities and wallets,
+ * `GET /v1/me`: the signed-in end user with identities and wallets,
  * plus where the iframe session key acts at the key provider.
  */
 export const meRoutes = new Hono<AppEnv>().get('/', requireApp, requireUser, async (c) => {

@@ -35,7 +35,7 @@ const deps = (c: Context<AppEnv>): SessionDeps => ({
 
 const SignParams = z.object({ id: EndUserId, wid: WalletId });
 
-/** Section 7.2 server routes (secret API key). */
+/** Server routes, authenticated by a secret API key. */
 export const serverRoutes = new Hono<AppEnv>()
   .use(requireApp, requireApiKey)
 
@@ -71,7 +71,7 @@ export const serverRoutes = new Hono<AppEnv>()
     return c.json(SessionSignOutput.parse(out));
   })
 
-  /* Gas sponsoring balance (T4.6) */
+  /* Gas sponsoring balance */
 
   .get('/sponsoring/balance', async (c) => {
     return c.json(SponsorBalance.parse(await getBalance(c.var.db, c.var.app)));

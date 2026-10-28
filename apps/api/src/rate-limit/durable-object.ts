@@ -10,7 +10,7 @@ import {
 const STATE_KEY = 'window';
 
 /**
- * One fixed window counter per key (T5.5). A Durable Object is the cheapest
+ * One fixed window counter per key. A Durable Object is the cheapest
  * strongly consistent counter on Workers, and `new_sqlite_classes` in
  * `wrangler.jsonc` keeps it available on the free plan.
  *

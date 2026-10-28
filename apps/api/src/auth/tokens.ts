@@ -12,7 +12,7 @@ import { ApiError } from '../errors.js';
 import { deriveKeyHex, randomBytes, sha256Hex, toBase64Url } from '../lib/crypto.js';
 
 /**
- * Pockey sessions (T1.4, section 7.2).
+ * Pockey sessions.
  * - Access: HS256 JWT, 15 minutes. Key derived from BETTER_AUTH_SECRET with HKDF,
  *   so no extra Wrangler secret is introduced.
  * - Refresh: opaque `pk_rt_<43 base64url>`, 30 days, SHA-256 in D1, one family per login.

@@ -16,7 +16,7 @@ Rules:
 - Conventional commits.
 - No em dash anywhere.
 - When a decision is not written down, take the simplest and cheapest option and
-  record it in DECISIONS.md with the date and the reason.
+  record it in docs/decisions.md with the reason.
 - Never change the security policies or the KeyProvider interface without saying
   so explicitly.
 

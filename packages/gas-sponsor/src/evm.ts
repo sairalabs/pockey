@@ -8,7 +8,7 @@ import { BaseError, isAddress, isHex, type Address, type Hex } from 'viem';
 import { GasSponsorError } from './errors.js';
 
 /**
- * EVM sponsoring (T4.5): ERC-4337 user operations from a Kernel smart account
+ * EVM sponsoring: ERC-4337 user operations from a Kernel smart account
  * owned by the embedded EOA, paid by a bundler paymaster. Every network client
  * lives behind `EvmSponsorClientsFactory`, so this module is testable offline.
  */

@@ -2,7 +2,7 @@ import { apps, type AppRow, type Db } from '@pockey/db';
 import { eq } from 'drizzle-orm';
 
 /**
- * App lookup with an edge cache (T1.5). Every `/v1/*` request resolves its app,
+ * App lookup with an edge cache. Every `/v1/*` request resolves its app,
  * so this is the hottest query in the API. The Workers Cache API keeps the row
  * for 60 seconds per colo; configuration changes from the dashboard call
  * `invalidateApp` and otherwise converge within a minute.

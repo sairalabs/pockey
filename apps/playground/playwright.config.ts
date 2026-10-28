@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * End to end (T3.4): real API on wrangler dev + embed on Vite + this Next app.
+ * End to end: real API on wrangler dev + embed on Vite + this Next app.
  * The API runs with MAILER=console and writes its log to .e2e/api.log, which
  * the test reads to get the OTP code. Ports: 8787, 5174, 3810.
  */

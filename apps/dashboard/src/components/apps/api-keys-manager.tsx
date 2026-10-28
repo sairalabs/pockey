@@ -14,7 +14,7 @@ import { cn } from '@/lib/cn';
 import { formatDate, formatRelative } from '@/lib/format';
 
 /**
- * Secret keys of one app (T5.1). The secret exists in this process for exactly
+ * Secret keys of one app. The secret exists in this process for exactly
  * as long as the panel that shows it: it is never stored, never re-rendered
  * after the panel is dismissed, and the API only keeps its hash and prefix.
  */

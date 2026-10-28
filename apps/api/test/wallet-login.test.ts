@@ -57,7 +57,7 @@ const readStamp = (value: string) =>
 const writeStamp = (json: StampJson) =>
   base64urlnopad.encode(new TextEncoder().encode(JSON.stringify(json)));
 
-describe('EVM wallet login (T1.3, non-custodial)', () => {
+describe('EVM wallet login (non-custodial)', () => {
   it('signs up an EVM wallet, then logs in to the same user', async () => {
     const account = newEvm();
     expect(await lookup('evm', account.address)).toBeNull();
@@ -197,7 +197,7 @@ describe('EVM wallet login (T1.3, non-custodial)', () => {
   });
 });
 
-describe('Solana wallet login (T1.3, non-custodial)', () => {
+describe('Solana wallet login (non-custodial)', () => {
   it('signs up a Solana wallet, then logs in to the same user', async () => {
     const wallet = newSolana();
     const first = await Device.loginWithWallet({ solana: wallet });

@@ -8,7 +8,7 @@ import {
 import { GasSponsorError } from './errors.js';
 
 /**
- * Solana sponsoring (T4.4): each app has its own fee payer keypair (held by the
+ * Solana sponsoring: each app has its own fee payer keypair (held by the
  * key provider in a system sub-org). The fee payer is account 0 and co-signs.
  */
 
