@@ -9,7 +9,6 @@ import {
   KeyRound,
   Mail,
   Palette,
-  Shield,
   Wallet,
   type IconComponent,
 } from '@/components/icons';
@@ -45,14 +44,6 @@ function Profile() {
   return <p>{evm?.address}</p>;
 }`;
 
-/* Four things that are true today, not four numbers that flatter us. */
-const FACTS = [
-  { value: 'MIT', label: 'The licence' },
-  { value: '6', label: 'Ways to log in' },
-  { value: '2', label: 'Chains, a wallet on each' },
-  { value: '1', label: 'Afternoon to deploy' },
-];
-
 const SCREENS = [
   { src: loginShot, caption: 'Log in or sign up' },
   { src: emailCodeShot, caption: 'The code, by email' },
@@ -71,10 +62,10 @@ const SKINS = [
     stage: 'radial-gradient(130% 80% at 50% -10%, rgba(65, 50, 236, 0.5), #0c0c0c 72%)',
   },
   {
-    name: 'Light, round',
+    name: 'Light, grey',
     src: skinLightShot,
-    line: "appearance: { theme: 'light', accent: '#D2042D', radius: 'round' }",
-    stage: 'radial-gradient(130% 80% at 50% -10%, rgba(210, 4, 45, 0.22), #f1f1f3 72%)',
+    line: "appearance: { theme: 'light', accent: '#52525B', radius: 'round' }",
+    stage: 'radial-gradient(130% 80% at 50% -10%, rgba(82, 82, 91, 0.2), #f1f1f3 72%)',
   },
   {
     name: 'Dark, pill',
@@ -166,10 +157,20 @@ const PIECES = [
   { name: 'The dashboard', body: 'A Next.js app, anywhere you like.' },
 ];
 
+/* The questions someone actually asks before putting a wallet behind this,
+   answered with what the repository can back up. */
 const FAQ = [
   {
-    q: 'Who holds the keys?',
-    a: 'Turnkey, in a sub-organization whose only root user is your end user. Your server cannot sign for them, and that was tested against the real API.',
+    q: 'Can my server move a user’s money?',
+    a: 'No. Keys live at Turnkey in a sub-organization whose only root user is your end user, and your API key is refused inside it. That was tested against the production API, not assumed.',
+  },
+  {
+    q: 'Do my users need a wallet already?',
+    a: 'No. An email code is enough, and the wallet exists from the first login. An existing wallet is one of the six ways in, not a requirement.',
+  },
+  {
+    q: 'What happens if a user wants to leave?',
+    a: 'They export their private key in their own browser and take it anywhere. Nothing in that path asks your server for permission.',
   },
   {
     q: 'What does it cost?',
@@ -180,19 +181,14 @@ const FAQ = [
     a: 'A Worker, a D1 database, an iframe on its own domain, and the dashboard. An afternoon the first time.',
   },
   {
-    q: 'Is it audited?',
+    q: 'Has anyone audited it?',
     a: 'No. Every flow was exercised against Turnkey’s production API and the test suite covers the stack end to end, but no third party has audited it. Read the security model before you put real value behind it.',
   },
 ] as const;
 
-/** A number and a word, so a long page says where the reader is. */
-function Eyebrow({ step, children }: { step: string; children: string }) {
-  return (
-    <p className="flex items-baseline gap-3 text-[13px] text-fg-2">
-      <span className="num text-fg-3">{step}</span>
-      {children}
-    </p>
-  );
+/** One quiet word above a heading, so a long page says where the reader is. */
+function Eyebrow({ children }: { children: string }) {
+  return <p className="text-[13px] text-fg-2">{children}</p>;
 }
 
 export default function Home() {
@@ -200,83 +196,75 @@ export default function Home() {
     <>
       {/* Hero */}
       <section className="mx-auto w-full max-w-[1120px] px-6 pb-16 pt-16 sm:pt-24">
-        <div className="stagger max-w-[760px]">
-          <p className="inline-flex items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
-            <span className="size-1.5 rounded-pill bg-accent" />
-            Open source, MIT, self hosted
-          </p>
-          <h1 className="mt-6 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[62px]">
-            Embedded wallets your users own, on your own infrastructure.
-          </h1>
-          <p className="mt-6 max-w-[560px] text-[17px] leading-[1.6] text-fg-2">
-            Login, wallets, signing and gas sponsoring behind a few React hooks. Your server never
-            holds a key that can sign.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/docs"
-              className="inline-flex items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
-            >
-              Read the docs
-              <ArrowRight size={16} />
-            </Link>
-            <a
-              href={site.repo}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 rounded-pill bg-surface px-5 py-3 text-[15px] text-fg transition-colors hover:bg-surface-2"
-            >
-              Clone the repository
-            </a>
-          </div>
-        </div>
-
-        {/* The hooks on the left, what they put on the screen on the right. */}
-        <div className="relative mt-14 overflow-hidden rounded-[32px] bg-surface">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-48 size-[620px] rounded-pill bg-accent/25 blur-[130px]"
-          />
-          <div className="relative grid grid-cols-1 gap-10 p-8 sm:p-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-8 lg:p-12 lg:pb-0">
-            {/* min-w-0: the sample must scroll inside its column, not widen it. */}
-            <div className="min-w-0 lg:pb-12">
-              <Code code={SAMPLE} lang="tsx" label="app.tsx" bare />
+        <div className="grid gap-12 lg:grid-cols-[1fr_300px] lg:items-start lg:gap-16">
+          <div className="stagger max-w-[680px]">
+            <p className="inline-flex items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
+              <span className="size-1.5 rounded-pill bg-accent" />
+              Open source, MIT, self hosted
+            </p>
+            <h1 className="mt-6 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[62px]">
+              Embedded wallets your users own, on your own infrastructure.
+            </h1>
+            <p className="mt-6 max-w-[560px] text-[17px] leading-[1.6] text-fg-2">
+              Login, wallets, signing and gas sponsoring behind a few React hooks. Your server never
+              holds a key that can sign.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/docs"
+                className="inline-flex items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
+              >
+                Read the docs
+                <ArrowRight size={16} />
+              </Link>
+              <a
+                href={site.repo}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-2 rounded-pill bg-surface px-5 py-3 text-[15px] text-fg transition-colors hover:bg-surface-2"
+              >
+                Clone the repository
+              </a>
             </div>
-            {/* Cut by the stage on a wide screen, the way a window cuts a page. */}
+          </div>
+
+          {/* The screen the code below puts on a page, next to the promise.
+              Taller than its frame, so it is cut rather than shrunk. */}
+          <div className="hidden h-[430px] w-[300px] justify-self-end overflow-hidden rounded-[20px] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.95)] lg:block">
             <Image
               src={loginShot}
               alt="The login screen, with email, Google, Apple, a passkey and a wallet"
-              sizes="(min-width: 1024px) 360px, 70vw"
+              sizes="300px"
               priority
-              className="mx-auto w-[240px] rounded-[20px] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.95)] sm:w-[280px] lg:mb-[-64px] lg:w-full lg:max-w-[360px]"
+              className="w-full"
             />
           </div>
         </div>
-      </section>
 
-      {/* Four facts */}
-      <section className="mx-auto w-full max-w-[1120px] px-6">
-        <ul className="grid grid-cols-2 gap-8 rounded-[28px] bg-surface px-8 py-10 sm:px-10 lg:grid-cols-4">
-          {FACTS.map((fact) => (
-            <li key={fact.label}>
-              <p className="num text-[34px] font-semibold leading-none tracking-[-0.02em]">
-                {fact.value}
-              </p>
-              <p className="mt-3 text-[14px] text-fg-2">{fact.label}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-16 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+          <Code code={SAMPLE} lang="tsx" label="app.tsx" />
+          <div className="rounded-card bg-surface p-6">
+            <h2 className="text-[16px] font-semibold">Runs locally in one command</h2>
+            <p className="mt-2 text-[14px] leading-[1.6] text-fg-2">
+              The default setup talks to an in-memory key provider, so the whole suite runs with no
+              account and no signatures spent.
+            </p>
+            <div className="mt-5 overflow-x-auto rounded-control bg-surface-2 px-4 py-3">
+              <Code code={'pnpm install\npnpm --filter @pockey/api dev'} lang="bash" bare />
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* The modal */}
       <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
-        <Eyebrow step="01">What the user sees</Eyebrow>
+        <Eyebrow>What the user sees</Eyebrow>
         <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.02em]">
-          Four screens, on a domain you own
+          Four screens, no seed phrase, no extension
         </h2>
         <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
-          No extension, no seed phrase, no new tab. The same components ship in the package, so
-          these are captures and not drawings.
+          They run on a domain you own, from the components that ship in the package. So these are
+          captures, not drawings.
         </p>
 
         <div className="relative mt-10 overflow-hidden rounded-[28px] bg-surface px-5 pb-14 pt-14 sm:px-10 lg:pb-24">
@@ -313,7 +301,7 @@ export default function Home() {
       {/* The dashboard */}
       <section className="mx-auto w-full max-w-[1280px] px-6 py-20">
         <div className="mx-auto max-w-[1120px]">
-          <Eyebrow step="02">And what you see</Eyebrow>
+          <Eyebrow>And what you see</Eyebrow>
           <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.02em]">
             A console that runs on your side
           </h2>
@@ -355,7 +343,7 @@ export default function Home() {
 
       {/* What is in the box */}
       <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
-        <Eyebrow step="03">What is in the box</Eyebrow>
+        <Eyebrow>What is in the box</Eyebrow>
         <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.02em]">
           Everything a wallet needs, and nothing to call home to
         </h2>
@@ -366,12 +354,9 @@ export default function Home() {
               key={item.title}
               className="overflow-hidden rounded-card bg-surface sm:col-span-2 lg:col-span-3"
             >
-              {/* A well, darker than the card, so a dark panel still reads. */}
-              <div className="relative h-[230px] overflow-hidden bg-bg">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -top-32 left-1/2 size-[420px] -translate-x-1/2 rounded-pill bg-accent/25 blur-[100px]"
-                />
+              {/* A well, lighter than the card, so a dark panel reads against
+                  it without any colour being poured in. */}
+              <div className="relative h-[230px] overflow-hidden bg-surface-2">
                 {item.frame === 'panel' ? (
                   <Image
                     src={item.src}
@@ -384,7 +369,7 @@ export default function Home() {
                     src={item.src}
                     alt={item.alt}
                     sizes="(min-width: 1024px) 540px, 90vw"
-                    className="absolute left-7 top-9 w-[150%] max-w-none rounded-[10px] shadow-[0_30px_60px_-24px_rgba(0,0,0,0.95)]"
+                    className="absolute left-0 top-10 w-[150%] max-w-none"
                   />
                 )}
               </div>
@@ -397,9 +382,7 @@ export default function Home() {
 
           {FEATURES.map((feature) => (
             <article key={feature.title} className="rounded-card bg-surface p-6 lg:col-span-2">
-              <span className="flex size-9 items-center justify-center rounded-control bg-surface-2">
-                <feature.icon size={18} className="text-fg" />
-              </span>
+              <feature.icon size={20} className="text-fg" />
               <h3 className="mt-5 text-[15px] font-semibold">{feature.title}</h3>
               <p className="mt-2 text-[14px] text-fg-2">{feature.body}</p>
             </article>
@@ -409,10 +392,7 @@ export default function Home() {
 
       {/* How it works */}
       <section id="how" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
-        <p className="inline-flex w-fit items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
-          <Shield size={14} className="text-fg" />
-          How it works
-        </p>
+        <Eyebrow>How it works</Eyebrow>
         <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.02em]">
           Three credentials, three kinds of power
         </h2>
@@ -426,31 +406,17 @@ export default function Home() {
             <article key={item.name} className="rounded-card bg-surface p-7">
               <p className="num text-[13px] text-fg-3">{`0${String(index + 1)}`}</p>
               <h3 className="mt-6 text-[17px] font-semibold">{item.name}</h3>
-              <p className="mt-2 inline-flex rounded-pill bg-surface-2 px-3 py-1 text-[12px] text-fg-2">
-                Held by {item.holder}
-              </p>
+              <p className="mt-1 text-[13px] text-fg-3">Held by {item.holder}</p>
               <p className="mt-4 text-[14px] leading-[1.6] text-fg-2">{item.body}</p>
             </article>
           ))}
         </div>
-
-        <Link
-          href="/docs/security"
-          className="mt-6 inline-flex items-center gap-2 text-[15px] text-fg transition-opacity hover:opacity-70"
-        >
-          The security model
-          <ArrowRight size={15} />
-        </Link>
       </section>
 
       {/* Self hosting */}
       <section id="self-hosting" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
-        <div className="relative overflow-hidden rounded-[32px] bg-surface p-8 sm:p-10 lg:p-14">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-40 -left-24 size-[520px] rounded-pill bg-accent/20 blur-[130px]"
-          />
-          <div className="relative grid gap-12 lg:grid-cols-2 lg:gap-16">
+        <div className="overflow-hidden rounded-[32px] bg-surface p-8 sm:p-10 lg:p-14">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
               <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Host it yourself</h2>
               <p className="mt-4 max-w-[460px] text-[16px] leading-[1.6] text-fg-2">
