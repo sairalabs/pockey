@@ -1,0 +1,280 @@
+@import 'tailwindcss';
+
+/*
+  Same brand as the dashboard and the modal: white, #101010, one accent.
+  Raw tokens on :root so a light theme would be a single overriding block.
+*/
+:root {
+  color-scheme: dark;
+
+  --bg: #101010;
+  --surface: #181818;
+  --surface-2: #202020;
+  --surface-3: #2a2a2a;
+  --text: #ffffff;
+  --text-2: #a1a1a1;
+  --text-3: #6b6b6b;
+  --accent: #4132ec;
+
+  /* Code colouring, tuned to stay quiet next to the accent. */
+  --code-keyword: #9d93ff;
+  --code-string: #8ad6a8;
+  --code-tag: #f0a868;
+  --code-type: #7fc4e8;
+  --code-comment: #6b6b6b;
+
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-pill: 9999px;
+
+  /* Flat brand: surfaces are told apart by their fill, never by a 1px ring. */
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+
+  --radius-card: var(--radius-card);
+  --radius-control: var(--radius-control);
+  --radius-pill: var(--radius-pill);
+
+  --ease-out-strong: var(--ease-out-strong);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  /* Preference: no monospace anywhere, code and hashes use the site font. */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: inherit;
+  }
+
+  html {
+    background: var(--bg);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: oklch(1 0 0 / 0.2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A line of code keeps its spacing without a monospace face. */
+@utility code-face {
+  font-variant-ligatures: none;
+  font-variant-numeric: tabular-nums slashed-zero;
+  tab-size: 2;
+  white-space: pre;
+}
+
+/* ---------- Enter on mount, once, opacity and a short rise ---------- */
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.stagger > * {
+  animation: enter-up 500ms var(--ease-out-strong) both;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 80ms;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 160ms;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 240ms;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 320ms;
+}
+.stagger > :nth-child(n + 6) {
+  animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * {
+    animation: none;
+  }
+}
+
+/* ---------- Prose, for the documentation rendered from the repository ---------- */
+
+.prose {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.prose > * + * {
+  margin-top: 16px;
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.3;
+  scroll-margin-top: 96px;
+}
+.prose h1 {
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+.prose h2 {
+  font-size: 20px;
+  margin-top: 44px;
+}
+.prose h3 {
+  font-size: 16px;
+  margin-top: 32px;
+}
+.prose h4 {
+  font-size: 15px;
+  margin-top: 24px;
+}
+.prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.prose a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--text-3);
+  transition: text-decoration-color 150ms;
+}
+.prose a:hover {
+  text-decoration-color: var(--text);
+}
+.prose ul,
+.prose ol {
+  padding-left: 20px;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li::marker {
+  color: var(--text-3);
+}
+.prose li + li {
+  margin-top: 6px;
+}
+.prose code {
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.92em;
+  font-variant-ligatures: none;
+  /* A long command inside a sentence breaks rather than widening the column. */
+  overflow-wrap: anywhere;
+}
+.prose pre {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-2);
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.prose blockquote {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+}
+.prose blockquote > * + * {
+  margin-top: 12px;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  font-size: 14px;
+}
+.prose th {
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+.prose th:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.prose th:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.prose td {
+  padding: 10px 14px;
+  vertical-align: top;
+}
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--surface-2);
+  margin: 36px 0;
+}
+.prose img {
+  border-radius: var(--radius-card);
+}
