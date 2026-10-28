@@ -19,7 +19,7 @@ import {
 } from '@/components/icons';
 import { site } from '@/lib/site';
 
-const SAMPLE = `import { PockeyProvider, usePockey, useWallet, useSign } from '@pockey/react';
+const SAMPLE = `import { PockeyProvider, usePockey, useWallet } from '@pockey/react';
 
 function App() {
   return (
@@ -30,59 +30,53 @@ function App() {
 }
 
 function Profile() {
-  const { authenticated, user, login, logout } = usePockey();
+  const { authenticated, login } = usePockey();
   const { evm } = useWallet();
-  const { signMessage } = useSign();
 
   if (!authenticated) return <button onClick={login}>Log in</button>;
-  return (
-    <>
-      <p>{evm?.address}</p>
-      <button onClick={() => signMessage({ message: 'gm' })}>Sign</button>
-    </>
-  );
+  return <p>{evm?.address}</p>;
 }`;
 
 const FEATURES: { icon: IconComponent; title: string; body: string }[] = [
   {
     icon: Mail,
     title: 'Six ways in',
-    body: 'Email code, Google, Apple, passkeys, or an EVM or Solana wallet the user already has.',
+    body: 'Email code, Google, Apple, passkeys, or a wallet they already have.',
   },
   {
     icon: Wallet,
     title: 'A wallet on first login',
-    body: 'One EVM and one Solana account per user, created the moment they sign in, in their own sub-organization.',
+    body: 'One EVM and one Solana account, created the moment the user signs in.',
   },
   {
     icon: AppWindow,
     title: 'Signing the user sees',
-    body: 'Messages, typed data and transactions go through a confirmation screen in an iframe the host page cannot forge.',
+    body: 'Every signature goes through a screen the host page cannot forge.',
   },
   {
     icon: KeyRound,
     title: 'Sessions with limits',
-    body: 'Chains, contracts, amount per transaction, total spend and expiry, enforced by the key provider rather than by your server.',
+    body: 'Chains, contracts, amounts and expiry, enforced outside your server.',
   },
   {
     icon: Fuel,
     title: 'Gas sponsoring',
-    body: 'A Solana fee payer, and ERC-4337 through a bundler, so a new user can transact with an empty wallet.',
+    body: 'A Solana fee payer and ERC-4337, so an empty wallet can transact.',
   },
   {
     icon: ArrowUpRight,
     title: 'Export, for real',
-    body: 'A user can take their private key out at any time, decrypted in their browser. Nothing holds them.',
+    body: 'Users can take their private key out at any time, in their browser.',
   },
   {
     icon: Users,
     title: 'A developer dashboard',
-    body: 'Apps, keys, users, usage, login methods and appearance, in a dark console you run yourself.',
+    body: 'Apps, keys, users and usage, in a console you run yourself.',
   },
   {
     icon: Palette,
     title: 'The modal is yours',
-    body: 'Theme, accent, corner scale, font stack, per mode colours, your logo and name, overridable per session.',
+    body: 'Theme, accent, corners, font, logo and name, down to the session.',
   },
 ];
 
@@ -90,39 +84,39 @@ const AUTHORITIES = [
   {
     name: 'The parent key',
     holder: 'Your API',
-    can: 'Create one sub-organization per user, and run login ceremonies.',
-    cannot: 'Sign, export, or add itself as a user inside someone’s sub-organization.',
+    can: 'Create one sub-organization per user, and run logins.',
+    cannot: 'Sign or export inside one.',
   },
   {
     name: 'The session key',
-    holder: 'The iframe, in the browser',
-    can: 'Everything the user can do. It is non-extractable and it stamps every request.',
-    cannot: 'Leave the browser, or be read by the host page or by your server.',
+    holder: 'The browser',
+    can: 'Everything the user can do, stamping each request.',
+    cannot: 'Leave the browser, or be read by your server.',
   },
   {
     name: 'The signer key',
     holder: 'Your API',
-    can: 'Act only through a policy the user created, within the limits they set.',
-    cannot: 'Do anything the user did not allow, or outlive the policy.',
+    can: 'Act inside a policy the user created.',
+    cannot: 'Outlive that policy, or exceed it.',
   },
 ];
 
 const FAQ = [
   {
     q: 'Who holds the keys?',
-    a: 'Turnkey does, in a sub-organization whose only root user is your end user. Pockey never holds them, and neither do you. The code that runs on your server cannot sign for a user even if it wanted to, which was verified against the real Turnkey API rather than assumed.',
+    a: 'Turnkey, in a sub-organization whose only root user is your end user. Your server cannot sign for them, and that was tested against the real API.',
   },
   {
     q: 'What does it cost?',
-    a: 'You pay Turnkey per signature, Cloudflare for a Worker and a database, and your email and RPC providers. There is no line for Pockey, because nobody is reselling you anything.',
+    a: 'Turnkey per signature, Cloudflare for a Worker and a database, your email and RPC providers. Nothing for Pockey.',
   },
   {
     q: 'What do I have to run?',
-    a: 'A Cloudflare Worker, a D1 database, an iframe on its own domain, and the dashboard wherever you deploy a Next.js app. Budget an afternoon the first time.',
+    a: 'A Worker, a D1 database, an iframe on its own domain, and the dashboard. An afternoon the first time.',
   },
   {
     q: 'Is it audited?',
-    a: 'No. It is complete and every flow was exercised against a production Turnkey organization, but it has had no third party audit and nobody runs it as a service. Read the security model before you put real value behind it.',
+    a: 'No. Read the security model before you put real value behind it.',
   },
 ];
 
@@ -139,10 +133,9 @@ export default function Home() {
           <h1 className="mt-6 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[62px]">
             Embedded wallets your users own, on your own infrastructure.
           </h1>
-          <p className="mt-6 max-w-[620px] text-[17px] leading-[1.6] text-fg-2">
-            Email, Google, Apple, passkeys or an existing wallet. An EVM and a Solana wallet created
-            on first login. Signing, sessions and gas sponsoring behind a few React hooks, and a key
-            provider that cannot sign for your users behind their back.
+          <p className="mt-6 max-w-[560px] text-[17px] leading-[1.6] text-fg-2">
+            Login, wallets, signing and gas sponsoring behind a few React hooks. Your server never
+            holds a key that can sign.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
@@ -165,23 +158,14 @@ export default function Home() {
 
         <div className="mt-14 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
           <Code code={SAMPLE} lang="tsx" label="app.tsx" />
-          <div className="flex flex-col gap-4">
-            <div className="rounded-card bg-surface p-6">
-              <h2 className="text-[16px] font-semibold">Runs on your machine in one command</h2>
-              <p className="mt-2 text-[14px] text-fg-2">
-                The default setup talks to an in-memory key provider that speaks the real wire
-                format, so the whole suite runs with no account and no signatures spent.
-              </p>
-              <div className="mt-4">
-                <Code code={'pnpm install\npnpm --filter @pockey/api dev'} lang="bash" />
-              </div>
-            </div>
-            <div className="rounded-card bg-surface p-6">
-              <h2 className="text-[16px] font-semibold">No service in the middle</h2>
-              <p className="mt-2 text-[14px] text-fg-2">
-                You bring your own Turnkey organization and pay them directly. Pockey is the code
-                between your app and their API, and it is yours to read.
-              </p>
+          <div className="rounded-card bg-surface p-6">
+            <h2 className="text-[16px] font-semibold">Runs locally in one command</h2>
+            <p className="mt-2 text-[14px] text-fg-2">
+              The default setup talks to an in-memory key provider, so the whole suite runs with no
+              account and no signatures spent.
+            </p>
+            <div className="mt-4">
+              <Code code={'pnpm install\npnpm --filter @pockey/api dev'} lang="bash" />
             </div>
           </div>
         </div>
@@ -190,9 +174,6 @@ export default function Home() {
       {/* What is in the box */}
       <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
         <h2 className="text-[32px] font-semibold tracking-[-0.02em]">What is in the box</h2>
-        <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
-          Everything a product needs to give someone a wallet without becoming responsible for it.
-        </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((feature) => (
             <div key={feature.title} className="rounded-card bg-surface p-6">
@@ -214,9 +195,8 @@ export default function Home() {
           <h2 className="text-[32px] font-semibold tracking-[-0.02em]">
             Three credentials, three kinds of power
           </h2>
-          <p className="max-w-[640px] text-[16px] text-fg-2">
-            A compromised backend is the question every embedded wallet has to answer. Here the
-            answer is structural: the key that your server holds is not the key that can sign.
+          <p className="max-w-[560px] text-[16px] text-fg-2">
+            The key your server holds is not the key that can sign.
           </p>
         </div>
 
@@ -242,10 +222,9 @@ export default function Home() {
         </div>
 
         <div className="mt-4 flex flex-col gap-4 rounded-card bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-[720px] text-[14px] text-fg-2">
-            This was checked, not assumed. Against a production organization, the parent key is
-            refused when it tries to sign, export, or add itself as a user inside an end user
-            sub-organization.
+          <p className="max-w-[640px] text-[14px] text-fg-2">
+            Checked against a production organization: the parent key is refused when it tries to
+            sign.
           </p>
           <Link
             href="/docs/security"
@@ -261,7 +240,7 @@ export default function Home() {
       <section id="hosting" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
         <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Two ways to get it</h2>
         <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
-          One of them exists today. The other depends on how many people ask.
+          One exists today. The other depends on how many people ask.
         </p>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
@@ -272,14 +251,14 @@ export default function Home() {
             </div>
             <p className="mt-1 text-[14px] text-fg-3">Available now</p>
             <p className="mt-5 text-[15px] text-fg-2">
-              Clone it, bring a Turnkey organization and a Cloudflare account, pick your domains and
-              deploy. You own the database, the keys and the bill.
+              Bring a Turnkey organization and a Cloudflare account, then deploy. You own the
+              database, the keys and the bill.
             </p>
             <ul className="mt-6 space-y-2.5">
               {[
-                'No seat pricing, no active wallet pricing, no middleman',
+                'No seat pricing, no wallet pricing, no middleman',
                 'Your data stays in your account',
-                'Fork it, read it, change it, it is MIT',
+                'MIT, so fork it and change it',
                 'An afternoon the first time',
               ].map((line) => (
                 <li key={line} className="flex gap-2.5 text-[14px] text-fg-2">
@@ -304,14 +283,14 @@ export default function Home() {
             </div>
             <p className="mt-1 text-[14px] text-fg-3">Not available</p>
             <p className="mt-5 text-[15px] text-fg-2">
-              There is no hosted Pockey. If enough teams want the same thing without running a
-              Worker and a database, it is worth building, and this is how that gets counted.
+              There is no hosted Pockey. If enough teams want one, it is worth building, and this is
+              how that gets counted.
             </p>
             <div className="mt-6">
               <Waitlist />
             </div>
             <p className="mt-auto pt-8 text-[13px] text-fg-3">
-              Nothing is promised and nothing is for sale. Self hosting stays free either way.
+              Self hosting stays free either way.
             </p>
           </div>
         </div>
@@ -321,11 +300,10 @@ export default function Home() {
       <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
         <div className="rounded-card bg-surface p-8">
           <h2 className="text-[20px] font-semibold">Where it stands</h2>
-          <p className="mt-3 max-w-[760px] text-[15px] text-fg-2">
+          <p className="mt-3 max-w-[640px] text-[15px] text-fg-2">
             Complete and verified, not run as a service. Every flow was exercised against Turnkey’s
-            production API, the test suite covers the stack end to end, and the repository says
-            plainly what it does not guarantee. It has had no third party audit. Read the security
-            model before putting real value behind it.
+            production API and the test suite covers the stack end to end. There has been no third
+            party audit.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link

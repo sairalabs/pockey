@@ -41,8 +41,7 @@ export function Footer() {
           <div className="max-w-[300px]">
             <Mark height={26} className="text-fg" />
             <p className="mt-4 text-[14px] text-fg-2">
-              Embedded wallets and auth you host yourself. Open source, MIT, no service in the
-              middle.
+              Embedded wallets and auth you host yourself. Open source, MIT.
             </p>
             <a
               href={site.repo}
@@ -88,8 +87,7 @@ export function Footer() {
         </div>
 
         <p className="mt-16 text-[13px] text-fg-3">
-          Pockey is free software under the MIT licence. It is not a custodian, not a wallet
-          provider, and nobody operates it for you.
+          Free software under the MIT licence. Not a custodian, and nobody operates it for you.
         </p>
       </div>
     </footer>

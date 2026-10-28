@@ -44,7 +44,7 @@ export function Waitlist() {
     return (
       <div className="flex items-center gap-3 rounded-control bg-surface-2 px-5 py-4 text-[14px] text-fg">
         <Check size={18} className="shrink-0 text-fg" />
-        Noted. You will hear from us only if this gets built.
+        Noted. You will hear back only if this gets built.
       </div>
     );
   }
@@ -104,7 +104,7 @@ export function Waitlist() {
             and it counts the same.
           </span>
         ) : (
-          'Your address, nothing else, and only for this. No newsletter.'
+          'Your address, nothing else. No newsletter.'
         )}
       </p>
     </div>

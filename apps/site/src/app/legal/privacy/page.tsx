@@ -12,35 +12,31 @@ export default function Privacy() {
     <>
       <h1>Privacy</h1>
       <p>
-        This site has no accounts, no analytics, no advertising and no tracking of any kind. It sets
-        no cookies, which is why it asks you about none. Fonts are served from this domain, not from
-        a third party.
+        No accounts, no analytics, no advertising, no tracking. No cookies either, which is why this
+        site asks you about none. Fonts are served from this domain.
       </p>
 
       <h2 id="controller">Who is responsible</h2>
       <p>
-        The publisher named in the <a href="/legal/notice">legal notice</a> is the controller for
-        the data described here. Write to <a href={`mailto:${legal.email}`}>{legal.email}</a> about
-        any of it.
+        The publisher named in the <a href="/legal/notice">legal notice</a> is the controller. Write
+        to <a href={`mailto:${legal.email}`}>{legal.email}</a> about any of it.
       </p>
       <p>
-        This concerns this website only. Anyone who runs the Pockey software is the controller for
-        their own users, and the publisher has no access to those deployments.
+        This page covers this website only. Anyone who runs the Pockey software is the controller
+        for their own users, and the publisher has no access to those deployments.
       </p>
 
       <h2 id="collected">What is collected</h2>
       <ul>
         <li>
-          <strong>Server logs.</strong> The host records the usual technical data for each request,
-          including the IP address, the date, the page requested and the browser identification. The
-          purpose is to serve the site and to detect abuse. The legal basis is the legitimate
-          interest in keeping the site available and secure.
+          <strong>Server logs.</strong> The host records the IP address, the date, the page and the
+          browser for each request, to serve the site and detect abuse. Legal basis: legitimate
+          interest.
         </li>
         <li>
-          <strong>Your email address, only if you type it in.</strong> The hosted version form sends
-          one address to one inbox so the publisher can count how many people want it. Nothing else
-          is asked and nothing is stored in a database here. The legal basis is your consent, given
-          by submitting the form.
+          <strong>Your email address, if you type it in.</strong> The hosted version form sends one
+          address to one inbox, so the publisher can count who wants it. Nothing is stored in a
+          database here. Legal basis: your consent.
         </li>
       </ul>
 
@@ -52,28 +48,24 @@ export default function Privacy() {
         </li>
       </ul>
       <p>
-        Both are established in the United States. Transfers rely on the European Commission’s
-        standard contractual clauses. Nothing is sold, rented or passed to anyone else.
+        Both are in the United States, under the European Commission’s standard contractual clauses.
+        Nothing is sold or passed to anyone else.
       </p>
 
       <h2 id="retention">How long</h2>
       <ul>
-        <li>Server logs: kept by the host for its own retention period, a few weeks at most.</li>
-        <li>
-          An address sent through the form: kept in the publisher’s mailbox until the question of a
-          hosted version is settled, and at most two years from the day you sent it.
-        </li>
+        <li>Server logs: the host’s own retention period, a few weeks at most.</li>
+        <li>An address sent through the form: two years at most.</li>
       </ul>
 
       <h2 id="rights">Your rights</h2>
       <p>
-        You may ask for access to your data, for it to be corrected or erased, for its processing to
-        be restricted, for it in a portable form, and you may object to processing or withdraw a
-        consent you gave. One email to <a href={`mailto:${legal.email}`}>{legal.email}</a> is
-        enough, and an answer is owed within one month.
+        You can ask for access, correction, erasure, restriction or portability, and you can object
+        or withdraw your consent. One email to <a href={`mailto:${legal.email}`}>{legal.email}</a>{' '}
+        is enough, and an answer is owed within one month.
       </p>
       <p>
-        If the answer does not satisfy you, you may complain to the CNIL, the French data protection
+        If it does not satisfy you, you can complain to the CNIL, the French data protection
         authority, at{' '}
         <a href="https://www.cnil.fr" target="_blank" rel="noreferrer noopener">
           cnil.fr
@@ -82,10 +74,7 @@ export default function Privacy() {
       </p>
 
       <h2 id="changes">Changes</h2>
-      <p>
-        If this page changes, the new version replaces this one at the same address. There is no
-        mailing list to notify, by design.
-      </p>
+      <p>If this page changes, the new version replaces this one at the same address.</p>
     </>
   );
 }

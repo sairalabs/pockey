@@ -62,38 +62,34 @@ export default function LegalNotice() {
         file of the repository and they govern any use of the code.
       </p>
       <p>
-        The software is provided as is, without warranty of any kind, express or implied. The
-        publisher operates no service on your behalf: anyone running Pockey runs it on their own
-        infrastructure, under their own responsibility, and is the data controller for their own
-        users.
+        The software is provided as is, without warranty of any kind. The publisher operates no
+        service on your behalf: anyone running Pockey runs it under their own responsibility and is
+        the data controller for their own users.
       </p>
 
       <h2 id="content">Content of this site</h2>
       <p>
-        The text, the layout and the marks on this site belong to the publisher. The documentation
-        pages reproduce files from the repository and are covered by the MIT licence like the rest
-        of it. The Pockey name and logo may not be used to suggest an endorsement of a fork.
+        The text, the layout and the marks belong to the publisher. The documentation pages
+        reproduce files from the repository and are covered by the MIT licence. The Pockey name and
+        logo may not be used to suggest an endorsement of a fork.
       </p>
 
       <h2 id="liability">Liability</h2>
       <p>
-        The publisher does its best to keep this site accurate but gives no guarantee that it is
-        complete or current, and is not liable for any direct or indirect damage arising from its
-        use or from the use of the software. External links are given for convenience and the
-        publisher is not responsible for what they lead to.
+        This site is kept accurate as far as possible, with no guarantee that it is complete or
+        current, and the publisher is not liable for any damage arising from its use or from the use
+        of the software. External links are given for convenience only.
       </p>
 
       <h2 id="law">Applicable law</h2>
       <p>
-        This notice is governed by French law. Any dispute relating to this site falls to the courts
-        with jurisdiction at the publisher’s address, subject to the mandatory rules that protect
-        consumers.
+        French law applies. Any dispute falls to the courts with jurisdiction at the publisher’s
+        address, subject to the mandatory rules that protect consumers.
       </p>
 
       <h2 id="privacy">Personal data</h2>
       <p>
-        How this site handles personal data is set out in the <a href="/legal/privacy">privacy</a>{' '}
-        page.
+        See the <a href="/legal/privacy">privacy</a> page.
       </p>
     </>
   );
