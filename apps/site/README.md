@@ -26,8 +26,8 @@ them. Each one photographs the panel alone, on a transparent background, so the
 landing page lights and frames them itself.
 
 The modal shots come from the embed's own preview route, which renders every
-screen with mock data and no network. The last one wears another theme, accent
-and radius, which is what the page shows beside it:
+screen with mock data and no network. The last three are the login screen in
+another theme, accent and radius, and the landing page flips between them:
 
 ```bash
 pnpm --filter @pockey/embed dev

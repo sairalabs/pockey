@@ -25,8 +25,11 @@ const SHOTS = [
   { label: 'Email code', file: 'email-code.png' },
   { label: 'Sign message', file: 'sign-message.png' },
   { label: 'Confirm transaction', file: 'transaction.png' },
-  // The same screen, dressed differently: what an app with its own brand gets.
-  { label: 'Login', file: 'login-themed.png', theme: 'Light', accent: '#D2042D', radius: 'Round' },
+  /* The same login screen, dressed three other ways. The landing page flips
+     between them, so an app with its own brand can see itself in it. */
+  { label: 'Login', file: 'skin-light.png', theme: 'Light', accent: '#D2042D', radius: 'Round' },
+  { label: 'Login', file: 'skin-green.png', accent: '#12A594', radius: 'Pill' },
+  { label: 'Login', file: 'skin-sharp.png', theme: 'Light', accent: '#0B5FFF', radius: 'Sharp' },
 ];
 
 /* The preview frames each screen in a stage with a blurred host page behind it.
