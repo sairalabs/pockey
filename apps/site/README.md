@@ -19,6 +19,29 @@ this repository is public. See `.env.example`, and set the variables in the
 hosting provider. A value left unset is rendered as "to be set", which is the
 visible failure.
 
+## The screenshots
+
+`public/shots` holds real captures, not mockups, and two scripts regenerate
+them. The modal shots come from the embed's own preview route, which renders
+every screen with mock data and no network:
+
+```bash
+pnpm --filter @pockey/embed dev
+pnpm --filter @pockey/site shots
+```
+
+The dashboard shot drives the local stack the way the end to end suite does,
+reading the login code from the API log:
+
+```bash
+bash apps/api/scripts/e2e-server.sh
+pnpm --filter @pockey/dashboard dev -- --port 3801
+pnpm --filter @pockey/site shots:dashboard
+```
+
+Run them again whenever those screens change, so the landing page never shows a
+version of the product that no longer exists.
+
 ## Deploying
 
 A plain Next.js app, deployed from the monorepo root with

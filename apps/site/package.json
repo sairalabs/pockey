@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/collect-docs.mjs && next dev --port 3850",
     "build": "node scripts/collect-docs.mjs && next build",
+    "dev": "node scripts/collect-docs.mjs && next dev --port 3850",
+    "lint": "eslint .",
+    "shots": "node scripts/shots.mjs",
+    "shots:dashboard": "node scripts/shots-dashboard.mjs",
     "start": "next start --port 3850",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "marked": "^18.1.2",
@@ -17,6 +19,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@pockey/config": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.18.0",

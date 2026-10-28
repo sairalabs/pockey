@@ -1,10 +1,11 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Code } from '@/components/code';
+import { Faq } from '@/components/faq';
 import {
   AppWindow,
   ArrowRight,
   ArrowUpRight,
-  Check,
   Fuel,
   KeyRound,
   Mail,
@@ -38,17 +39,17 @@ const FEATURES: { icon: IconComponent; title: string; body: string }[] = [
   {
     icon: Mail,
     title: 'Six ways in',
-    body: 'Email code, Google, Apple, passkeys, or a wallet they already have.',
+    body: 'Email code, Google, Apple, passkeys, or an existing wallet.',
   },
   {
     icon: Wallet,
     title: 'A wallet on first login',
-    body: 'One EVM and one Solana account, created the moment the user signs in.',
+    body: 'One EVM and one Solana account per user, from day one.',
   },
   {
     icon: AppWindow,
     title: 'Signing the user sees',
-    body: 'Every signature goes through a screen the host page cannot forge.',
+    body: 'A confirmation screen the host page cannot forge.',
   },
   {
     icon: KeyRound,
@@ -58,43 +59,47 @@ const FEATURES: { icon: IconComponent; title: string; body: string }[] = [
   {
     icon: Fuel,
     title: 'Gas sponsoring',
-    body: 'A Solana fee payer and ERC-4337, so an empty wallet can transact.',
+    body: 'A Solana fee payer and ERC-4337, for empty wallets.',
   },
   {
     icon: ArrowUpRight,
     title: 'Export, for real',
-    body: 'Users can take their private key out at any time, in their browser.',
+    body: 'Users can take their private key out, in their browser.',
   },
   {
     icon: Users,
     title: 'A developer dashboard',
-    body: 'Apps, keys, users and usage, in a console you run yourself.',
+    body: 'Apps, keys, users and usage, in a console you run.',
   },
   {
     icon: Palette,
     title: 'The modal is yours',
-    body: 'Theme, accent, corners, font, logo and name, down to the session.',
+    body: 'Theme, accent, corners, font and logo, down to the session.',
   },
+];
+
+const SHOTS = [
+  { src: '/shots/login.png', caption: 'Log in or sign up' },
+  { src: '/shots/email-code.png', caption: 'The email code' },
+  { src: '/shots/sign-message.png', caption: 'Signing a message' },
+  { src: '/shots/transaction.png', caption: 'Confirming a transaction' },
 ];
 
 const AUTHORITIES = [
   {
     name: 'The parent key',
     holder: 'Your API',
-    can: 'Create one sub-organization per user, and run logins.',
-    cannot: 'Sign or export inside one.',
+    body: 'Creates one sub-organization per user and runs logins. It cannot sign or export inside one.',
   },
   {
     name: 'The session key',
     holder: 'The browser',
-    can: 'Everything the user can do, stamping each request.',
-    cannot: 'Leave the browser, or be read by your server.',
+    body: 'Stamps every request the user makes. It cannot leave the browser or be read by your server.',
   },
   {
     name: 'The signer key',
     holder: 'Your API',
-    can: 'Act inside a policy the user created.',
-    cannot: 'Outlive that policy, or exceed it.',
+    body: 'Acts inside a policy the user created, and never outlives it.',
   },
 ];
 
@@ -113,9 +118,9 @@ const FAQ = [
   },
   {
     q: 'Is it audited?',
-    a: 'No. Read the security model before you put real value behind it.',
+    a: 'No. Every flow was exercised against Turnkey’s production API and the test suite covers the stack end to end, but no third party has audited it. Read the security model before you put real value behind it.',
   },
-];
+] as const;
 
 export default function Home() {
   return (
@@ -182,126 +187,97 @@ export default function Home() {
         </div>
       </section>
 
+      {/* The modal */}
+      <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
+        <h2 className="text-[32px] font-semibold tracking-[-0.02em]">What the user sees</h2>
+        <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
+          The real screens, in your colours, on a domain you own.
+        </p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SHOTS.map((shot) => (
+            <figure key={shot.src}>
+              <Image
+                src={shot.src}
+                alt={shot.caption}
+                width={896}
+                height={1362}
+                sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 90vw"
+                className="w-full rounded-card bg-surface"
+              />
+              <figcaption className="mt-3 text-[13px] text-fg-3">{shot.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <figure className="mt-10">
+          <Image
+            src="/shots/dashboard.png"
+            alt="The developer dashboard, with the login methods of an app"
+            width={2720}
+            height={1700}
+            sizes="(min-width: 1120px) 1120px, 100vw"
+            className="w-full rounded-card bg-surface"
+          />
+          <figcaption className="mt-3 text-[13px] text-fg-3">
+            The dashboard, where you choose what the modal offers
+          </figcaption>
+        </figure>
+      </section>
+
       {/* How it works */}
       <section id="how" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
-        <div className="flex flex-col gap-3">
-          <p className="inline-flex w-fit items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
-            <Shield size={14} className="text-fg" />
-            How it works
-          </p>
-          <h2 className="text-[32px] font-semibold tracking-[-0.02em]">
-            Three credentials, three kinds of power
-          </h2>
-          <p className="max-w-[560px] text-[16px] text-fg-2">
-            The key your server holds is not the key that can sign.
-          </p>
-        </div>
+        <p className="inline-flex w-fit items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
+          <Shield size={14} className="text-fg" />
+          How it works
+        </p>
+        <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.02em]">
+          Three credentials, three kinds of power
+        </h2>
+        <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
+          The key your server holds is not the key that can sign. Checked against a production
+          organization, where it is refused.
+        </p>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
           {AUTHORITIES.map((item) => (
-            <div key={item.name} className="flex flex-col rounded-card bg-surface p-6">
+            <div key={item.name} className="rounded-card bg-surface p-6">
               <h3 className="text-[16px] font-semibold">{item.name}</h3>
               <p className="mt-1 text-[13px] text-fg-3">{item.holder}</p>
-              <div className="mt-5 space-y-3">
-                <p className="flex gap-2.5 text-[14px] text-fg-2">
-                  <Check size={16} className="mt-0.5 shrink-0 text-fg" />
-                  {item.can}
-                </p>
-                <p className="flex gap-2.5 text-[14px] text-fg-2">
-                  <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center text-fg">
-                    <span className="block h-[1.5px] w-3 rounded-pill bg-current" />
-                  </span>
-                  {item.cannot}
-                </p>
-              </div>
+              <p className="mt-4 text-[14px] leading-[1.6] text-fg-2">{item.body}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 flex flex-col gap-4 rounded-card bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-[640px] text-[14px] text-fg-2">
-            Checked against a production organization: the parent key is refused when it tries to
-            sign.
-          </p>
-          <Link
-            href="/docs/security"
-            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-pill bg-surface-2 px-4 py-2.5 text-[14px] text-fg transition-colors hover:bg-surface-3"
-          >
-            The security model
-            <ArrowRight size={15} />
-          </Link>
-        </div>
+        <Link
+          href="/docs/security"
+          className="mt-6 inline-flex items-center gap-2 text-[15px] text-fg transition-opacity hover:opacity-70"
+        >
+          The security model
+          <ArrowRight size={15} />
+        </Link>
       </section>
 
       {/* Self hosting */}
       <section id="self-hosting" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
         <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Host it yourself</h2>
-        <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
+        <p className="mt-3 max-w-[600px] text-[16px] leading-[1.6] text-fg-2">
           Bring a Turnkey organization and a Cloudflare account, then deploy. You own the database,
-          the keys and the bill.
+          the keys and the bill, with no seat pricing and nobody in the middle. An afternoon the
+          first time.
         </p>
-
-        <div className="mt-10 rounded-card bg-surface p-8">
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {[
-              'No seat pricing, no wallet pricing, no middleman',
-              'Your data stays in your account',
-              'MIT, so fork it and change it',
-              'An afternoon the first time',
-            ].map((line) => (
-              <li key={line} className="flex gap-2.5 text-[15px] text-fg-2">
-                <Check size={16} className="mt-1 shrink-0 text-fg" />
-                {line}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/docs/self-hosting"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
-          >
-            Deployment guide
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-
-      {/* Honest status */}
-      <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
-        <div className="rounded-card bg-surface p-8">
-          <h2 className="text-[20px] font-semibold">Where it stands</h2>
-          <p className="mt-3 max-w-[640px] text-[15px] text-fg-2">
-            Complete and verified, not run as a service. Every flow was exercised against Turnkey’s
-            production API and the test suite covers the stack end to end. There has been no third
-            party audit.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/docs/security"
-              className="rounded-pill bg-surface-2 px-4 py-2.5 text-[14px] text-fg transition-colors hover:bg-surface-3"
-            >
-              Security model
-            </Link>
-            <Link
-              href="/docs/decisions"
-              className="rounded-pill bg-surface-2 px-4 py-2.5 text-[14px] text-fg transition-colors hover:bg-surface-3"
-            >
-              Why it is built this way
-            </Link>
-          </div>
-        </div>
+        <Link
+          href="/docs/self-hosting"
+          className="mt-8 inline-flex w-fit items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
+        >
+          Deployment guide
+          <ArrowRight size={16} />
+        </Link>
       </section>
 
       {/* Questions */}
-      <section className="mx-auto w-full max-w-[1120px] px-6 py-20">
+      <section className="mx-auto w-full max-w-[760px] px-6 py-20">
         <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Questions</h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {FAQ.map((item) => (
-            <div key={item.q} className="rounded-card bg-surface p-6">
-              <h3 className="text-[16px] font-semibold">{item.q}</h3>
-              <p className="mt-2 text-[14px] text-fg-2">{item.a}</p>
-            </div>
-          ))}
-        </div>
+        <Faq items={FAQ} />
       </section>
     </>
   );
