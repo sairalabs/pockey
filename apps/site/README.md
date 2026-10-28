@@ -22,20 +22,25 @@ visible failure.
 ## The screenshots
 
 `public/shots` holds real captures, not mockups, and two scripts regenerate
-them. The modal shots come from the embed's own preview route, which renders
-every screen with mock data and no network:
+them. Each one photographs the panel alone, on a transparent background, so the
+landing page lights and frames them itself.
+
+The modal shots come from the embed's own preview route, which renders every
+screen with mock data and no network. The last one wears another theme, accent
+and radius, which is what the page shows beside it:
 
 ```bash
 pnpm --filter @pockey/embed dev
 pnpm --filter @pockey/site shots
 ```
 
-The dashboard shot drives the local stack the way the end to end suite does,
-reading the login code from the API log:
+The dashboard shots drive the local stack the way the end to end suite does,
+reading the login code from the API log. The API only accepts the dashboard
+origin it was given, so both have to be on the same port:
 
 ```bash
 bash apps/api/scripts/e2e-server.sh
-pnpm --filter @pockey/dashboard dev -- --port 3801
+pnpm --filter @pockey/dashboard dev
 pnpm --filter @pockey/site shots:dashboard
 ```
 

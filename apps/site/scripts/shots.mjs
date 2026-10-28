@@ -7,6 +7,9 @@
  *
  *   pnpm --filter @pockey/embed dev
  *   pnpm --filter @pockey/site shots
+ *
+ * Only the panel is photographed, on a transparent background, so the page can
+ * light it the way it likes instead of inheriting the preview's own stage.
  */
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,13 +19,23 @@ import { chromium } from '@playwright/test';
 const EMBED = process.env.EMBED_URL ?? 'http://localhost:5174';
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public', 'shots');
 
-/** The preview card label, and the file it is written to. */
+/** The preview card label, the file it is written to, and the skin to wear. */
 const SHOTS = [
   { label: 'Login', file: 'login.png' },
   { label: 'Email code', file: 'email-code.png' },
   { label: 'Sign message', file: 'sign-message.png' },
   { label: 'Confirm transaction', file: 'transaction.png' },
+  // The same screen, dressed differently: what an app with its own brand gets.
+  { label: 'Login', file: 'login-themed.png', theme: 'Light', accent: '#D2042D', radius: 'Round' },
 ];
+
+/* The preview frames each screen in a stage with a blurred host page behind it.
+   That is the gallery's furniture, not the product. */
+const STRIP = `
+  html, body, #root, #root > * { background: transparent !important; }
+  .pk-preview-stage { background: transparent !important; box-shadow: none !important; }
+  .pk-preview-stage > *:not(:last-child) { display: none !important; }
+`;
 
 const browser = await chromium.launch();
 const context = await browser.newContext({
@@ -34,7 +47,7 @@ const context = await browser.newContext({
 const page = await context.newPage();
 
 await page.goto(`${EMBED}/?preview=1`, { waitUntil: 'networkidle' });
-await page.getByRole('button', { name: 'Dark' }).click();
+await page.addStyleTag({ content: STRIP });
 
 // The development feedback toolbar floats over the page. It is not part of the
 // product and has no place in a screenshot of it.
@@ -43,17 +56,33 @@ await page.evaluate(() => {
     node.remove();
   });
 });
-await page.waitForTimeout(400);
 
+let skin = '';
 await mkdir(OUT, { recursive: true });
 
 for (const shot of SHOTS) {
+  const wanted = `${shot.theme ?? 'Dark'}|${shot.accent ?? ''}|${shot.radius ?? 'Soft'}`;
+  if (wanted !== skin) {
+    await page.getByRole('button', { name: shot.theme ?? 'Dark', exact: true }).click();
+    await page.getByRole('button', { name: shot.radius ?? 'Soft', exact: true }).click();
+    const hex = page.getByLabel('Accent hex value');
+    await hex.fill(shot.accent ?? '#4132EC');
+    await hex.press('Enter');
+    // The picker waits for the typing to settle before repainting every screen.
+    await page.waitForTimeout(900);
+    skin = wanted;
+  }
+
   const card = page.locator('section', {
     has: page.getByRole('heading', { level: 2, name: shot.label, exact: true }),
   });
-  const stage = card.locator('.pk-preview-stage');
-  await stage.first().waitFor({ state: 'visible' });
-  await stage.first().screenshot({ path: path.join(OUT, shot.file), animations: 'disabled' });
+  const panel = card.locator('[data-testid="pk-dialog"]').first();
+  await panel.waitFor({ state: 'visible' });
+  await panel.screenshot({
+    path: path.join(OUT, shot.file),
+    animations: 'disabled',
+    omitBackground: true,
+  });
   process.stdout.write(`${shot.file}\n`);
 }
 

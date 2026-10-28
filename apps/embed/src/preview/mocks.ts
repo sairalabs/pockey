@@ -11,7 +11,9 @@ import type { Screen, WalletOption } from '../lib/state';
 
 /** Static mock data for the preview gallery. Nothing here touches the network. */
 
-export const PREVIEW_ORIGIN = 'http://localhost:3810';
+/* The host page a user would really be on. At runtime the value comes from
+   the page that opened the modal; this one only has to look like one. */
+export const PREVIEW_ORIGIN = 'https://app.example.com';
 
 export const PREVIEW_METHODS: LoginMethod[] = ['email', 'google', 'apple', 'passkey', 'wallet'];
 

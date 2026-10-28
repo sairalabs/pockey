@@ -1,20 +1,24 @@
 /**
- * Screenshot of the real developer dashboard for the landing page.
+ * Screenshots of the real developer dashboard for the landing page.
  *
  * It drives the local stack the same way the end to end suite does: the API
  * with the console mailer, which prints the login code to a log this script
- * reads. Start both first, then run this:
+ * reads. The API only accepts the dashboard origin it was given, so the two
+ * ports have to agree. Start both first, then run this:
  *
  *   bash apps/api/scripts/e2e-server.sh
- *   pnpm --filter @pockey/dashboard dev -- --port 3801
+ *   pnpm --filter @pockey/dashboard dev
  *   pnpm --filter @pockey/site shots:dashboard
+ *
+ * On another port, pass it to both: `--var DASHBOARD_ORIGIN:http://localhost:3801`
+ * on wrangler, and DASHBOARD_URL here.
  */
 import { mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
-const DASHBOARD = process.env.DASHBOARD_URL ?? 'http://localhost:3801';
+const DASHBOARD = process.env.DASHBOARD_URL ?? 'http://localhost:3800';
 const EMAIL = process.env.DASHBOARD_EMAIL ?? 'dev@pockey.local';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const LOG = process.env.API_LOG ?? path.join(here, '..', '..', 'playground', '.e2e', 'api.log');
@@ -37,6 +41,18 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 
+/** Next's development indicator and the feedback toolbar float over the page. */
+async function strip() {
+  await page.evaluate(() => {
+    document.querySelectorAll('nextjs-portal').forEach((node) => {
+      node.remove();
+    });
+    document.querySelectorAll('body > div').forEach((node) => {
+      if (!node.querySelector('main, header, nav')) node.remove();
+    });
+  });
+}
+
 await page.goto(`${DASHBOARD}/login`, { waitUntil: 'networkidle' });
 await page.getByLabel('Email').fill(EMAIL);
 await page.getByRole('button', { name: /continue|sign in|send/i }).click();
@@ -52,28 +68,44 @@ await page
   .first()
   .click();
 await page.waitForURL(/\/apps\/[^/]+$/, { timeout: 20_000 });
-await page.waitForLoadState('networkidle');
+const app = page.url();
 
-// The configuration pane holds the login methods and the chains an app offers,
-// which is the screen that shows what the dashboard is for.
+await mkdir(OUT, { recursive: true });
+
+// The keys screen: the app id a client bundle carries and the secrets that
+// never leave the server. Real rows, no invented numbers.
+await page.goto(`${app}/keys`, { waitUntil: 'networkidle' });
+await page.waitForTimeout(800);
+await strip();
+await page.screenshot({ path: path.join(OUT, 'dashboard.png'), animations: 'disabled' });
+process.stdout.write('dashboard.png\n');
+
+// The configuration panel: the login methods and chains an app offers. Shot on
+// its own so the page can place it rather than inherit the dimmed backdrop.
 await page.getByRole('button', { name: 'Account' }).click();
 await page.getByRole('menuitem', { name: 'Settings' }).click();
 await page.getByRole('button', { name: 'Configuration', exact: true }).click();
-await page.waitForTimeout(1200);
-
-// Next's development indicator and the feedback toolbar are tooling, not the
-// product, and they float over the page.
+await page.waitForTimeout(1000);
+await strip();
 await page.evaluate(() => {
-  document.querySelectorAll('nextjs-portal, body > *:not(#__next):not(div)').forEach((node) => {
-    node.remove();
-  });
-  document.querySelectorAll('body > div').forEach((node) => {
-    if (!node.querySelector('main, header, nav')) node.remove();
-  });
+  const dialog = document.querySelector('[role="dialog"]');
+  if (!dialog) throw new Error('no dialog');
+  document.documentElement.style.background = 'transparent';
+  document.body.style.background = 'transparent';
+  for (let node = dialog; node && node !== document.body; node = node.parentElement) {
+    const parent = node.parentElement;
+    if (!parent) break;
+    parent.style.background = 'transparent';
+    for (const sibling of parent.children) {
+      if (sibling !== node && sibling instanceof HTMLElement) sibling.style.visibility = 'hidden';
+    }
+  }
 });
-
-await mkdir(OUT, { recursive: true });
-await page.screenshot({ path: path.join(OUT, 'dashboard.png'), animations: 'disabled' });
-process.stdout.write('dashboard.png\n');
+await page.getByRole('dialog').screenshot({
+  path: path.join(OUT, 'dashboard-config.png'),
+  animations: 'disabled',
+  omitBackground: true,
+});
+process.stdout.write('dashboard-config.png\n');
 
 await browser.close();
