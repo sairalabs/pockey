@@ -28,5 +28,6 @@
     "eslint": "^9.39.0",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"
-  }
+  },
+  "license": "MIT"
 }

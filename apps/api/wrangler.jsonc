@@ -11,7 +11,7 @@
   "triggers": { "crons": ["0 * * * *", "20 2 * * *"] },
   "vars": {
     "ENVIRONMENT": "development",
-    // `mock` is refused outside development. Production sets `turnkey` (T0.5).
+    // `mock` is refused outside development. Deployed environments set `turnkey` (T0.5).
     "KEY_PROVIDER": "mock",
     // T5.1: the dashboard origin allowed with credentials on /admin/*.
     "DASHBOARD_ORIGIN": "http://localhost:3800",
@@ -20,8 +20,8 @@
     {
       "binding": "DB",
       "database_name": "pockey",
-      // Replace with the real id after `wrangler d1 create pockey`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Run `wrangler d1 create pockey` and paste the id it prints.
+      "database_id": "REPLACE_WITH_YOUR_D1_ID",
       "migrations_dir": "../../packages/db/migrations",
     },
   ],
@@ -31,4 +31,46 @@
   },
   // SQLite backed, the only kind of Durable Object available on the free plan.
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
+
+  /*
+    The closed beta runs as `staging`: real Turnkey, real Resend, no billing.
+    `ENVIRONMENT=production` demands Stripe (price, meter, webhook) by design, so
+    it waits for SAI-92 and the company. Nothing about that guard is relaxed here.
+
+    Secrets never live in this file. Set them with
+    `wrangler secret put <NAME> --env staging`:
+      BETTER_AUTH_SECRET
+      TURNKEY_ORG_ID, TURNKEY_API_PUBLIC_KEY, TURNKEY_API_PRIVATE_KEY
+      TURNKEY_SIGNER_PUBLIC_KEY, TURNKEY_SIGNER_PRIVATE_KEY
+      RESEND_API_KEY
+  */
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "KEY_PROVIDER": "turnkey",
+        "MAILER": "resend",
+        "API_BASE_URL": "https://api.pockey.xyz",
+        "EMBED_ORIGIN": "https://embed.pockey.xyz",
+        "DASHBOARD_ORIGIN": "https://app.pockey.xyz",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pockey",
+          "database_id": "REPLACE_WITH_YOUR_D1_ID",
+          "migrations_dir": "../../packages/db/migrations",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "RATE_LIMITER", "class_name": "RateLimiter" }],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RateLimiter"] }],
+      "triggers": { "crons": ["0 * * * *", "20 2 * * *"] },
+      "observability": { "enabled": true },
+      // Added once pockey.xyz is a zone on this Cloudflare account. Until then the
+      // worker answers on its workers.dev URL.
+      // "routes": [{ "pattern": "api.pockey.xyz", "custom_domain": true }],
+    },
+  },
 }

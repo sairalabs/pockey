@@ -47,5 +47,17 @@
     "tsup": "^8.5.1",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/medhychabour/pockey.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/medhychabour/pockey#readme",
+  "bugs": {
+    "url": "https://github.com/medhychabour/pockey/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

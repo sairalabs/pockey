@@ -1,19 +1,28 @@
-Tu travailles sur Pockey, un SDK d'embedded wallets. Lis POCKEY_SPEC.md avant toute tâche.
+Pockey is a self hosted embedded wallet and auth SDK. Keys live at Turnkey, in a
+sub-organization per user; nothing here ever holds one. Read SECURITY.md before
+touching anything that signs.
 
-Règles :
+Rules:
 
-- TypeScript strict. Pas de `any`. Zod pour toute entrée externe.
-- Aucune clé privée, seed ou share ne transite par notre code. Si une tâche semble l'exiger, arrête-toi et demande.
-- Tout appel à un service externe passe par une interface dans packages/ (KeyProvider, GasSponsor, Mailer, Db). N'importe jamais le SDK Turnkey en dehors de packages/key-provider/src/turnkey/.
-- Chaque route API a un schema Zod d'entrée et de sortie, et un test Vitest.
-- Les packages publics (types, core, react, react-native, chains-*) ne dépendent d'aucun package privé.
-- Conventional commits. Une PR = une tâche de la roadmap.
-- Pas de tirets longs (em dash) nulle part.
-- Quand une décision n'est pas dans la spec : choisis la solution la moins chère et la plus simple, note-la dans DECISIONS.md avec la date et la raison.
-- Ne modifie jamais le pricing, les policies de sécurité ou l'interface KeyProvider sans le signaler explicitement.
+- TypeScript strict. No `any`. Zod for every external input.
+- No private key, seed or share passes through this code. If a task seems to
+  require one, stop and ask.
+- Every external service sits behind a port in `packages/` (KeyProvider,
+  GasSponsor, Mailer, Db). Never import the Turnkey SDK outside
+  `packages/key-provider/src/turnkey/`.
+- Every API route has a Zod schema in and out, and a Vitest test.
+- The published packages (types, core, react, chains-*) depend on no private
+  package.
+- Conventional commits.
+- No em dash anywhere.
+- When a decision is not written down, take the simplest and cheapest option and
+  record it in DECISIONS.md with the date and the reason.
+- Never change the security policies or the KeyProvider interface without saying
+  so explicitly.
 
-Outils :
+Tools:
 
-- `pnpm check` (typecheck + lint + test) doit passer avant tout commit.
-- Skills UI installés dans `.agents/skills/` : `better-ui` (polish, radius concentrique, ombres, icônes) et `emil-design-eng` (motion, easing, durées). Les lire avant de toucher au dashboard, à l'embed ou au modal React.
-- Références visuelles du dashboard : style Base Dashboard (fond noir, cartes sombres avec bord 1px translucide, typographie sans-serif, densité aérée). Voir `apps/dashboard/DESIGN.md`.
+- `pnpm check` (typecheck + lint + test) must pass before any commit.
+- `pnpm e2e` drives the whole stack in a real browser.
+- The embed at `/?preview=1` shows every screen of the modal at once, in both
+  themes and all four corner scales. Use it when changing the modal.

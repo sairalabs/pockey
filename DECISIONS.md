@@ -1,6 +1,6 @@
 # Decisions
 
-Journal des décisions non couvertes par `POCKEY_SPEC.md`. Une entrée = date, décision, raison.
+Journal des décisions prises pendant la construction. Une entrée = date, décision, raison.
 
 ## 2026-09-15
 
@@ -116,7 +116,7 @@ Journal des décisions non couvertes par `POCKEY_SPEC.md`. Une entrée = date, d
 
 ## 2026-09-17 (phase 5)
 
-- **Contrats dashboard** dans `packages/types/src/admin.ts` : session développeur, apps avec usage du mois et solde, clés API (secret montré une seule fois), séries d'usage avec remplissage des jours vides, liste d'utilisateurs paginée, résumé de facturation (500 wallets actifs inclus, 0,06 $ au-delà, section 11).
+- **Contrats dashboard** dans `packages/types/src/admin.ts` : session développeur, apps avec usage du mois et solde, clés API (secret montré une seule fois), séries d'usage avec remplissage des jours vides, liste d'utilisateurs paginée, résumé de facturation (le calcul vit dans `estimateMonthlyCents`, à régler par qui héberge).
 - **Facturation Stripe dans `@pockey/payments` (T5.4)** :
   - Clés d'idempotence hachées (`pockey-<scope>-<sha256>`) pour qu'aucun identifiant de développeur ou de client ne circule en clair dans un en-tête. Checkout et portail gardent une clé aléatoire (une clé stable rejouerait une URL expirée).
   - Compatibilité entre versions d'API Stripe : `current_period_end` est lu au niveau de l'abonnement puis de ses items (déplacé dans Basil), et l'abonnement d'une facture est lu aux deux emplacements connus.
