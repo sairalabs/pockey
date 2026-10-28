@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Footer } from '@/components/footer';
 import { Nav } from '@/components/nav';
 import { site } from '@/lib/site';
+import { DevFeedback } from './DevFeedback';
 import './globals.css';
 
 const inter = Inter({
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Nav />
         <main id="content">{children}</main>
         <Footer />
+        <DevFeedback appName="Pockey site" />
       </body>
     </html>
   );
