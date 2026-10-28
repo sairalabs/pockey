@@ -1,17 +1,14 @@
 import Link from 'next/link';
 import { Code } from '@/components/code';
-import { Waitlist } from '@/components/waitlist';
 import {
   AppWindow,
   ArrowRight,
   ArrowUpRight,
   Check,
   Fuel,
-  Globe,
   KeyRound,
   Mail,
   Palette,
-  ScanFace,
   Shield,
   Users,
   Wallet,
@@ -236,63 +233,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Hosting */}
-      <section id="hosting" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
-        <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Two ways to get it</h2>
+      {/* Self hosting */}
+      <section id="self-hosting" className="mx-auto w-full max-w-[1120px] scroll-mt-20 px-6 py-20">
+        <h2 className="text-[32px] font-semibold tracking-[-0.02em]">Host it yourself</h2>
         <p className="mt-3 max-w-[560px] text-[16px] text-fg-2">
-          One exists today. The other depends on how many people ask.
+          Bring a Turnkey organization and a Cloudflare account, then deploy. You own the database,
+          the keys and the bill.
         </p>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-2">
-          <div className="flex flex-col rounded-card bg-surface p-8">
-            <div className="flex items-center gap-2">
-              <Globe size={18} className="text-fg" />
-              <h3 className="text-[18px] font-semibold">Host it yourself</h3>
-            </div>
-            <p className="mt-1 text-[14px] text-fg-3">Available now</p>
-            <p className="mt-5 text-[15px] text-fg-2">
-              Bring a Turnkey organization and a Cloudflare account, then deploy. You own the
-              database, the keys and the bill.
-            </p>
-            <ul className="mt-6 space-y-2.5">
-              {[
-                'No seat pricing, no wallet pricing, no middleman',
-                'Your data stays in your account',
-                'MIT, so fork it and change it',
-                'An afternoon the first time',
-              ].map((line) => (
-                <li key={line} className="flex gap-2.5 text-[14px] text-fg-2">
-                  <Check size={16} className="mt-0.5 shrink-0 text-fg" />
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/docs/self-hosting"
-              className="mt-8 inline-flex w-fit items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
-            >
-              Deployment guide
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          <div className="flex flex-col rounded-card bg-surface p-8">
-            <div className="flex items-center gap-2">
-              <ScanFace size={18} className="text-fg" />
-              <h3 className="text-[18px] font-semibold">Let someone else host it</h3>
-            </div>
-            <p className="mt-1 text-[14px] text-fg-3">Not available</p>
-            <p className="mt-5 text-[15px] text-fg-2">
-              There is no hosted Pockey. If enough teams want one, it is worth building, and this is
-              how that gets counted.
-            </p>
-            <div className="mt-6">
-              <Waitlist />
-            </div>
-            <p className="mt-auto pt-8 text-[13px] text-fg-3">
-              Self hosting stays free either way.
-            </p>
-          </div>
+        <div className="mt-10 rounded-card bg-surface p-8">
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {[
+              'No seat pricing, no wallet pricing, no middleman',
+              'Your data stays in your account',
+              'MIT, so fork it and change it',
+              'An afternoon the first time',
+            ].map((line) => (
+              <li key={line} className="flex gap-2.5 text-[15px] text-fg-2">
+                <Check size={16} className="mt-1 shrink-0 text-fg" />
+                {line}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/docs/self-hosting"
+            className="mt-8 inline-flex w-fit items-center gap-2 rounded-pill bg-white px-5 py-3 text-[15px] font-medium text-black transition-transform duration-150 active:scale-[0.96]"
+          >
+            Deployment guide
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
 

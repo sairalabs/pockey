@@ -35,6 +35,6 @@ export const host = {
 
 export const nav = [
   { href: '/#how', label: 'How it works' },
-  { href: '/#hosting', label: 'Hosting' },
+  { href: '/#self-hosting', label: 'Self hosting' },
   { href: '/docs', label: 'Docs' },
 ] as const;

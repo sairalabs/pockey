@@ -27,36 +27,22 @@ export default function Privacy() {
       </p>
 
       <h2 id="collected">What is collected</h2>
-      <ul>
-        <li>
-          <strong>Server logs.</strong> The host records the IP address, the date, the page and the
-          browser for each request, to serve the site and detect abuse. Legal basis: legitimate
-          interest.
-        </li>
-        <li>
-          <strong>Your email address, if you type it in.</strong> The hosted version form sends one
-          address to one inbox, so the publisher can count who wants it. Nothing is stored in a
-          database here. Legal basis: your consent.
-        </li>
-      </ul>
+      <p>
+        Server logs only. The host records the IP address, the date, the page and the browser for
+        each request, to serve the site and detect abuse. Legal basis: legitimate interest. There is
+        no form on this site, so nothing else is collected. If you write to the contact address, the
+        publisher keeps your message as long as the exchange is useful.
+      </p>
 
       <h2 id="recipients">Who sees it</h2>
-      <ul>
-        <li>{host.name}, as the host, for serving the site and keeping its logs.</li>
-        <li>
-          Resend, as the email provider, for delivering the message that carries your address.
-        </li>
-      </ul>
       <p>
-        Both are in the United States, under the European Commission’s standard contractual clauses.
-        Nothing is sold or passed to anyone else.
+        {host.name}, as the host, for serving the site and keeping its logs. It is in the United
+        States, under the European Commission’s standard contractual clauses. Nothing is sold or
+        passed to anyone else.
       </p>
 
       <h2 id="retention">How long</h2>
-      <ul>
-        <li>Server logs: the host’s own retention period, a few weeks at most.</li>
-        <li>An address sent through the form: two years at most.</li>
-      </ul>
+      <p>Server logs are kept for the host’s own retention period, a few weeks at most.</p>
 
       <h2 id="rights">Your rights</h2>
       <p>
