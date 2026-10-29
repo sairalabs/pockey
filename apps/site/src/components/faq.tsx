@@ -17,7 +17,7 @@ export function Faq({ items }: { items: readonly FaqItem[] }) {
   const [open, setOpen] = useState(0);
 
   return (
-    <div className="mt-10 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       {items.map((item, index) => {
         const expanded = open === index;
         return (
