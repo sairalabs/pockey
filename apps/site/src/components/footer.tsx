@@ -87,8 +87,7 @@ export function Footer() {
         </div>
 
         <p className="mt-16 text-[13px] text-fg-3">
-          © {new Date().getFullYear()} Saira Labs. Free software under the MIT licence. Not a
-          custodian, and nobody operates it for you.
+          © {new Date().getFullYear()} Saira Labs. Free software under the MIT licence.
         </p>
       </div>
     </footer>

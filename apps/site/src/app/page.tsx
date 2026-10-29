@@ -127,7 +127,7 @@ const KEYS = [
 const FAQ = [
   {
     q: 'Can my server move a user’s money?',
-    a: 'No. Keys live at Turnkey in a sub-organization whose only root user is your end user, and your API key is refused inside it. That was tested against the production API, not assumed.',
+    a: 'No. Keys live at Turnkey in a sub-organization whose only root user is your end user, and your API key is refused inside it. That refusal is tested against the live API, not taken on trust.',
   },
   {
     q: 'Do my users need a wallet already?',
@@ -140,10 +140,6 @@ const FAQ = [
   {
     q: 'What does it cost?',
     a: 'Turnkey per signature, Cloudflare for a Worker and a database, your email and RPC providers. Nothing for Pockey.',
-  },
-  {
-    q: 'Has anyone audited it?',
-    a: 'No. Every flow was exercised against Turnkey’s production API and the test suite covers the stack end to end, but no third party has audited it. Read the security model before you put real value behind it.',
   },
 ] as const;
 

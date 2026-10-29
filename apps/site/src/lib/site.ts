@@ -14,7 +14,7 @@ export const site = {
     'Open source embedded wallets and auth. Email, Google, Apple, passkeys or an existing wallet, an EVM and a Solana wallet per user, signing and sessions behind a few React hooks. Keys live at Turnkey, nobody else can sign for your users.',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pockey.xyz',
   repo: 'https://github.com/medhychabour/pockey',
-  contact: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@pockey.xyz',
+  contact: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@saira.xyz',
 } as const;
 
 /** Set these in the hosting provider. Missing values are shown as missing. */

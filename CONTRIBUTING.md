@@ -2,10 +2,9 @@
 
 Read this first, it will save you time.
 
-**This project is published, not maintained.** It is complete and it works, but
-nobody is on duty. Issues and pull requests are welcome and will be read when
-there is time, which may be a while. If you need something on a schedule, fork
-it: that is what the licence is for.
+**This project is maintained and contributions are welcome.** It is complete and
+it works, and it keeps moving. Issues and pull requests are read, so open one.
+There is no SLA on a reply, but there is somebody at the other end.
 
 ## If you open an issue
 

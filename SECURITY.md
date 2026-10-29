@@ -78,12 +78,11 @@ and the balance ends up correct, but a reader of the ledger sees both.
 ## Reporting something
 
 Open a GitHub issue for anything that is not exploitable. For anything that is,
-write to the address on https://github.com/medhychabour rather than opening an
-issue.
+write to hello@saira.xyz rather than opening an issue.
 
-This project is published as source, not operated as a service, and it is not
-actively maintained. Expect a reply when there is time, not an SLA. If you are
-running it, you are the one who has to act on what you learn.
+This project is maintained, and reports are read. It is published as source and
+not operated as a service, so there is no SLA on a reply, and if you are running
+it you are the one who has to act on what you learn.
 
 ## If you deploy it
 
