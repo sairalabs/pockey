@@ -279,43 +279,90 @@
   border-radius: var(--radius-card);
 }
 
-/* ---------- The hero: three bands, each undulating on its own clock ------- */
+/* ---------- The hero: three bands, each on its own uneven loop ------------- */
+
+/*
+  Full loops rather than a ping-pong between two states: a band that goes back
+  the way it came reads as a machine. The stops are at odd percentages and the
+  durations share no factor, so the three never line up twice the same way, and
+  a negative delay starts each one in a different place.
+*/
 
 @keyframes ribbon-a {
-  to {
-    transform: translate3d(-4%, 3%, 0) rotate(-2deg);
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  23% {
+    transform: translate3d(-3%, 2.4%, 0) rotate(-1.4deg) scale(1.07);
+  }
+  48% {
+    transform: translate3d(2.2%, -1.6%, 0) rotate(0.9deg) scale(0.96);
+  }
+  71% {
+    transform: translate3d(-1.4%, 3.1%, 0) rotate(-0.5deg) scale(1.05);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
   }
 }
+
 @keyframes ribbon-b {
-  to {
-    transform: translate3d(5%, -4%, 0) rotate(3deg);
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  31% {
+    transform: translate3d(3.4%, -2.2%, 0) rotate(1.7deg) scale(1.04);
+  }
+  57% {
+    transform: translate3d(-2.6%, 2.8%, 0) rotate(-1.1deg) scale(1.09);
+  }
+  82% {
+    transform: translate3d(1.2%, 1.1%, 0) rotate(0.4deg) scale(0.98);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
   }
 }
+
 @keyframes ribbon-c {
-  to {
-    transform: translate3d(-3%, -3%, 0) rotate(2deg);
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  19% {
+    transform: translate3d(-2.1%, -2.6%, 0) rotate(1.2deg) scale(0.94);
+  }
+  44% {
+    transform: translate3d(2.8%, 1.9%, 0) rotate(-1.6deg) scale(1.08);
+  }
+  76% {
+    transform: translate3d(-3.2%, -0.8%, 0) rotate(0.7deg) scale(1.02);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
   }
 }
 
 .ribbon-a,
 .ribbon-b,
 .ribbon-c {
-  animation-duration: 23s;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
-  animation-direction: alternate;
   will-change: transform;
 }
 .ribbon-a {
   animation-name: ribbon-a;
+  animation-duration: 37s;
+  animation-delay: -11s;
 }
 .ribbon-b {
   animation-name: ribbon-b;
-  animation-duration: 29s;
+  animation-duration: 43s;
+  animation-delay: -29s;
 }
 .ribbon-c {
   animation-name: ribbon-c;
-  animation-duration: 35s;
+  animation-duration: 53s;
+  animation-delay: -7s;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -42,6 +42,8 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
     let w = 0;
     let h = 0;
     let cells: string[] = [];
+    /* A phase per cell, so neighbours never brighten in step. */
+    let phases: number[] = [];
     let cols = 0;
     let rows = 0;
 
@@ -57,6 +59,7 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
       cols = Math.ceil(w / cell);
       rows = Math.ceil(h / cell);
       cells = Array.from({ length: cols * rows }, pick);
+      phases = Array.from({ length: cols * rows }, () => Math.random() * Math.PI * 2);
     };
 
     const at = { x: -9999, y: -9999, near: 0 };
@@ -94,14 +97,24 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
           const x = col * cell + cell / 2;
           const y = row * cell + cell / 2;
 
-          // A swell crossing the field, so it breathes with no pointer on it.
-          const wave = Math.sin((x + y) * 0.006 - seconds * 0.9) * 0.5 + 0.5;
-          let light = base * (0.35 + wave);
+          // Three waves of different lengths crossing, plus a phase of the
+          // cell's own: no front marches across the field, it breathes.
+          const swell =
+            (Math.sin(x * 0.009 + seconds * 0.5) * 0.44 +
+              Math.sin(y * 0.013 - seconds * 0.33) * 0.3 +
+              Math.sin((x + y) * 0.004 + seconds * 0.19) * 0.38 +
+              Math.sin(seconds * 0.6 + (phases[index] ?? 0)) * 0.18 +
+              1.3) /
+            2.6;
+          let light = base * (0.45 + swell * 1.2);
+
+          // A character here and there turns over on its own.
+          if (Math.random() < 0.0012) cells[index] = pick();
 
           if (at.near) {
             const near = Math.max(0, 1 - Math.hypot(x - at.x, y - at.y) / reach);
             light += near * near * 0.8;
-            // Only the characters the pointer is over keep changing.
+            // The ones the pointer is over turn over far more often.
             if (near > 0.25 && Math.random() < 0.06) cells[index] = pick();
           }
 
