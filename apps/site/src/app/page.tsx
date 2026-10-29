@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Code } from '@/components/code';
 import { Faq } from '@/components/faq';
+import { HeroGlow } from '@/components/hero-glow';
 import {
   ArrowUpRight,
   ChevronRight,
@@ -47,25 +48,21 @@ const SKINS = [
   {
     name: 'Dark, indigo',
     src: loginShot,
-    line: "appearance: { theme: 'dark', accent: '#4132EC' }",
     stage: '#0c0c0c',
   },
   {
     name: 'Light, grey',
     src: skinLightShot,
-    line: "appearance: { theme: 'light', accent: '#52525B', radius: 'round' }",
     stage: '#f1f1f3',
   },
   {
     name: 'Dark, pill',
     src: skinGreenShot,
-    line: "appearance: { theme: 'dark', accent: '#12A594', radius: 'pill' }",
     stage: '#09100f',
   },
   {
     name: 'Light, sharp',
     src: skinSharpShot,
-    line: "appearance: { theme: 'light', accent: '#0B5FFF', radius: 'sharp' }",
     stage: '#edf0f6',
   },
 ];
@@ -146,17 +143,6 @@ const FAQ = [
   },
 ] as const;
 
-/* A field of faint lines, lit from above by the accent and fading back into the
-   page. Decoration only, and the one place on the site that carries colour. */
-const GRID = {
-  backgroundImage:
-    'linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),' +
-    'linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
-  backgroundSize: '72px 72px',
-  maskImage: 'radial-gradient(90% 70% at 50% 35%, #000 20%, transparent 100%)',
-  WebkitMaskImage: 'radial-gradient(90% 70% at 50% 35%, #000 20%, transparent 100%)',
-};
-
 /** White, through the accent, back to white. The one word that carries it. */
 const LIT = { backgroundImage: 'linear-gradient(120deg, #ffffff 8%, #9d93ff 50%, #ffffff 92%)' };
 
@@ -165,11 +151,7 @@ export default function Home() {
     <>
       {/* Hero, the height of the screen */}
       <section className="relative isolate -mt-16 flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 pt-16 text-center">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute inset-0" style={GRID} />
-          <div className="absolute left-1/2 top-[-26%] size-[780px] -translate-x-1/2 rounded-pill bg-accent/20 blur-[180px]" />
-          <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-b from-transparent to-bg" />
-        </div>
+        <HeroGlow />
 
         <div className="stagger w-full max-w-[880px]">
           <p className="inline-flex items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
@@ -208,7 +190,7 @@ export default function Home() {
 
       {/* The code */}
       <section className="mx-auto w-full max-w-[1120px] px-6 py-28">
-        <div className="grid gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-center lg:gap-16">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-start lg:gap-16">
           <div>
             <h2 className="max-w-[420px] text-[34px] font-semibold leading-[1.1] tracking-[-0.025em] sm:text-[40px]">
               A provider and two hooks
@@ -293,19 +275,21 @@ export default function Home() {
           <ChevronRight size={17} />
         </Link>
 
-        <div className="mt-12 overflow-hidden rounded-[20px] bg-surface-2">
-          <div className="flex h-11 items-center gap-2 px-4">
-            <span className="size-2.5 rounded-pill bg-surface-3" />
-            <span className="size-2.5 rounded-pill bg-surface-3" />
-            <span className="size-2.5 rounded-pill bg-surface-3" />
-            <span className="mx-auto hidden rounded-pill bg-bg px-3 py-1 text-[12px] text-fg-3 sm:block">
+        {/* The console is as dark as the page, so the frame around it is the
+            lightest surface on the site and carries the whole shot. */}
+        <div className="mt-12 rounded-[24px] bg-surface-3 p-2 sm:p-3">
+          <div className="flex h-10 items-center gap-2 px-2.5">
+            <span className="size-2.5 rounded-pill bg-surface" />
+            <span className="size-2.5 rounded-pill bg-surface" />
+            <span className="size-2.5 rounded-pill bg-surface" />
+            <span className="mx-auto hidden rounded-pill bg-surface px-3 py-1 text-[12px] text-fg-2 sm:block">
               dashboard.yourapp.com
             </span>
             <span aria-hidden="true" className="hidden w-[42px] sm:block" />
           </div>
           {/* A 1360 wide screen is unreadable on a phone, so a phone is shown
               the part that carries the meaning, enlarged. */}
-          <div className="aspect-square overflow-hidden sm:aspect-[1360/700]">
+          <div className="aspect-square overflow-hidden rounded-[14px] sm:aspect-[1360/700]">
             <Image
               src={dashboardShot}
               alt="The API keys screen of the dashboard, with the public app id and a secret key"
@@ -347,7 +331,10 @@ export default function Home() {
           <p className="mx-auto mt-4 max-w-[420px] text-[16px] leading-[1.6] text-fg-2">
             Nothing to sign up for. The default setup runs on an in-memory key provider.
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mx-auto mt-8 w-fit max-w-full overflow-x-auto rounded-control bg-surface-2 px-5 py-3 text-left">
+            <Code code={`git clone ${site.repo}`} lang="bash" bare />
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <a
               href={site.repo}
               target="_blank"

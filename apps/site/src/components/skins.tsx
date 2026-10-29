@@ -7,8 +7,6 @@ export interface Skin {
   /** The preset, named by what it actually sets. */
   name: string;
   src: StaticImageData;
-  /** The appearance object that produced this capture. */
-  line: string;
   /** The page behind the modal wears the theme too. */
   stage: string;
 }
@@ -20,7 +18,6 @@ export interface Skin {
  */
 export function Skins({ skins }: { skins: Skin[] }) {
   const [active, setActive] = useState(0);
-  const current = skins[active];
 
   return (
     <div className="relative mt-10 flex h-[560px] flex-col overflow-hidden rounded-[28px] sm:h-[660px]">
@@ -43,34 +40,24 @@ export function Skins({ skins }: { skins: Skin[] }) {
         </div>
       ))}
 
-      {/* The controls belong to this page, not to the skin, so they keep their
-          own dark slab whichever theme is showing behind them. */}
-      <div className="relative z-10 mt-auto p-4 sm:p-6">
-        <div className="rounded-[20px] bg-black/55 p-4 backdrop-blur-md sm:p-5">
-          <div className="flex flex-wrap gap-2">
-            {skins.map((skin, index) => (
-              <button
-                key={skin.name}
-                type="button"
-                aria-pressed={index === active}
-                onClick={() => {
-                  setActive(index);
-                }}
-                className={`rounded-pill px-4 py-2 text-[13px] transition-colors ${
-                  index === active
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                {skin.name}
-              </button>
-            ))}
-          </div>
-          {/* The appearance line scrolls on its own rather than widening the page. */}
-          <p className="code-face mt-4 max-w-full overflow-x-auto text-[13px] text-white/60">
-            {current?.line}
-          </p>
-        </div>
+      {/* The controls belong to this page, not to the skin, so each one carries
+          its own fill and reads over a light theme as well as a dark one. */}
+      <div className="relative z-10 mt-auto flex flex-wrap gap-2 p-5 sm:p-7">
+        {skins.map((skin, index) => (
+          <button
+            key={skin.name}
+            type="button"
+            aria-pressed={index === active}
+            onClick={() => {
+              setActive(index);
+            }}
+            className={`rounded-pill px-4 py-2 text-[13px] backdrop-blur-md transition-colors ${
+              index === active ? 'bg-white text-black' : 'bg-black/40 text-white hover:bg-black/60'
+            }`}
+          >
+            {skin.name}
+          </button>
+        ))}
       </div>
     </div>
   );
