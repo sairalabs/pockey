@@ -1,7 +1,7 @@
 'use client';
 
 import Image, { type StaticImageData } from 'next/image';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 export interface Skin {
   /** The preset, named by what it actually sets. */
@@ -18,6 +18,26 @@ export interface Skin {
  */
 export function Skins({ skins }: { skins: Skin[] }) {
   const [active, setActive] = useState(0);
+  const track = useRef<HTMLDivElement>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pill, setPill] = useState({ x: 0, width: 0 });
+
+  // The pill is told where to sit by the tab itself, so it follows a label of
+  // any length and survives a resize or a late font.
+  useLayoutEffect(() => {
+    const place = () => {
+      const tab = tabs.current[active];
+      if (tab) setPill({ x: tab.offsetLeft, width: tab.offsetWidth });
+    };
+    place();
+    const box = track.current;
+    if (!box || typeof ResizeObserver === 'undefined') return;
+    const watch = new ResizeObserver(place);
+    watch.observe(box);
+    return () => {
+      watch.disconnect();
+    };
+  }, [active]);
 
   return (
     <div className="relative mt-10 flex h-[560px] flex-col overflow-hidden rounded-[28px] sm:h-[660px]">
@@ -35,29 +55,45 @@ export function Skins({ skins }: { skins: Skin[] }) {
             alt={`The login screen, ${skin.name.toLowerCase()}`}
             sizes="300px"
             priority={index === 0}
-            className="absolute left-1/2 top-10 w-[210px] -translate-x-1/2 rounded-[18px] shadow-[0_30px_60px_-24px_rgba(0,0,0,0.55)] sm:top-14 sm:w-[260px]"
+            className="absolute left-1/2 top-10 w-[210px] -translate-x-1/2 rounded-[18px] sm:top-14 sm:w-[260px]"
           />
         </div>
       ))}
 
-      {/* The controls belong to this page, not to the skin, so each one carries
+      {/* The controls belong to this page, not to the skin, so the track keeps
           its own fill and reads over a light theme as well as a dark one. */}
-      <div className="relative z-10 mt-auto flex flex-wrap gap-2 p-5 sm:p-7">
-        {skins.map((skin, index) => (
-          <button
-            key={skin.name}
-            type="button"
-            aria-pressed={index === active}
-            onClick={() => {
-              setActive(index);
-            }}
-            className={`rounded-pill px-4 py-2 text-[13px] backdrop-blur-md transition-colors ${
-              index === active ? 'bg-white text-black' : 'bg-black/40 text-white hover:bg-black/60'
-            }`}
-          >
-            {skin.name}
-          </button>
-        ))}
+      <div className="relative z-10 mt-auto flex justify-center overflow-x-auto p-5 sm:p-7">
+        <div
+          ref={track}
+          role="tablist"
+          aria-label="Appearance presets"
+          className="relative flex w-max gap-1 rounded-pill bg-black/70 p-1 backdrop-blur-md"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute bottom-1 left-0 top-1 rounded-pill bg-white transition-[transform,width] duration-300 ease-out motion-reduce:transition-none"
+            style={{ transform: `translateX(${String(pill.x)}px)`, width: pill.width }}
+          />
+          {skins.map((skin, index) => (
+            <button
+              key={skin.name}
+              ref={(el) => {
+                tabs.current[index] = el;
+              }}
+              type="button"
+              role="tab"
+              aria-selected={index === active}
+              onClick={() => {
+                setActive(index);
+              }}
+              className={`relative rounded-pill px-4 py-2 text-[13px] transition-colors ${
+                index === active ? 'text-black' : 'text-white/75 hover:text-white'
+              }`}
+            >
+              {skin.name}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
