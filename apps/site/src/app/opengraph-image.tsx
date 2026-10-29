@@ -5,7 +5,7 @@ import { site } from '@/lib/site';
  * The card every link to this site unfurls into. Drawn here rather than kept as
  * a file so it cannot fall out of step with the tagline.
  */
-export const alt = `${site.name}, ${site.tagline}`;
+export const alt = `${site.name} - ${site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 

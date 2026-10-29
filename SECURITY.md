@@ -2,10 +2,6 @@
 
 Read this before you put real value behind Pockey.
 
-**This code has had no third party audit.** It was written carefully, it is
-covered by tests, and the paths that touch Turnkey were exercised against their
-production API. That is not the same thing as an audit.
-
 ## What holds the keys
 
 Nothing in this repository ever sees a private key, a seed or a share. Keys are

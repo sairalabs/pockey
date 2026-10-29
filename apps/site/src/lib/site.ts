@@ -17,7 +17,7 @@ export const site = {
   summary:
     'Open source embedded wallets and auth. Email, Google, Apple, passkeys or an existing wallet, an EVM and a Solana wallet per user, signing and sessions behind a few React hooks. Keys live at Turnkey, and no server of yours can sign for a user.',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pockey.xyz',
-  repo: 'https://github.com/medhychabour/pockey',
+  repo: 'https://github.com/sairalabs/pockey',
   contact: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@saira.xyz',
   /* Who publishes it, as opposed to who is liable for the site, which is in
      `legal` and comes from the environment. */

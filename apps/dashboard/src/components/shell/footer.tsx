@@ -9,7 +9,7 @@ const links = [
   { label: 'Legal', href: 'https://pockey.xyz/legal/notice' },
   { label: 'Privacy', href: 'https://pockey.xyz/legal/privacy' },
   { label: 'Preferences', href: '/billing' },
-  { label: 'Source', href: 'https://github.com/medhychabour/pockey' },
+  { label: 'Source', href: 'https://github.com/sairalabs/pockey' },
 ] as const;
 
 export function Footer() {

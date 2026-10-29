@@ -21,7 +21,7 @@ export function docMetadata(doc: DocPage): Metadata {
     openGraph: {
       type: 'article',
       siteName: site.name,
-      title: `${doc.title} | ${site.name}`,
+      title: `${doc.title} - ${site.name}`,
       description: doc.summary,
       url: new URL(path, site.url).toString(),
       locale: 'en',

@@ -144,9 +144,6 @@ const FAQ = [
   },
 ] as const;
 
-/** White, through the accent, back to white. The one word that carries it. */
-const LIT = { backgroundImage: 'linear-gradient(120deg, #ffffff 8%, #9d93ff 50%, #ffffff 92%)' };
-
 /*
    The product and the answers, in the form a search engine and an assistant
    read. Every line of it is on the page in prose as well.
@@ -201,10 +198,7 @@ export default function Home() {
             <span className="relative">Open source, MIT licensed</span>
           </p>
           <h1 className="mt-7 text-[48px] font-semibold leading-[1.03] tracking-[-0.035em] sm:text-[76px]">
-            Embedded wallets your users{' '}
-            <span className="bg-clip-text text-transparent" style={LIT}>
-              own
-            </span>
+            Embedded wallets your users own
           </h1>
           <p className="mx-auto mt-7 max-w-[540px] text-[17px] leading-[1.6] text-fg-2">
             Login, wallets and signing behind a few React hooks, on your own infrastructure. Your

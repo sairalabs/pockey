@@ -35,12 +35,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/medhychabour/pockey.git",
+    "url": "git+https://github.com/sairalabs/pockey.git",
     "directory": "packages/types"
   },
-  "homepage": "https://github.com/medhychabour/pockey#readme",
+  "homepage": "https://github.com/sairalabs/pockey#readme",
   "bugs": {
-    "url": "https://github.com/medhychabour/pockey/issues"
+    "url": "https://github.com/sairalabs/pockey/issues"
   },
   "publishConfig": {
     "access": "public"
