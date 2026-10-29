@@ -67,7 +67,7 @@ export function Skins({ skins }: { skins: Skin[] }) {
           ref={track}
           role="tablist"
           aria-label="Appearance presets"
-          className="relative flex w-max gap-1 rounded-pill bg-accent/85 p-1 backdrop-blur-md"
+          className="relative flex w-max gap-1 rounded-pill bg-surface-3/90 p-1 backdrop-blur-md"
         >
           <span
             aria-hidden="true"

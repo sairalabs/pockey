@@ -286,8 +286,8 @@ export default function Home() {
 
         {/* The console is as dark as the page, so the frame around it is the
             lightest surface on the site and carries the whole shot. */}
-        <div className="mt-12 rounded-[20px] border border-white/10 bg-surface-3 p-1.5">
-          <div className="flex items-center gap-2 px-1.5 py-1.5">
+        <div className="mt-12 rounded-[20px] border border-white/10 bg-surface-3 px-1.5 pb-1.5">
+          <div className="flex items-center gap-2 px-1.5 py-2">
             <span className="size-2.5 rounded-pill bg-surface" />
             <span className="size-2.5 rounded-pill bg-surface" />
             <span className="size-2.5 rounded-pill bg-surface" />
@@ -336,10 +336,6 @@ export default function Home() {
       {/* The last word */}
       <section className="mx-auto w-full max-w-[1120px] px-6 pb-28">
         <div className="relative isolate overflow-hidden rounded-[32px] bg-bg px-6 py-16 text-center sm:py-20">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-[-40%] size-[560px] -translate-x-1/2 rounded-pill bg-accent/15 blur-[150px]"
-          />
           {/* The characters a wallet is made of, lighting up under the pointer.
               Masked away from the middle, so they frame the words rather than
               run under them. */}
@@ -353,7 +349,7 @@ export default function Home() {
           >
             <AsciiField base={0.07} />
           </div>
-          <Grain opacity={0.05} />
+          <Grain opacity={0.04} />
           <div className="relative">
             <h2 className="mx-auto max-w-[520px] text-[34px] font-semibold leading-[1.1] tracking-[-0.025em] sm:text-[40px]">
               Read it before you trust it
