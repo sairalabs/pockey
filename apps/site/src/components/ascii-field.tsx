@@ -100,8 +100,8 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
           lit.x = at.x;
           lit.y = at.y;
         } else {
-          lit.x += (at.x - lit.x) * 0.055;
-          lit.y += (at.y - lit.y) * 0.055;
+          lit.x += (at.x - lit.x) * 0.15;
+          lit.y += (at.y - lit.y) * 0.15;
         }
       }
       // And it never sits exactly on it either.
@@ -136,14 +136,18 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
           const dy = y - driftY;
           if (at.near && dx > -far && dx < far && dy > -far && dy < far) {
             // The edge is not a circle. It swells and shrinks around the angle,
-            // on three turns of different speed, so the shape never settles.
+            // on four turns of different speed, so the shape never settles.
+            // A low harmonic would make a polygon of it, three lobes reading
+            // as a triangle, so the weight sits on the high ones and on the
+            // first, which only pulls the blob off centre.
             const angle = Math.atan2(dy, dx);
             const edge =
               reach *
               (1 +
-                Math.sin(angle * 3 + seconds * 0.5) * 0.3 +
-                Math.sin(angle * 5 - seconds * 0.31) * 0.17 +
-                Math.sin(angle - seconds * 0.73) * 0.12);
+                Math.sin(angle - seconds * 0.57) * 0.11 +
+                Math.sin(angle * 2 + seconds * 0.41) * 0.07 +
+                Math.sin(angle * 5 - seconds * 0.27) * 0.08 +
+                Math.sin(angle * 7 + seconds * 0.19) * 0.05);
             const near = Math.max(0, 1 - Math.hypot(dx, dy) / edge);
             light += near * near * near * 1.15;
             // The ones the light is on turn over far more often.
