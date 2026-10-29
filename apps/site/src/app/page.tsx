@@ -347,7 +347,7 @@ export default function Home() {
               WebkitMaskImage: 'radial-gradient(62% 72% at 50% 50%, transparent 8%, #000 78%)',
             }}
           >
-            <AsciiField base={0.07} />
+            <AsciiField base={0.05} />
           </div>
           <Grain opacity={0.04} />
           <div className="relative">

@@ -279,154 +279,52 @@
   border-radius: var(--radius-card);
 }
 
-/* ---------- The hero: five bands, each wandering on its own clock --------- */
+/* ---------- The hero: bands hung on two crossed swings -------------------- */
 
 /*
-  Translation only, at a constant pace, over long uneven paths. Easing at every
-  stop makes a band slow down in the same place each time, and scaling a blurred
-  one makes it swell: together they read as a light being switched rather than
-  one that moves. The durations share no factor and each band starts somewhere
-  else along its own path, so the five never make a pattern.
+  A swing eased at both ends is a sine: it never corners, and it never stops,
+  because the other swing is always moving. Crossed, with periods that share no
+  factor, they trace a path that does not come back for hours, which is what a
+  single looping path could never do however many stops it was given.
 */
 
-@keyframes band-1 {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+@keyframes sway-x {
+  from {
+    transform: translateX(calc(var(--sway) * -1));
   }
-  17% {
-    transform: translate3d(-2.6%, 1.8%, 0) rotate(-0.6deg);
-  }
-  38% {
-    transform: translate3d(1.9%, 3.4%, 0) rotate(0.4deg);
-  }
-  59% {
-    transform: translate3d(3.2%, -1.2%, 0) rotate(0.8deg);
-  }
-  81% {
-    transform: translate3d(-1.1%, -2.7%, 0) rotate(-0.3deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  to {
+    transform: translateX(var(--sway));
   }
 }
 
-@keyframes band-2 {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+@keyframes sway-y {
+  from {
+    transform: translateY(calc(var(--sway) * -1));
   }
-  22% {
-    transform: translate3d(3.1%, -2.4%, 0) rotate(0.7deg);
-  }
-  41% {
-    transform: translate3d(-1.3%, -3.6%, 0) rotate(-0.5deg);
-  }
-  67% {
-    transform: translate3d(-3.4%, 1.1%, 0) rotate(-0.9deg);
-  }
-  88% {
-    transform: translate3d(0.8%, 2.9%, 0) rotate(0.2deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  to {
+    transform: translateY(var(--sway));
   }
 }
 
-@keyframes band-3 {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  13% {
-    transform: translate3d(2.2%, 2.1%, 0) rotate(-0.4deg);
-  }
-  44% {
-    transform: translate3d(-3.6%, -1.4%, 0) rotate(0.9deg);
-  }
-  62% {
-    transform: translate3d(-0.9%, 3.2%, 0) rotate(0.3deg);
-  }
-  86% {
-    transform: translate3d(2.7%, -2.2%, 0) rotate(-0.7deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-@keyframes band-4 {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  26% {
-    transform: translate3d(-3.9%, -1.7%, 0) rotate(0.5deg);
-  }
-  49% {
-    transform: translate3d(1.4%, -3.1%, 0) rotate(-0.8deg);
-  }
-  73% {
-    transform: translate3d(3.7%, 1.6%, 0) rotate(0.6deg);
-  }
-  91% {
-    transform: translate3d(-1.8%, 2.4%, 0) rotate(-0.2deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-@keyframes band-5 {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  19% {
-    transform: translate3d(1.6%, -2.9%, 0) rotate(-0.3deg);
-  }
-  37% {
-    transform: translate3d(-2.8%, -0.6%, 0) rotate(0.8deg);
-  }
-  64% {
-    transform: translate3d(-1.2%, 3.7%, 0) rotate(0.4deg);
-  }
-  84% {
-    transform: translate3d(3.3%, 0.9%, 0) rotate(-0.6deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-.band {
-  animation-timing-function: linear;
+.sway-x,
+.sway-y {
+  position: absolute;
+  inset: 0;
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
+  animation-direction: alternate;
   will-change: transform;
 }
-.band-1 {
-  animation-name: band-1;
-  animation-duration: 61s;
-  animation-delay: -17s;
+.sway-x {
+  animation-name: sway-x;
 }
-.band-2 {
-  animation-name: band-2;
-  animation-duration: 73s;
-  animation-delay: -41s;
-}
-.band-3 {
-  animation-name: band-3;
-  animation-duration: 89s;
-  animation-delay: -8s;
-}
-.band-4 {
-  animation-name: band-4;
-  animation-duration: 97s;
-  animation-delay: -63s;
-}
-.band-5 {
-  animation-name: band-5;
-  animation-duration: 113s;
-  animation-delay: -29s;
+.sway-y {
+  animation-name: sway-y;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .band {
+  .sway-x,
+  .sway-y {
     animation: none;
   }
 }

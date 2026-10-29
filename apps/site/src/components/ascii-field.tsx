@@ -12,7 +12,7 @@ interface AsciiFieldProps {
   base?: number;
   /** How far the pointer reaches, in CSS pixels. Zero means it does not. */
   reach?: number;
-  /** The colour of a character, as `r, g, b`. */
+  /** The colour of a character, as `r, g, b`. White unless told otherwise. */
   tint?: string;
 }
 
@@ -36,7 +36,7 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
 
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hovers = window.matchMedia('(pointer: fine)').matches;
-    const colour = tint ?? '123, 107, 255';
+    const colour = tint ?? '255, 255, 255';
 
     const dpr = Math.min(window.devicePixelRatio, 2);
     let w = 0;
