@@ -36,6 +36,9 @@ export default defineConfig({
       url: 'http://localhost:3810',
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
+      // Keeps the feedback toolbar out of the run: it is a development tool,
+      // and under test it only reaches for a server nobody started.
+      env: { NEXT_PUBLIC_E2E: '1' },
     },
   ],
 });

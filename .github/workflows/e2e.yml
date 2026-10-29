@@ -1,8 +1,10 @@
 name: E2E
 
-# Manual for now: it boots wrangler dev, the embed and the playground, and drives
-# Chromium. Once it has passed a few times here, move it onto pull_request.
+# Boots wrangler dev, the embed and the playground, and drives Chromium. It
+# needs no secret: the API runs on the in-memory key provider and prints its
+# login codes to a log the test reads.
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
