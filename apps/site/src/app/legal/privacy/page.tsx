@@ -1,10 +1,20 @@
 import type { Metadata } from 'next';
-import { host, legal } from '@/lib/site';
+import { host, legal, site } from '@/lib/site';
+
+const DESCRIPTION = 'What this site collects, which is close to nothing, and what happens to it.';
 
 export const metadata: Metadata = {
   title: 'Privacy',
-  description: 'What this site collects, which is close to nothing, and what happens to it.',
+  description: DESCRIPTION,
   alternates: { canonical: '/legal/privacy' },
+  openGraph: {
+    type: 'article',
+    siteName: site.name,
+    title: `Privacy - ${site.name}`,
+    description: DESCRIPTION,
+    url: new URL('/legal/privacy', site.url).toString(),
+    locale: 'en',
+  },
 };
 
 export default function Privacy() {

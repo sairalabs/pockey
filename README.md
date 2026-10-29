@@ -4,6 +4,9 @@ Embedded wallets and auth you host yourself. Email, Google, Apple, passkeys or a
 existing wallet; an EVM and a Solana wallet created on first login; signing,
 sessions and gas sponsoring behind a few React hooks.
 
+[pockey.xyz](https://pockey.xyz) has the documentation rendered, the modal in
+four themes, and the console.
+
 Keys live at [Turnkey](https://turnkey.com), in a sub-organization per user.
 Pockey never holds them, and neither do you: the part that runs on your server
 cannot sign for a user even if it wanted to. See [SECURITY.md](SECURITY.md).

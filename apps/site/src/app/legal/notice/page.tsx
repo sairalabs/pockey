@@ -1,17 +1,22 @@
 import type { Metadata } from 'next';
 import { host, legal, site } from '@/lib/site';
 
+const DESCRIPTION =
+  'Who publishes this site, who hosts it, and under which licence the software is.';
+
 export const metadata: Metadata = {
   title: 'Legal notice',
-  description: 'Who publishes this site, who hosts it, and under which licence the software is.',
+  description: DESCRIPTION,
   alternates: { canonical: '/legal/notice' },
+  openGraph: {
+    type: 'article',
+    siteName: site.name,
+    title: `Legal notice - ${site.name}`,
+    description: DESCRIPTION,
+    url: new URL('/legal/notice', site.url).toString(),
+    locale: 'en',
+  },
 };
-
-/** A value the operator has to set in the environment before going live. */
-function Value({ children }: { children: string }) {
-  if (children) return <>{children}</>;
-  return <span className="text-fg-3">to be set</span>;
-}
 
 export default function LegalNotice() {
   return (
@@ -24,21 +29,13 @@ export default function LegalNotice() {
 
       <h2 id="publisher">Publisher</h2>
       <ul>
-        <li>
-          Publisher: <Value>{legal.publisher}</Value>
-        </li>
-        <li>
-          Legal form: <Value>{legal.status}</Value>
-        </li>
-        <li>
-          Address: <Value>{legal.address}</Value>
-        </li>
-        <li>
-          Registration: <Value>{legal.registration}</Value>
-        </li>
-        <li>
-          Publication director: <Value>{legal.director}</Value>
-        </li>
+        <li>Publisher: {legal.publisher}</li>
+        <li>Legal form: {legal.status}</li>
+        <li>Registered office: {legal.address}</li>
+        <li>Registration: {legal.registration}</li>
+        <li>SIRET: {legal.siret}</li>
+        <li>VAT: {legal.vat}</li>
+        <li>Publication director: {legal.director}</li>
         <li>
           Contact: <a href={`mailto:${legal.email}`}>{legal.email}</a>
         </li>

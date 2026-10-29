@@ -1,10 +1,12 @@
 /**
  * Everything the site says about itself in one place, so a fork only has to
- * edit this file and its environment.
+ * edit this file.
  *
- * The legal identity is read from the environment on purpose: this repository
- * is public, and a publisher's address does not belong in it. Set the variables
- * in the hosting provider, see `.env.example`.
+ * The publisher is here rather than in the environment. French law requires a
+ * published site to name it, so these values are on the live page either way,
+ * and a company's registered office and number are public record. Keeping them
+ * in a variable only bought a site that said "to be set" when a deploy forgot
+ * one. A fork replaces this block with its own.
  */
 
 export const site = {
@@ -25,14 +27,16 @@ export const site = {
   authorUrl: 'https://saira.xyz',
 } as const;
 
-/** Set these in the hosting provider. Missing values are shown as missing. */
+/** Who answers for this site, as its registration says it. */
 export const legal = {
-  publisher: process.env.NEXT_PUBLIC_LEGAL_PUBLISHER ?? '',
-  status: process.env.NEXT_PUBLIC_LEGAL_STATUS ?? '',
-  address: process.env.NEXT_PUBLIC_LEGAL_ADDRESS ?? '',
-  registration: process.env.NEXT_PUBLIC_LEGAL_REGISTRATION ?? '',
-  director: process.env.NEXT_PUBLIC_LEGAL_DIRECTOR ?? '',
-  email: process.env.NEXT_PUBLIC_LEGAL_EMAIL ?? site.contact,
+  publisher: 'Saira',
+  status: 'A French société par actions simplifiée with a sole shareholder, share capital €1,000',
+  address: '173 rue de Courcelles, 75017 Paris, France',
+  registration: 'RCS Paris 130 728 926',
+  siret: '130 728 926 00010',
+  vat: 'FR76130728926',
+  director: 'Médhy Chabour, President',
+  email: site.contact,
 } as const;
 
 export const host = {
