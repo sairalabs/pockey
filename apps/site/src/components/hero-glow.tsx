@@ -15,10 +15,13 @@ export function HeroGlow() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-bg"
     >
-      <div className="absolute inset-[-25%]">
-        <span className="ribbon-a absolute left-[-10%] top-[20%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/16 blur-[90px]" />
-        <span className="ribbon-b absolute left-[-10%] top-[40%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/8 blur-[80px]" />
-        <span className="ribbon-c absolute left-[-10%] top-[60%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/30 blur-[100px]" />
+      {/* Wider than the frame by half, so an end never comes into it. */}
+      <div className="absolute inset-[-30%]">
+        <span className="band band-1 absolute left-[-15%] top-[14%] h-[11rem] w-[150%] -rotate-12 rounded-pill bg-accent/14 blur-[95px]" />
+        <span className="band band-2 absolute left-[-15%] top-[29%] h-[8rem] w-[150%] -rotate-6 rounded-pill bg-[#7b6bff]/8 blur-[80px]" />
+        <span className="band band-3 absolute left-[-15%] top-[44%] h-[14rem] w-[150%] -rotate-[17deg] rounded-pill bg-[#120c52]/26 blur-[110px]" />
+        <span className="band band-4 absolute left-[-15%] top-[61%] h-[9rem] w-[150%] rotate-3 rounded-pill bg-accent/9 blur-[100px]" />
+        <span className="band band-5 absolute left-[-15%] top-[75%] h-[12rem] w-[150%] -rotate-[9deg] rounded-pill bg-[#1a1270]/20 blur-[120px]" />
       </div>
 
       {/* Masked away from the middle, so the characters frame the sentence

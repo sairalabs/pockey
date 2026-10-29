@@ -165,7 +165,7 @@ export default function Home() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/12 to-transparent"
             />
-            <span className="relative">No custodian, not even us</span>
+            <span className="relative">Open source, MIT licensed</span>
           </p>
           <h1 className="mt-7 text-[48px] font-semibold leading-[1.03] tracking-[-0.035em] sm:text-[76px]">
             Embedded wallets your users{' '}
