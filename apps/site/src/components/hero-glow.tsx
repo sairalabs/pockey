@@ -11,11 +11,14 @@ import { Grain } from './grain';
  */
 export function HeroGlow() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-bg"
+    >
       <div className="absolute inset-[-25%]">
-        <span className="ribbon-a absolute left-[-10%] top-[22%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/18 blur-[90px]" />
-        <span className="ribbon-b absolute left-[-10%] top-[42%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/8 blur-[80px]" />
-        <span className="ribbon-c absolute left-[-10%] top-[62%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/55 blur-[100px]" />
+        <span className="ribbon-a absolute left-[-10%] top-[20%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/16 blur-[90px]" />
+        <span className="ribbon-b absolute left-[-10%] top-[40%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/8 blur-[80px]" />
+        <span className="ribbon-c absolute left-[-10%] top-[60%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/30 blur-[100px]" />
       </div>
 
       {/* Masked away from the middle, so the characters frame the sentence
@@ -29,12 +32,13 @@ export function HeroGlow() {
       >
         <AsciiField base={0.06} />
       </div>
-      <Grain />
+      {/* Light grain: on a surface this dark, more of it reads as grey. */}
+      <Grain opacity={0.04} />
 
-      {/* The page comes back at the corners, and then at the bottom. */}
+      {/* The page colour comes back at the corners, and then at the bottom. */}
       <div
         className="absolute inset-0"
-        style={{ background: 'radial-gradient(115% 85% at 50% 28%, transparent 22%, #101010 92%)' }}
+        style={{ background: 'radial-gradient(95% 65% at 50% 24%, transparent 8%, #101010 82%)' }}
       />
       <div className="absolute inset-x-0 bottom-0 h-56 bg-linear-to-b from-transparent to-bg" />
     </div>

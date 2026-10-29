@@ -165,7 +165,7 @@ export default function Home() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/12 to-transparent"
             />
-            <span className="relative">Nobody in the middle, including us</span>
+            <span className="relative">No custodian, not even us</span>
           </p>
           <h1 className="mt-7 text-[48px] font-semibold leading-[1.03] tracking-[-0.035em] sm:text-[76px]">
             Embedded wallets your users{' '}
@@ -189,7 +189,7 @@ export default function Home() {
               href={site.repo}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 rounded-pill bg-surface px-5 py-3 text-[15px] text-fg transition-colors hover:bg-surface-2"
+              className="inline-flex items-center gap-2 rounded-pill bg-white/12 px-5 py-3 text-[15px] text-fg backdrop-blur-md transition-colors hover:bg-white/20"
             >
               Clone the repository
             </a>
@@ -286,15 +286,17 @@ export default function Home() {
 
         {/* The console is as dark as the page, so the frame around it is the
             lightest surface on the site and carries the whole shot. */}
-        <div className="mt-12 rounded-[24px] bg-surface-3 p-2 sm:p-2.5">
-          <div className="flex items-center gap-2 px-2 py-2.5">
+        <div className="mt-12 rounded-[20px] border border-white/10 bg-surface-3 p-1.5">
+          <div className="flex items-center gap-2 px-1.5 py-1.5">
             <span className="size-2.5 rounded-pill bg-surface" />
             <span className="size-2.5 rounded-pill bg-surface" />
             <span className="size-2.5 rounded-pill bg-surface" />
-            <div className="ml-2 flex h-7 min-w-0 items-center gap-1.5 rounded-pill bg-surface px-2.5">
+            <div className="mx-auto flex h-6 min-w-0 items-center gap-1.5 rounded-pill bg-surface px-2.5">
               <Globe size={12} className="shrink-0 text-fg-3" />
               <span className="truncate text-[12px] text-fg-2">dashboard.yourapp.com</span>
             </div>
+            {/* The dots on the left, balanced, so the address sits in the middle. */}
+            <span aria-hidden="true" className="w-[46px] shrink-0" />
           </div>
           {/* A 1360 wide screen is unreadable on a phone, so a phone is shown
               the part that carries the meaning, enlarged. */}
@@ -333,7 +335,7 @@ export default function Home() {
 
       {/* The last word */}
       <section className="mx-auto w-full max-w-[1120px] px-6 pb-28">
-        <div className="relative isolate overflow-hidden rounded-[32px] bg-surface px-6 py-16 text-center sm:py-20">
+        <div className="relative isolate overflow-hidden rounded-[32px] bg-bg px-6 py-16 text-center sm:py-20">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-1/2 top-[-40%] size-[560px] -translate-x-1/2 rounded-pill bg-accent/15 blur-[150px]"
