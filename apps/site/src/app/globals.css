@@ -325,3 +325,61 @@
     animation: none;
   }
 }
+
+/* ---------- Background lab: candidates for the hero, deleted with it ------- */
+
+@keyframes ribbon-a {
+  to {
+    transform: translate3d(-4%, 3%, 0) rotate(-2deg);
+  }
+}
+@keyframes ribbon-b {
+  to {
+    transform: translate3d(5%, -4%, 0) rotate(3deg);
+  }
+}
+@keyframes ribbon-c {
+  to {
+    transform: translate3d(-3%, -3%, 0) rotate(2deg);
+  }
+}
+
+.ribbon-a,
+.ribbon-b,
+.ribbon-c {
+  animation-duration: 23s;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform;
+}
+.ribbon-a {
+  animation-name: ribbon-a;
+}
+.ribbon-b {
+  animation-name: ribbon-b;
+  animation-duration: 29s;
+}
+.ribbon-c {
+  animation-name: ribbon-c;
+  animation-duration: 35s;
+}
+
+@keyframes mesh-breathe {
+  to {
+    transform: scale(1.08) rotate(1.5deg);
+  }
+}
+.bg-mesh {
+  animation: mesh-breathe 31s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ribbon-a,
+  .ribbon-b,
+  .ribbon-c,
+  .bg-mesh {
+    animation: none;
+  }
+}
