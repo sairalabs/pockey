@@ -34,7 +34,7 @@ pnpm --filter @pockey/embed dev
 pnpm --filter @pockey/site shots
 ```
 
-The dashboard shots drive the local stack the way the end to end suite does,
+The dashboard shot drives the local stack the way the end to end suite does,
 reading the login code from the API log. The API only accepts the dashboard
 origin it was given, so both have to be on the same port:
 

@@ -1,5 +1,5 @@
 /**
- * Screenshots of the real developer dashboard for the landing page.
+ * A screenshot of the real developer dashboard for the landing page.
  *
  * It drives the local stack the same way the end to end suite does: the API
  * with the console mailer, which prints the login code to a log this script
@@ -79,33 +79,5 @@ await page.waitForTimeout(800);
 await strip();
 await page.screenshot({ path: path.join(OUT, 'dashboard.png'), animations: 'disabled' });
 process.stdout.write('dashboard.png\n');
-
-// The configuration panel: the login methods and chains an app offers. Shot on
-// its own so the page can place it rather than inherit the dimmed backdrop.
-await page.getByRole('button', { name: 'Account' }).click();
-await page.getByRole('menuitem', { name: 'Settings' }).click();
-await page.getByRole('button', { name: 'Configuration', exact: true }).click();
-await page.waitForTimeout(1000);
-await strip();
-await page.evaluate(() => {
-  const dialog = document.querySelector('[role="dialog"]');
-  if (!dialog) throw new Error('no dialog');
-  document.documentElement.style.background = 'transparent';
-  document.body.style.background = 'transparent';
-  for (let node = dialog; node && node !== document.body; node = node.parentElement) {
-    const parent = node.parentElement;
-    if (!parent) break;
-    parent.style.background = 'transparent';
-    for (const sibling of parent.children) {
-      if (sibling !== node && sibling instanceof HTMLElement) sibling.style.visibility = 'hidden';
-    }
-  }
-});
-await page.getByRole('dialog').screenshot({
-  path: path.join(OUT, 'dashboard-config.png'),
-  animations: 'disabled',
-  omitBackground: true,
-});
-process.stdout.write('dashboard-config.png\n');
 
 await browser.close();
