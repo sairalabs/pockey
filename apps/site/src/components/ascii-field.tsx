@@ -63,6 +63,8 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
     };
 
     const at = { x: -9999, y: -9999, near: 0 };
+    /* Where the light actually is, which is a little behind the pointer. */
+    const lit = { x: -9999, y: -9999 };
     const move = (event: PointerEvent) => {
       const rect = el.getBoundingClientRect();
       at.x = event.clientX - rect.left;
@@ -85,8 +87,27 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
     const start = performance.now();
     let frame = 0;
 
+    /* Past the widest the halo can swell to, there is nothing to compute. */
+    const far = reach * 1.7;
+
     const draw = (seconds: number) => {
       ctx.clearRect(0, 0, w, h);
+
+      // The light is drawn towards the pointer rather than placed on it, so it
+      // arrives a moment late and overruns a little when the pointer stops.
+      if (at.near) {
+        if (lit.x < -9000) {
+          lit.x = at.x;
+          lit.y = at.y;
+        } else {
+          lit.x += (at.x - lit.x) * 0.055;
+          lit.y += (at.y - lit.y) * 0.055;
+        }
+      }
+      // And it never sits exactly on it either.
+      const driftX = lit.x + Math.sin(seconds * 0.43) * 11 + Math.sin(seconds * 0.11) * 7;
+      const driftY = lit.y + Math.cos(seconds * 0.37) * 9 + Math.sin(seconds * 0.17) * 6;
+
       ctx.font = `12px ${getComputedStyle(box).fontFamily}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -111,11 +132,22 @@ export function AsciiField({ cell = 17, base = 0.05, reach = 190, tint }: AsciiF
           // A character here and there turns over on its own.
           if (Math.random() < 0.0012) cells[index] = pick();
 
-          if (at.near) {
-            const near = Math.max(0, 1 - Math.hypot(x - at.x, y - at.y) / reach);
-            light += near * near * 0.8;
-            // The ones the pointer is over turn over far more often.
-            if (near > 0.25 && Math.random() < 0.06) cells[index] = pick();
+          const dx = x - driftX;
+          const dy = y - driftY;
+          if (at.near && dx > -far && dx < far && dy > -far && dy < far) {
+            // The edge is not a circle. It swells and shrinks around the angle,
+            // on three turns of different speed, so the shape never settles.
+            const angle = Math.atan2(dy, dx);
+            const edge =
+              reach *
+              (1 +
+                Math.sin(angle * 3 + seconds * 0.5) * 0.3 +
+                Math.sin(angle * 5 - seconds * 0.31) * 0.17 +
+                Math.sin(angle - seconds * 0.73) * 0.12);
+            const near = Math.max(0, 1 - Math.hypot(dx, dy) / edge);
+            light += near * near * near * 1.15;
+            // The ones the light is on turn over far more often.
+            if (near > 0.3 && Math.random() < 0.06) cells[index] = pick();
           }
 
           if (light < 0.012) continue;
