@@ -158,9 +158,14 @@ export default function Home() {
         <HeroGlow />
 
         <div className="stagger w-full max-w-[880px]">
-          <p className="inline-flex items-center gap-2 rounded-pill bg-surface px-3.5 py-1.5 text-[13px] text-fg-2">
-            <span className="size-1.5 rounded-pill bg-accent" />
-            Nobody in the middle, including us
+          {/* Glass rather than a filled pill: it sits on the light behind it
+              instead of covering a hole in it. Lit from the top, no ring. */}
+          <p className="relative inline-flex items-center overflow-hidden rounded-pill bg-white/[0.07] px-4 py-1.5 text-[13px] text-fg backdrop-blur-md">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/12 to-transparent"
+            />
+            <span className="relative">Nobody in the middle, including us</span>
           </p>
           <h1 className="mt-7 text-[48px] font-semibold leading-[1.03] tracking-[-0.035em] sm:text-[76px]">
             Embedded wallets your users{' '}

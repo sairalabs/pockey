@@ -59,9 +59,9 @@ export function HeroGlow() {
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
       <div ref={bands} className="absolute inset-[-25%]">
-        <span className="ribbon-a absolute left-[-10%] top-[22%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/30 blur-[90px]" />
-        <span className="ribbon-b absolute left-[-10%] top-[42%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/15 blur-[80px]" />
-        <span className="ribbon-c absolute left-[-10%] top-[62%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/80 blur-[100px]" />
+        <span className="ribbon-a absolute left-[-10%] top-[22%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/18 blur-[90px]" />
+        <span className="ribbon-b absolute left-[-10%] top-[42%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/8 blur-[80px]" />
+        <span className="ribbon-c absolute left-[-10%] top-[62%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/55 blur-[100px]" />
       </div>
 
       {/* Masked away from the middle, so the characters frame the sentence
