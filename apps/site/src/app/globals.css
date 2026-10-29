@@ -279,54 +279,7 @@
   border-radius: var(--radius-card);
 }
 
-/* ---------- The hero light: three drifts, each on its own clock ---------- */
-
-@keyframes hero-drift-a {
-  to {
-    transform: translate3d(7%, 5%, 0) scale(1.14);
-  }
-}
-@keyframes hero-drift-b {
-  to {
-    transform: translate3d(-9%, 8%, 0) scale(1.1);
-  }
-}
-@keyframes hero-drift-c {
-  to {
-    transform: translate3d(5%, -7%, 0) scale(0.9);
-  }
-}
-
-.hero-drift-a,
-.hero-drift-b,
-.hero-drift-c {
-  animation-duration: 21s;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  will-change: transform;
-}
-.hero-drift-a {
-  animation-name: hero-drift-a;
-}
-.hero-drift-b {
-  animation-name: hero-drift-b;
-  animation-duration: 27s;
-}
-.hero-drift-c {
-  animation-name: hero-drift-c;
-  animation-duration: 33s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-drift-a,
-  .hero-drift-b,
-  .hero-drift-c {
-    animation: none;
-  }
-}
-
-/* ---------- Background lab: candidates for the hero, deleted with it ------- */
+/* ---------- The hero: three bands, each undulating on its own clock ------- */
 
 @keyframes ribbon-a {
   to {
@@ -365,21 +318,10 @@
   animation-duration: 35s;
 }
 
-@keyframes mesh-breathe {
-  to {
-    transform: scale(1.08) rotate(1.5deg);
-  }
-}
-.bg-mesh {
-  animation: mesh-breathe 31s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
-  will-change: transform;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ribbon-a,
   .ribbon-b,
-  .ribbon-c,
-  .bg-mesh {
+  .ribbon-c {
     animation: none;
   }
 }

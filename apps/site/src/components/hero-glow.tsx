@@ -1,49 +1,47 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-
-/* Film grain, as a tile rather than an image file. Large flat gradients band on
-   an ordinary screen, and a little noise over them is what stops it. */
-const GRAIN =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+import { AsciiField } from './ascii-field';
+import { Grain } from './grain';
 
 /**
- * Three lights behind the hero, each drifting on its own clock, under a layer
- * of grain. The pointer does not carry a spotlight around: it leans the whole
- * field a few pixels, the way a held object catches the light.
+ * Three wide bands crossing behind the sentence, undulating on their own
+ * clocks, with a field of characters over them. The pointer tilts and lifts
+ * the bands together, and lights the characters it passes.
  *
- * The position travels as two custom properties on one element, so nothing
- * re-renders and the browser moves a single composited layer.
+ * Kept dark on purpose: the colour is a hint of where the light comes from,
+ * not the subject. The sentence is the subject.
  */
 export function HeroGlow() {
-  const ref = useRef<HTMLDivElement>(null);
+  const host = useRef<HTMLDivElement>(null);
+  const bands = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const field = ref.current;
-    // A finger has no hover, and a light that jumps on tap is worse than none.
-    if (!field || !window.matchMedia('(pointer: fine)').matches) return;
+    const box = host.current;
+    const el = bands.current;
+    // A finger has no hover, and bands that jump on tap are worse than still.
+    if (!box || !el || !window.matchMedia('(pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    /** How far the field leans, at the edges of the screen. */
-    const REACH = 26;
     let frame = 0;
-    let x = 0;
-    let y = 0;
-    let toX = 0;
-    let toY = 0;
+    let tilt = 0;
+    let lift = 0;
+    let toTilt = 0;
+    let toLift = 0;
 
     const step = () => {
-      x += (toX - x) * 0.06;
-      y += (toY - y) * 0.06;
-      field.style.setProperty('--px', `${x.toFixed(2)}px`);
-      field.style.setProperty('--py', `${y.toFixed(2)}px`);
-      frame = Math.abs(toX - x) + Math.abs(toY - y) > 0.1 ? requestAnimationFrame(step) : 0;
+      tilt += (toTilt - tilt) * 0.05;
+      lift += (toLift - lift) * 0.05;
+      el.style.transform = `rotate(${tilt.toFixed(3)}deg) translateY(${lift.toFixed(2)}px)`;
+      frame =
+        Math.abs(toTilt - tilt) + Math.abs(toLift - lift) > 0.02 ? requestAnimationFrame(step) : 0;
     };
 
     const onMove = (event: PointerEvent) => {
-      const box = field.getBoundingClientRect();
-      toX = ((event.clientX - box.left) / box.width - 0.5) * 2 * REACH;
-      toY = ((event.clientY - box.top) / box.height - 0.5) * 2 * REACH;
+      const rect = box.getBoundingClientRect();
+      toTilt = (event.clientX - rect.left) / rect.width - 0.5;
+      toTilt *= 6;
+      toLift = ((event.clientY - rect.top) / rect.height - 0.5) * 44;
       if (!frame) frame = requestAnimationFrame(step);
     };
 
@@ -56,31 +54,33 @@ export function HeroGlow() {
 
   return (
     <div
-      ref={ref}
+      ref={host}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden [--px:0px] [--py:0px]"
+      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
-      {/* Wide and low rather than round, so the lights read as one field and
-          the brightest part of it sits behind the sentence. */}
-      <div
-        className="absolute inset-0"
-        style={{ transform: 'translate3d(var(--px), var(--py), 0)' }}
-      >
-        <span className="hero-drift-a absolute left-1/2 top-[-14%] h-[34rem] w-[64rem] -translate-x-1/2 rounded-pill bg-accent/45 blur-[150px]" />
-        <span className="hero-drift-b absolute right-[6%] top-[4%] h-[20rem] w-[32rem] rounded-pill bg-[#7b6bff]/25 blur-[150px]" />
-        <span className="hero-drift-c absolute bottom-[-6%] left-[14%] h-[26rem] w-[52rem] rounded-pill bg-[#1a1270]/80 blur-[150px]" />
+      <div ref={bands} className="absolute inset-[-25%]">
+        <span className="ribbon-a absolute left-[-10%] top-[22%] h-[13rem] w-[120%] -rotate-12 rounded-pill bg-accent/30 blur-[90px]" />
+        <span className="ribbon-b absolute left-[-10%] top-[42%] h-[9rem] w-[120%] -rotate-6 rounded-pill bg-[#7b6bff]/15 blur-[80px]" />
+        <span className="ribbon-c absolute left-[-10%] top-[62%] h-[15rem] w-[120%] -rotate-[14deg] rounded-pill bg-[#120c52]/80 blur-[100px]" />
       </div>
 
-      <div
-        className="absolute inset-0 opacity-[0.07]"
-        style={{ backgroundImage: GRAIN, backgroundSize: '180px 180px' }}
-      />
-      {/* The page under it comes back, at the edges and then at the bottom. */}
+      {/* Masked away from the middle, so the characters frame the sentence
+          rather than run under it. */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(120% 90% at 50% 20%, transparent 40%, #101010 100%)',
+          maskImage: 'radial-gradient(50% 44% at 50% 50%, transparent 20%, #000 100%)',
+          WebkitMaskImage: 'radial-gradient(50% 44% at 50% 50%, transparent 20%, #000 100%)',
         }}
+      >
+        <AsciiField base={0.045} />
+      </div>
+      <Grain />
+
+      {/* The page comes back at the corners, and then at the bottom. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(115% 85% at 50% 28%, transparent 22%, #101010 92%)' }}
       />
       <div className="absolute inset-x-0 bottom-0 h-56 bg-linear-to-b from-transparent to-bg" />
     </div>
