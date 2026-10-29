@@ -80,6 +80,11 @@ function source(doc: DocPage): string {
   return path.join(process.cwd(), 'content', path.basename(doc.file));
 }
 
+/** The markdown exactly as the repository has it. */
+export async function rawDoc(doc: DocPage): Promise<string> {
+  return readFile(source(doc), 'utf8');
+}
+
 export async function renderDoc(doc: DocPage): Promise<string> {
   const markdown = await readFile(source(doc), 'utf8');
   return buildMarked().parse(markdown, { async: false });

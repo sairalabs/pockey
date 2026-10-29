@@ -4,7 +4,7 @@ import { host, legal, site } from '@/lib/site';
 export const metadata: Metadata = {
   title: 'Legal notice',
   description: 'Who publishes this site, who hosts it, and under which licence the software is.',
-  robots: { index: true, follow: true },
+  alternates: { canonical: '/legal/notice' },
 };
 
 /** A value the operator has to set in the environment before going live. */

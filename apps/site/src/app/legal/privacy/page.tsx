@@ -4,7 +4,7 @@ import { host, legal } from '@/lib/site';
 export const metadata: Metadata = {
   title: 'Privacy',
   description: 'What this site collects, which is close to nothing, and what happens to it.',
-  robots: { index: true, follow: true },
+  alternates: { canonical: '/legal/privacy' },
 };
 
 export default function Privacy() {

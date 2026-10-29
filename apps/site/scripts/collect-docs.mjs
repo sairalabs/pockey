@@ -8,9 +8,13 @@
  *
  * `content/` is generated and gitignored. Run it again after editing a doc.
  */
-import { copyFile, mkdir, readdir, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { copyFile, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = path.resolve(APP, '../..');
@@ -29,9 +33,31 @@ const FILES = [
 await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
 
+/**
+ * When the file last changed, from git rather than from the filesystem: a
+ * checkout stamps every file with the time of the checkout, so an mtime here
+ * would only ever say "now". A shallow clone may not reach the commit that
+ * last touched a file, and then there is no date and the sitemap omits it,
+ * which is better than inventing one.
+ */
+async function lastChanged(file) {
+  try {
+    const { stdout } = await run('git', ['log', '-1', '--format=%cI', '--', file], { cwd: ROOT });
+    return stdout.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+const updated = {};
+
 for (const file of FILES) {
   await copyFile(path.join(ROOT, file), path.join(OUT, path.basename(file)));
+  const date = await lastChanged(file);
+  if (date) updated[file] = date;
 }
+
+await writeFile(path.join(OUT, 'updated.json'), `${JSON.stringify(updated, null, 2)}\n`);
 
 const written = await readdir(OUT);
 console.log(`collect-docs: ${written.length} files into apps/site/content`);

@@ -2,13 +2,14 @@ import { AtSign, Globe, MessageCircle } from '../ui/icons';
 import Link from 'next/link';
 import { IconButton } from '@/components/ui/icon-button';
 
+/** Only addresses the site actually serves, so none of these dead-ends. */
 const links = [
   { label: 'Home', href: '/apps' },
-  { label: 'Docs', href: 'https://docs.pockey.xyz' },
-  { label: 'Terms', href: 'https://pockey.xyz/terms' },
-  { label: 'Privacy', href: 'https://pockey.xyz/privacy' },
+  { label: 'Docs', href: 'https://pockey.xyz/docs' },
+  { label: 'Legal', href: 'https://pockey.xyz/legal/notice' },
+  { label: 'Privacy', href: 'https://pockey.xyz/legal/privacy' },
   { label: 'Preferences', href: '/billing' },
-  { label: 'Help', href: 'https://pockey.xyz/help' },
+  { label: 'Source', href: 'https://github.com/medhychabour/pockey' },
 ] as const;
 
 export function Footer() {
